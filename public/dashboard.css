@@ -1,0 +1,382 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1800px;
+    margin: 0 auto;
+}
+
+/* 헤더 */
+header {
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+header h1 {
+    color: #333;
+    font-size: 32px;
+    margin-bottom: 10px;
+}
+
+header p {
+    color: #666;
+    font-size: 16px;
+}
+
+/* 메인 컨텐츠 */
+.main-content {
+    display: grid;
+    grid-template-columns: 450px 1fr;
+    gap: 20px;
+}
+
+/* 컨트롤 패널 */
+.control-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.control-panel > div {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+    font-size: 18px;
+    color: #333;
+    margin-bottom: 15px;
+    border-bottom: 2px solid #667eea;
+    padding-bottom: 10px;
+}
+
+/* 상태 표시 */
+.status-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.status-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background: #f7fafc;
+    border-radius: 5px;
+}
+
+.status-item .label {
+    color: #666;
+    font-weight: 500;
+}
+
+.status-item .value {
+    font-weight: 600;
+    padding: 5px 15px;
+    border-radius: 20px;
+}
+
+.value.idle {
+    background: #e2e8f0;
+    color: #4a5568;
+}
+
+.value.running {
+    background: #48bb78;
+    color: white;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* NocoDB 통계 */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.stat-card {
+    background: #f7fafc;
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.stat-label {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 8px;
+}
+
+.stat-value {
+    font-size: 28px;
+    font-weight: bold;
+    color: #667eea;
+    margin-bottom: 5px;
+}
+
+.stat-sublabel {
+    font-size: 11px;
+    color: #999;
+}
+
+.refresh-btn {
+    width: 100%;
+    padding: 10px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background 0.2s;
+}
+
+.refresh-btn:hover {
+    background: #5568d3;
+}
+
+/* Phase 버튼 */
+.phase-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.phase-btn {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.phase-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.phase-number {
+    background: rgba(255, 255, 255, 0.3);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.phase-name {
+    flex: 1;
+    text-align: left;
+    font-weight: 500;
+}
+
+/* 순차 실행 버튼 */
+.sequence-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.sequence-btn {
+    padding: 12px 20px;
+    background: #48bb78;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.sequence-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
+}
+
+.sequence-btn.full {
+    background: #ed8936;
+    font-size: 16px;
+    padding: 15px 20px;
+}
+
+.sequence-btn.full:hover {
+    box-shadow: 0 4px 12px rgba(237, 137, 54, 0.4);
+}
+
+/* 중단 버튼 */
+.stop-btn {
+    width: 100%;
+    padding: 15px;
+    background: #f56565;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.stop-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(245, 101, 101, 0.4);
+}
+
+/* 로그 패널 */
+.log-panel {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 180px);
+}
+
+.log-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 2px solid #667eea;
+}
+
+.log-header h2 {
+    margin: 0;
+    padding: 0;
+    border: none;
+}
+
+.clear-btn {
+    padding: 8px 15px;
+    background: #e2e8f0;
+    color: #4a5568;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background 0.2s;
+}
+
+.clear-btn:hover {
+    background: #cbd5e0;
+}
+
+.log-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    background: #1a202c;
+    border-radius: 0 0 10px 10px;
+    font-family: 'Monaco', 'Consolas', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.log-entry {
+    margin-bottom: 5px;
+    padding: 5px 0;
+}
+
+.log-entry .timestamp {
+    color: #a0aec0;
+    margin-right: 10px;
+}
+
+.log-entry .message {
+    color: #e2e8f0;
+}
+
+.log-entry.start .timestamp {
+    color: #48bb78;
+}
+
+.log-entry.start .message {
+    color: #9ae6b4;
+}
+
+.log-entry.error .timestamp {
+    color: #f56565;
+}
+
+.log-entry.error .message {
+    color: #fc8181;
+}
+
+.log-entry.complete .timestamp {
+    color: #4299e1;
+}
+
+.log-entry.complete .message {
+    color: #90cdf4;
+}
+
+.log-entry.system .timestamp {
+    color: #ed8936;
+}
+
+.log-entry.system .message {
+    color: #fbd38d;
+}
+
+/* 스크롤바 스타일 */
+.log-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.log-container::-webkit-scrollbar-track {
+    background: #2d3748;
+}
+
+.log-container::-webkit-scrollbar-thumb {
+    background: #4a5568;
+    border-radius: 4px;
+}
+
+.log-container::-webkit-scrollbar-thumb:hover {
+    background: #718096;
+}
+
+/* 반응형 */
+@media (max-width: 1200px) {
+    .main-content {
+        grid-template-columns: 1fr;
+    }
+    
+    .log-panel {
+        height: 500px;
+    }
+}

@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL 관리 - Copychu Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        body { background-color: #0f172a; }
+        .card { background-color: #1e293b; border-radius: 12px; }
+        .input-field { 
+            background-color: #334155; 
+            border: 1px solid #475569;
+            color: white;
+        }
+        .input-field:focus {
+            border-color: #22d3ee;
+            outline: none;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #22d3ee, #0ea5e9);
+        }
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+        .status-pending { color: #fbbf24; }
+        .status-processing { color: #22d3ee; }
+        .status-completed { color: #22c55e; }
+        .status-error { color: #ef4444; }
+        .drag-over { border: 2px dashed #22d3ee !important; }
+    </style>
+</head>
+<body class="text-gray-100 min-h-screen">
+    <!-- 사이드바 -->
+    <div class="fixed left-0 top-0 h-full w-52 bg-slate-900 p-4">
+        <h1 class="text-xl font-bold text-cyan-400 mb-2">COPYCHU</h1>
+        <p class="text-xs text-gray-500 mb-8">Automation Dashboard</p>
+        
+        <nav class="space-y-2">
+            <a href="/" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-slate-800">
+                <span>📊</span> 대시보드
+            </a>
+            <a href="/pipeline.html" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-slate-800">
+                <span>▶️</span> 파이프라인
+            </a>
+            <a href="/urls.html" class="flex items-center gap-3 px-4 py-3 rounded-lg bg-slate-800 text-cyan-400">
+                <span>🔗</span> URL 관리
+            </a>
+            <a href="/monitoring.html" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-slate-800">
+                <span>📺</span> 모니터링
+            </a>
+            <a href="/gallery.html" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-slate-800">
+                <span>🖼️</span> 갤러리
+            </a>
+            <a href="/settings.html" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-slate-800">
+                <span>⚙️</span> 설정
+            </a>
+        </nav>
+        
+        <div class="absolute bottom-4 left-4">
+            <div class="flex items-center gap-2">
+                <div id="status-dot" class="w-2 h-2 rounded-full bg-green-400"></div>
+                <span id="status-text" class="text-xs text-gray-500">대기중</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 메인 컨텐츠 -->
+    <div class="ml-52 p-8">
+        <h2 class="text-2xl font-bold mb-2">URL 관리</h2>
+        <p class="text-gray-400 mb-8">카테고리 URL 큐 및 개별 제품 URL 관리</p>
+
+        <!-- 탭 -->
+        <div class="flex gap-4 mb-6">
+            <button id="tab-category" class="px-6 py-2 rounded-lg bg-cyan-500 text-white font-medium" onclick="showTab('category')">
+                📂 카테고리 큐
+            </button>
+            <button id="tab-product" class="px-6 py-2 rounded-lg bg-slate-700 text-gray-300" onclick="showTab('product')">
+                📦 개별 URL 추가
+            </button>
+            <button id="tab-list" class="px-6 py-2 rounded-lg bg-slate-700 text-gray-300" onclick="showTab('list')">
+                📋 등록된 제품
+            </button>
+        </div>
+
+        <!-- 카테고리 큐 탭 -->
+        <div id="content-category" class="space-y-6">
+            <!-- 카테고리 URL 추가 -->
+            <div class="card p-6">
+                <h3 class="text-lg font-semibold mb-4">카테고리 URL 추가</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div class="md:col-span-2">
+                        <label class="block text-sm text-gray-400 mb-2">올리브영 카테고리 URL</label>
+                        <input type="text" id="category-url" class="input-field w-full px-4 py-3 rounded-lg" 
+                               placeholder="https://www.oliveyoung.co.kr/store/main/getBestList.do?dispCatNo=...">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">카테고리 이름</label>
+                        <input type="text" id="category-name" class="input-field w-full px-4 py-3 rounded-lg" 
+                               placeholder="예: 스킨케어">
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">최대 수집 개수</label>
+                        <input type="number" id="category-max" class="input-field w-full px-4 py-3 rounded-lg" 
+                               value="100" min="1" max="500">
+                    </div>
+                    <div class="md:col-span-2 flex items-end">
+                        <button onclick="addCategory()" class="btn-primary px-6 py-3 rounded-lg font-medium">
+                            ➕ 큐에 추가
+                        </button>
+                    </div>
+                </div>
+                
+                <p class="text-sm text-gray-500">
+                    💡 팁: 올리브영 → 랭킹 → 원하는 카테고리 선택 → URL 복사
+                </p>
+            </div>
+
+            <!-- 카테고리 큐 목록 -->
+            <div class="card p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold">카테고리 큐</h3>
+                    <div class="flex gap-2">
+                        <button onclick="processQueue()" id="btn-process" class="btn-primary px-4 py-2 rounded-lg text-sm font-medium">
+                            ▶️ 큐 실행
+                        </button>
+                        <button onclick="clearCompleted()" class="px-4 py-2 rounded-lg text-sm bg-slate-700 hover:bg-slate-600">
+                            🗑️ 완료 항목 삭제
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="category-queue" class="space-y-3">
+                    <!-- 동적으로 추가됨 -->
+                    <p class="text-gray-500 text-center py-8">카테고리가 없습니다. 위에서 추가해주세요.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 개별 URL 추가 탭 -->
+        <div id="content-product" class="hidden space-y-6">
+            <div class="card p-6">
+                <h3 class="text-lg font-semibold mb-4">개별 제품 URL 추가</h3>
+                
+                <div class="flex gap-4 mb-4">
+                    <input type="text" id="product-url" class="input-field flex-1 px-4 py-3 rounded-lg" 
+                           placeholder="https://www.oliveyoung.co.kr/store/goods/getGoodsDetail.do?goodsNo=...">
+                    <button onclick="addProductUrl()" class="btn-primary px-6 py-3 rounded-lg font-medium">
+                        ➕ 추가
+                    </button>
+                </div>
+                
+                <p class="text-sm text-gray-500 mb-6">
+                    💡 올리브영 제품 상세 페이지 URL을 입력하세요
+                </p>
+                
+                <!-- 여러 URL 한번에 추가 -->
+                <h4 class="font-medium mb-2">여러 URL 한번에 추가</h4>
+                <textarea id="product-urls-bulk" class="input-field w-full px-4 py-3 rounded-lg h-32" 
+                          placeholder="URL을 한 줄에 하나씩 입력하세요..."></textarea>
+                <button onclick="addBulkUrls()" class="btn-primary px-6 py-3 rounded-lg font-medium mt-4">
+                    ➕ 일괄 추가
+                </button>
+            </div>
+            
+            <!-- 최근 추가된 URL -->
+            <div class="card p-6">
+                <h3 class="text-lg font-semibold mb-4">최근 추가된 URL</h3>
+                <div id="recent-urls" class="space-y-2">
+                    <p class="text-gray-500">로딩 중...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 등록된 제품 목록 탭 -->
+        <div id="content-list" class="hidden space-y-6">
+            <div class="card p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold">등록된 제품 목록</h3>
+                    <div class="flex gap-2 items-center">
+                        <span id="product-count" class="text-sm text-gray-400">0개 제품</span>
+                        <button onclick="loadProducts()" class="px-4 py-2 rounded-lg text-sm bg-slate-700 hover:bg-slate-600">
+                            🔄 새로고침
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="text-left text-gray-400 text-sm border-b border-slate-700">
+                                <th class="pb-3 pl-4">ID</th>
+                                <th class="pb-3">SKU</th>
+                                <th class="pb-3">제품명</th>
+                                <th class="pb-3">가격</th>
+                                <th class="pb-3">수집일</th>
+                                <th class="pb-3">상태</th>
+                                <th class="pb-3">작업</th>
+                            </tr>
+                        </thead>
+                        <tbody id="product-list">
+                            <!-- 동적으로 추가됨 -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- 페이지네이션 -->
+                <div class="flex justify-center gap-2 mt-4">
+                    <button onclick="prevPage()" class="px-4 py-2 rounded bg-slate-700 hover:bg-slate-600">이전</button>
+                    <span id="page-info" class="px-4 py-2 text-gray-400">1 / 1</span>
+                    <button onclick="nextPage()" class="px-4 py-2 rounded bg-slate-700 hover:bg-slate-600">다음</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        let currentPage = 0;
+        const pageSize = 50;
+        let totalProducts = 0;
+        
+        // 탭 전환
+        function showTab(tab) {
+            ['category', 'product', 'list'].forEach(t => {
+                document.getElementById(`content-${t}`).classList.add('hidden');
+                document.getElementById(`tab-${t}`).classList.remove('bg-cyan-500', 'text-white');
+                document.getElementById(`tab-${t}`).classList.add('bg-slate-700', 'text-gray-300');
+            });
+            
+            document.getElementById(`content-${tab}`).classList.remove('hidden');
+            document.getElementById(`tab-${tab}`).classList.remove('bg-slate-700', 'text-gray-300');
+            document.getElementById(`tab-${tab}`).classList.add('bg-cyan-500', 'text-white');
+            
+            if (tab === 'list') {
+                loadProducts();
+            }
+        }
+        
+        // 카테고리 추가
+        async function addCategory() {
+            const url = document.getElementById('category-url').value.trim();
+            const name = document.getElementById('category-name').value.trim();
+            const maxProducts = parseInt(document.getElementById('category-max').value) || 100;
+            
+            if (!url) {
+                alert('카테고리 URL을 입력해주세요');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/url-queue/category', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url, name, maxProducts })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('category-url').value = '';
+                    document.getElementById('category-name').value = '';
+                    loadUrlQueue();
+                } else {
+                    alert(data.error || '추가 실패');
+                }
+            } catch (error) {
+                alert('오류: ' + error.message);
+            }
+        }
+        
+        // 카테고리 삭제
+        async function deleteCategory(id) {
+            if (!confirm('이 카테고리를 삭제하시겠습니까?')) return;
+            
+            try {
+                await fetch(`/api/url-queue/category/${id}`, { method: 'DELETE' });
+                loadUrlQueue();
+            } catch (error) {
+                alert('삭제 실패: ' + error.message);
+            }
+        }
+        
+        // 큐 실행
+        async function processQueue() {
+            try {
+                const response = await fetch('/api/url-queue/process', { method: 'POST' });
+                const data = await response.json();
+                
+                if (!data.success) {
+                    alert(data.error || '실행 실패');
+                }
+            } catch (error) {
+                alert('오류: ' + error.message);
+            }
+        }
+        
+        // 완료 항목 삭제
+        async function clearCompleted() {
+            // 완료된 항목만 삭제 API 호출
+            const queue = await (await fetch('/api/url-queue')).json();
+            
+            for (const cat of queue.categories) {
+                if (cat.status === 'completed') {
+                    await fetch(`/api/url-queue/category/${cat.id}`, { method: 'DELETE' });
+                }
+            }
+            
+            loadUrlQueue();
+        }
+        
+        // 개별 URL 추가
+        async function addProductUrl() {
+            const url = document.getElementById('product-url').value.trim();
+            
+            if (!url) {
+                alert('제품 URL을 입력해주세요');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/url-queue/product', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('product-url').value = '';
+                    alert('URL이 추가되었습니다');
+                    loadRecentUrls();
+                } else {
+                    alert(data.error || '추가 실패');
+                }
+            } catch (error) {
+                alert('오류: ' + error.message);
+            }
+        }
+        
+        // 일괄 URL 추가
+        async function addBulkUrls() {
+            const text = document.getElementById('product-urls-bulk').value.trim();
+            const urls = text.split('\n').filter(u => u.trim());
+            
+            if (urls.length === 0) {
+                alert('URL을 입력해주세요');
+                return;
+            }
+            
+            let success = 0;
+            let failed = 0;
+            
+            for (const url of urls) {
+                try {
+                    const response = await fetch('/api/url-queue/product', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ url: url.trim() })
+                    });
+                    
+                    const data = await response.json();
+                    if (data.success) success++;
+                    else failed++;
+                } catch {
+                    failed++;
+                }
+            }
+            
+            alert(`추가 완료: 성공 ${success}개, 실패 ${failed}개`);
+            document.getElementById('product-urls-bulk').value = '';
+            loadRecentUrls();
+        }
+        
+        // URL 큐 로드
+        async function loadUrlQueue() {
+            try {
+                const response = await fetch('/api/url-queue');
+                const queue = await response.json();
+                
+                const container = document.getElementById('category-queue');
+                
+                if (!queue.categories || queue.categories.length === 0) {
+                    container.innerHTML = '<p class="text-gray-500 text-center py-8">카테고리가 없습니다. 위에서 추가해주세요.</p>';
+                    return;
+                }
+                
+                container.innerHTML = queue.categories.map((cat, index) => `
+                    <div class="flex items-center gap-4 p-4 bg-slate-800 rounded-lg" draggable="true" data-id="${cat.id}">
+                        <span class="text-gray-500 cursor-move">☰</span>
+                        <span class="w-8 h-8 flex items-center justify-center bg-slate-700 rounded-full text-sm">${index + 1}</span>
+                        <div class="flex-1">
+                            <p class="font-medium">${cat.name || '이름 없음'}</p>
+                            <p class="text-sm text-gray-400 truncate">${cat.url.substring(0, 60)}...</p>
+                        </div>
+                        <span class="text-sm">최대 ${cat.maxProducts}개</span>
+                        <span class="status-${cat.status} text-sm capitalize">${getStatusText(cat.status)}</span>
+                        <button onclick="deleteCategory('${cat.id}')" class="text-red-400 hover:text-red-300 px-2">🗑️</button>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                console.error('URL 큐 로드 실패:', error);
+            }
+        }
+        
+        function getStatusText(status) {
+            const texts = {
+                'pending': '⏳ 대기중',
+                'processing': '🔄 처리중',
+                'completed': '✅ 완료',
+                'error': '❌ 오류'
+            };
+            return texts[status] || status;
+        }
+        
+        // 최근 URL 로드
+        async function loadRecentUrls() {
+            try {
+                const response = await fetch('/api/oliveyoung/products?limit=10');
+                const data = await response.json();
+                
+                const container = document.getElementById('recent-urls');
+                
+                if (!data.list || data.list.length === 0) {
+                    container.innerHTML = '<p class="text-gray-500">등록된 URL이 없습니다</p>';
+                    return;
+                }
+                
+                container.innerHTML = data.list.map(p => `
+                    <div class="flex items-center gap-4 p-3 bg-slate-800 rounded-lg">
+                        <div class="flex-1">
+                            <p class="text-sm font-medium">${p.title_kr || p.sku || '제목 없음'}</p>
+                            <p class="text-xs text-gray-500">${p.product_url?.substring(0, 50)}...</p>
+                        </div>
+                        <span class="text-xs text-gray-400">${new Date(p.collected_at).toLocaleDateString()}</span>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                console.error('최근 URL 로드 실패:', error);
+            }
+        }
+        
+        // 제품 목록 로드
+        async function loadProducts() {
+            try {
+                const response = await fetch(`/api/oliveyoung/products?limit=${pageSize}&offset=${currentPage * pageSize}`);
+                const data = await response.json();
+                
+                totalProducts = data.total;
+                document.getElementById('product-count').textContent = `${totalProducts}개 제품`;
+                
+                const totalPages = Math.ceil(totalProducts / pageSize);
+                document.getElementById('page-info').textContent = `${currentPage + 1} / ${totalPages || 1}`;
+                
+                const tbody = document.getElementById('product-list');
+                
+                if (!data.list || data.list.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-8 text-gray-500">등록된 제품이 없습니다</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = data.list.map(p => `
+                    <tr class="border-b border-slate-700 hover:bg-slate-800">
+                        <td class="py-3 pl-4">${p.Id}</td>
+                        <td class="py-3 text-sm text-gray-400">${p.sku || '-'}</td>
+                        <td class="py-3">${(p.title_kr || '').substring(0, 30)}${(p.title_kr || '').length > 30 ? '...' : ''}</td>
+                        <td class="py-3">₩${(p.price_current || 0).toLocaleString()}</td>
+                        <td class="py-3 text-sm text-gray-400">${p.collected_at ? new Date(p.collected_at).toLocaleDateString() : '-'}</td>
+                        <td class="py-3">
+                            ${p.product_images ? '<span class="text-green-400">✅ 스크랩됨</span>' : '<span class="text-yellow-400">⏳ 대기</span>'}
+                        </td>
+                        <td class="py-3">
+                            <button onclick="deleteProduct(${p.Id})" class="text-red-400 hover:text-red-300 text-sm">삭제</button>
+                        </td>
+                    </tr>
+                `).join('');
+                
+            } catch (error) {
+                console.error('제품 목록 로드 실패:', error);
+            }
+        }
+        
+        // 제품 삭제
+        async function deleteProduct(id) {
+            if (!confirm('이 제품을 삭제하시겠습니까?')) return;
+            
+            try {
+                await fetch(`/api/oliveyoung/products/${id}`, { method: 'DELETE' });
+                loadProducts();
+            } catch (error) {
+                alert('삭제 실패: ' + error.message);
+            }
+        }
+        
+        // 페이지네이션
+        function prevPage() {
+            if (currentPage > 0) {
+                currentPage--;
+                loadProducts();
+            }
+        }
+        
+        function nextPage() {
+            const totalPages = Math.ceil(totalProducts / pageSize);
+            if (currentPage < totalPages - 1) {
+                currentPage++;
+                loadProducts();
+            }
+        }
+        
+        // 상태 업데이트
+        socket.on('state', (state) => {
+            const dot = document.getElementById('status-dot');
+            const text = document.getElementById('status-text');
+            
+            if (state.status === 'running') {
+                dot.className = 'w-2 h-2 rounded-full bg-cyan-400 animate-pulse';
+                text.textContent = state.currentPhase || '실행중';
+            } else if (state.status === 'error') {
+                dot.className = 'w-2 h-2 rounded-full bg-red-400';
+                text.textContent = '오류';
+            } else {
+                dot.className = 'w-2 h-2 rounded-full bg-green-400';
+                text.textContent = '대기중';
+            }
+        });
+        
+        socket.on('urlQueue', (queue) => {
+            loadUrlQueue();
+        });
+        
+        // 초기 로드
+        loadUrlQueue();
+        loadRecentUrls();
+    </script>
+</body>
+</html>

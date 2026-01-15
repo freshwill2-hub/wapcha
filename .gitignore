@@ -1,0 +1,8 @@
+node_modules/
+rembg-env/
+complete-backup-20260111_070224/
+models/
+.env
+*.log
+tmp/
+.DS_Store
