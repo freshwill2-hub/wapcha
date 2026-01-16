@@ -350,7 +350,7 @@ async function saveAIImages(shopifyProductId, imageDataArray) {
 
 // 메인 함수
 async function main() {
-    const limit = 3; // ✅ 3개 제품 처리
+    const limit = parseInt(process.env.PRODUCT_LIMIT) || 1000;
     
     try {
         // 1. 올리브영 제품 가져오기
