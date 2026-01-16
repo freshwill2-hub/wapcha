@@ -1,0 +1,9 @@
+{
+	"id": "RT60c10kIczR30H",
+	"json": "{\"id\":\"RT60c10kIczR30H\",\"url\":\"https://search.naver.com/search.naver?ssc=tab.image.all&where=image&sm=tab_jum&query=Unknown%20Product\",\"loadedUrl\":\"https://search.naver.com/search.naver?ssc=tab.image.all&where=image&sm=tab_jum&query=Unknown%20Product\",\"uniqueKey\":\"https://search.naver.com/search.naver?query=Unknown+Product&sm=tab_jum&ssc=tab.image.all&where=image\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"state\":4}},\"handledAt\":\"2026-01-16T13:35:27.177Z\"}",
+	"method": "GET",
+	"orderNo": null,
+	"retryCount": 0,
+	"uniqueKey": "https://search.naver.com/search.naver?query=Unknown+Product&sm=tab_jum&ssc=tab.image.all&where=image",
+	"url": "https://search.naver.com/search.naver?ssc=tab.image.all&where=image&sm=tab_jum&query=Unknown%20Product"
+}
