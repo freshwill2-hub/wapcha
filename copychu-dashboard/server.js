@@ -172,9 +172,9 @@ function getImageUrl(imageData) {
 // ==================== 파이프라인 실행 ====================
 const PHASES = [
     { id: 'phase1', name: 'Phase 1: 스크래핑', script: 'phase1-main-gallery.js' },
-    { id: 'phase2', name: 'Phase 2: 배경 제거', script: 'phase2-ai-generate-improved.js' },
-    { id: 'phase2_5', name: 'Phase 2.5: AI 크롭', script: 'phase2_5-final-multi-3products.js' },
-    { id: 'phase2_6', name: 'Phase 2.6: 이미지 선별', script: 'phase2.6-with-naver-supplement-v4.js' }
+    { id: 'phase2', name: 'Phase 2: 배경 제거', script: 'phase2-ai-generate.js' },
+    { id: 'phase3', name: 'Phase 3: AI 크롭', script: 'phase3-multi-3products.js' },
+    { id: 'phase4', name: 'Phase 4: 이미지 선별', script: 'phase4-final-data.js' }
 ];
 
 async function runPhase(phase, productLimit) {

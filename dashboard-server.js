@@ -22,9 +22,9 @@ const SHOPIFY_TABLE_ID = process.env.SHOPIFY_TABLE_ID;
 // Phase 파일 경로
 const PHASE_FILES = {
     phase1: './phase1-main-gallery.js',
-    phase2: './phase2-ai-generate-improved.js',
-    phase2_5: './phase2.5-final-multi-3products.js',
-    phase2_6: './phase2.6-select-best-images.js'
+    phase2: './phase2-ai-generate.js',
+    phase3: './phase3-multi-3products.js',
+    phase4: './phase4-final-data.js'
 };
 
 // ==================== Express 앱 ====================

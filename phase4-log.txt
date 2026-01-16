@@ -1,0 +1,895 @@
+[dotenv@17.2.3] injecting env (13) from .env -- tip: ⚙️  enable debug logging with { debug: true }
+🚀 Phase 2.6: 최고 이미지 선별 + 네이버 원본 이미지 보충 (v6)
+======================================================================
+⚙️  설정:
+   - Shopify Table: mu6cjbedwo3m2tt
+   - 최종 크기: 1200x1200px
+   - 제품 비율: 75%
+   - Gallery 최소 점수: 70점
+
+✨ v6 개선 사항:
+   ✅ 네이버 이미지: 제품 라인 이름까지 매칭 (브랜드+제품명)
+   ✅ 세트 제품: 세트 이미지 우선, 없으면 개별 이미지 허용
+   ✅ v5 기능 유지: 여러 제품 감지, 포장박스 감지
+
+
+📥 NocoDB에서 3개 제품 가져오는 중...
+
+✅ 3개 제품 발견
+
+
+======================================================================
+📦 제품 1/3 - ID: 1
+
+🗑️  Step 0: 초기화 (오래된 이미지 제거)
+   ✅ 초기화 완료!
+
+🔍 Step 1: Oliveyoung 테이블에서 제품 정보 조회 중...
+✅ 제품명 (EN): Ongreedients Skin Barrier Calming Lotion EX 220ml
+✅ 제품명 (KR): 온그리디언츠 스킨 베리어 카밍 로션 이엑스 220ml
+📋 제품 정보:
+   - 브랜드: ongreedients
+   - 제품 라인: skin barrier calming lotion ex
+   - 용량: 220ml
+   - 세트 여부: ❌ 개별 제품
+📸 검증된 이미지 (올리브영): 6개
+
+📊 Step 2: validated_images 평가 시작
+──────────────────────────────────────────────────────────────────────
+
+   이미지 1 평가:
+   ──────────────────────────────────────────────────────────────────
+      📏 해상도: 20/30점 (860x999)
+      🔍 여러 제품 감지 중... (개별 제품)
+      ❌ 여러 제품 감지됨! (2개) - 이미지에 Ongreedients Skin Barrier Calming Lotion EX 제품 병 1개와 튜브 1개, 총 2개가 보입니다.
+      ⚠️  개별 제품인데 2개 감지 → 즉시 탈락!
+      🎯 총점: 0/125점 (여러 제품 탈락)
+
+
+      ⏳ 10초 대기... (Gemini API)
+
+   이미지 2 평가:
+   ──────────────────────────────────────────────────────────────────
+      📏 해상도: 15/30점 (476x952)
+      🔍 여러 제품 감지 중... (개별 제품)
+      ✅ 단일 제품 확인 (1개) - 이미지에는 "Ongreedients Skin Barrier Calming Lotion EX 220ml" 제품의 실물 용기 1개만 보입니다.
+      📦 포장박스 감지 중...
+      ✅ 포장박스 없음 - The image only shows the product bottle itself, without any external paper box or packaging.
+      🔍 제품 완성도 검증 시작...
+      ✅ 완성도: 25/25점 - The entire product is visible in the image, with no parts cut off.
+      🔍 타이틀 매칭 확인 시작...
+      📄 Gemini 응답:
+         EXACT_MATCH: YES
+         BRAND: ongreedients
+         PRODUCT_LINE: skin barrier calming lotion ex
+         VOLUME: 220ml
+         COUNT: 1
+         REASON: 이미지에 제품명, 브랜드, 제품 라인, 용량이 모두 일치하며 제품이 1개 보입니다.
+      ✅ 정확한 제품 매칭! (+20점)
+      📊 타이틀 매칭: 30/30점
+      🔍 세트 구성 분석 시작...
+      ✅ 단일 제품 → 자동 20점
+      🤖 이미지 품질 평가 중...
+      📊 이미지 품질: 17/20점
+      🎯 총점: 107/125점
+
+      ⏳ 10초 대기... (Gemini API)
+
+   이미지 3 평가:
+   ──────────────────────────────────────────────────────────────────
+      📏 해상도: 20/30점 (840x980)
+      🔍 여러 제품 감지 중... (개별 제품)
+      ❌ 여러 제품 감지됨! (2개) - 이미지에는 "Ongreedients Skin Barrier Calming Lotion EX 220ml" 로션 병 1개와 동일한 라인의 튜브형 로션 1개가 보입니다.
+      ⚠️  개별 제품인데 2개 감지 → 즉시 탈락!
+      🎯 총점: 0/125점 (여러 제품 탈락)
+
+
+      ⏳ 10초 대기... (Gemini API)
+
+   이미지 4 평가:
+   ──────────────────────────────────────────────────────────────────
+      📏 해상도: 15/30점 (460x932)
+      🔍 여러 제품 감지 중... (개별 제품)
+      ✅ 단일 제품 확인 (1개) - 이미지에는 "Ongreedients Skin Barrier Calming Lotion EX 220ml" 제품 1개가 보입니다.
+      📦 포장박스 감지 중...
+      ✅ 포장박스 없음 - 이미지에는 제품 용기만 있고 포장 박스는 보이지 않습니다.
+      🔍 제품 완성도 검증 시작...
+      ❌ 완성도: 0/25점 - 제품의 하단 부분이 잘려있어 완전하지 않습니다.
+      ⚠️  제품 불완전 → 나머지 평가 생략
+      🎯 총점: 0/125점 (자동 탈락)
+
+
+      ⏳ 10초 대기... (Gemini API)
+
+   이미지 5 평가:
+   ──────────────────────────────────────────────────────────────────
+      📏 해상도: 15/30점 (422x789)
+      🔍 여러 제품 감지 중... (개별 제품)
+      ✅ 단일 제품 확인 (1개) - 이미지에 Ongreedients Skin Barrier Calming Lotion EX 220ml 제품 1개가 보입니다.
+      📦 포장박스 감지 중...
+      ✅ 포장박스 없음 - 이미지에는 제품 용기만 보이고, 포장 박스는 보이지 않습니다.
+      🔍 제품 완성도 검증 시작...
+      ❌ 완성도: 0/25점 - The bottom of the product is cut off.
+      ⚠️  제품 불완전 → 나머지 평가 생략
+      🎯 총점: 0/125점 (자동 탈락)
+
+
+      ⏳ 10초 대기... (Gemini API)
+
+   이미지 6 평가:
+   ──────────────────────────────────────────────────────────────────
+      📏 해상도: 25/30점 (1024x1024)
+      🔍 여러 제품 감지 중... (개별 제품)
+      ✅ 단일 제품 확인 (1개) - 이미지에는 옹그리디언츠 스킨 배리어 카밍 로션 EX 220ml 제품 튜브 1개가 보입니다.
+      📦 포장박스 감지 중...
+      ✅ 포장박스 없음 - 이미지에는 제품 튜브만 보이고, 외부 종이 포장 박스는 없습니다.
+      🔍 제품 완성도 검증 시작...
+      ✅ 완성도: 25/25점 - The product is fully visible from top to bottom and is not cut off in any part of the image.
+      🔍 타이틀 매칭 확인 시작...
+      📄 Gemini 응답:
+         EXACT_MATCH: NO
+         BRAND: ongreedients
+         PRODUCT_LINE: Skin Barrier Calming Lotion EX
+         VOLUME: UNKNOWN
+         COUNT: 1
+         REASON: The image shows "Ongreedients Skin Barrier Calming Lotion EX" but the volume is shown as "80ml", not "220ml".
+      ❌ 타이틀 매칭: 0/30점 (다른 제품 라인!)
+         → 타겟: skin barrier calming lotion ex
+         → 감지: skin barrier calming lotion ex
+         → The image shows "Ongreedients Skin Barrier Calming Lotion EX" but the volume is shown as "80ml", not "220ml".
+      ⚠️  다른 제품 감지 → 나머지 평가 생략
+      🎯 총점: 0/125점 (자동 탈락)
+
+
+📊 평가 결과:
+   - 올바른 제품: 1개
+   - 포장박스 탈락: 0개
+   - 여러 제품 탈락: 2개
+
+✂️  Step 3: Main 1개 + Gallery 0-2개 선별
+   - Main: 1개
+   - Gallery 후보: 0개
+
+📐 Step 4: 정규화 + 업로드
+
+   1/1 처리 중...
+      📐 크기 정규화 중...
+      ✅ 정규화 완료: 1200x1200px
+      📤 NocoDB 업로드 중...
+      ✅ 완료!
+
+💾 Step 5: main_image, gallery_images 저장
+✅ 저장 완료!
+   - main_image: 1개
+   - gallery_images: 0개
+
+🔍 Step 6: DB에서 실제 저장된 개수 확인
+   ✅ DB 확인 완료:
+      - Main: 1개
+      - Gallery: 0개
+   - 총: 1개
+
+⚠️  부족함! (1/3개) → 네이버 보충 필요
+   필요한 개수: 2개
+
+🌐 Step 7: 네이버 원본 이미지 검색
+======================================================================
+
+🔍 네이버 이미지 검색 시작: "온그리디언츠 스킨 베리어 카밍 로션 이엑스 220ml"
+   목표: 원본 이미지 15개 수집
+   💡 전략: 썸네일 URL 파싱 → 원본 URL 추출 (클릭 불필요!)
+   🔗 검색 URL: https://search.naver.com/search.naver?ssc=tab.image.all&where=image&sm=tab_jum&query=%EC%98%A8%EA%B7...
+[32mINFO[39m [33m PlaywrightCrawler:[39m Starting the crawler.
+   📄 페이지 로딩 중...
+   ✅ DOM 로딩 완료
+   ⏳ 이미지 렌더링 대기 중 (5초)...
+   📸 스크린샷: /tmp/naver-final-1768524763216.png
+   🔍 썸네일 이미지 URL 추출 중...
+
+   ✅ 추출 완료: 12개
+
+   📋 추출된 원본 URL:
+      1. http://shop1.phinf.naver.net/20260102_221/17673464004957D9P3_JPEG/54545007351825212_674826534.jpg...
+      2. http://shop1.phinf.naver.net/20251231_200/1767142758123mgk0S_JPEG/101275605228139582_297804370.jpg...
+      3. http://blogfiles.naver.net/MjAyNTEyMTNfMTM5/MDAxNzY1NjE1NDk5NDk3.XaeqjBfCJOi_3FEKaqOrwctBkpXQZ9d0PSC...
+      4. http://image.nmv.naver.net/blog_2025_12_03_1708/68rnG4AsOH_01.jpg...
+      5. http://blogfiles.naver.net/MjAyNjAxMDdfMTc3/MDAxNzY3NzE0NTIyNjg2.jHpn21ZJ88eBc187sW5xpKRJNG3q9GnNnr1...
+      6. http://blogfiles.naver.net/MjAyNTEyMTFfMTUy/MDAxNzY1NDYxNDUzNzEw.T9QCtt30XW8rdMvs1I1OT33oZC5VL6zK_Y8...
+      7. http://blogfiles.naver.net/MjAyNTEyMDNfNTcg/MDAxNzY0NzM3NzkyMTEx.WJixdTFbQO4QWbMdsRz3_h1fvHfELdA5o3S...
+      8. http://blogfiles.naver.net/MjAyNTA2MjZfOTkg/MDAxNzUwOTMzNTg4Mjgz.XQDy2cdHRG6jRLBLpzkOYQIylFWgxVwhiXD...
+      9. http://blogfiles.naver.net/MjAyNDA3MDFfMTE1/MDAxNzE5ODMyNDk5MDIz.5HcSDIU4zWnTZQqZiIijKkq67Aq6h8eJRVm...
+      10. http://blogfiles.naver.net/MjAyNTEyMDJfMjAw/MDAxNzY0NjA2MTgxNzY0.8h8BSOdSUbfHwX4noATvfvcFBwCK7vK0PEV...
+      11. http://shop1.phinf.naver.net/20250710_261/1752104750961YrgpM_PNG/5066281837618593_561143621.png...
+      12. http://blogfiles.naver.net/MjAyNjAxMDFfMTYg/MDAxNzY3MjQxMDExNDk3.x3Jo9QKMhhdcb2A1kHNn39Di5JqXWCt1Had...
+[32mINFO[39m [33m PlaywrightCrawler:[39m Crawler reached the maxRequestsPerCrawl limit of 1 requests and will shut down soon. Requests that are in progress will be allowed to finish.
+[32mINFO[39m [33m PlaywrightCrawler:[39m Earlier, the crawler reached the maxRequestsPerCrawl limit of 1 requests and all requests that were in progress at that time have now finished. In total, the crawler processed 1 requests and will shut down.
+[32mINFO[39m [33m PlaywrightCrawler:[39m Final request statistics:[90m {"requestsFinished":1,"requestsFailed":0,"retryHistogram":[1],"requestAvgFailedDurationMillis":null,"requestAvgFinishedDurationMillis":11071,"requestsFinishedPerMinute":5,"requestsFailedPerMinute":0,"requestTotalDurationMillis":11071,"requestsTotal":1,"crawlerRuntimeMillis":11429}[39m
+[32mINFO[39m [33m PlaywrightCrawler:[39m Finished! Total 1 requests: 1 succeeded, 0 failed.[90m {"terminal":true}[39m
+   🧹 Playwright 메모리 해제 중...
+   ✅ 메모리 해제 완료
+
+   ✅ 최종 수집: 12개 원본 이미지
+   📋 사전 필터링: 12개
+      (올리브영, 언박싱, 패키지, 박스 키워드 제외)
+
+🖼️  Step 8: 네이버 이미지 처리
+──────────────────────────────────────────────────────────────────────
+
+   네이버 1/12:
+   URL: http://shop1.phinf.naver.net/20260102_221/17673464004957D9P3_JPEG/54545007351825...
+      ⬇️  다운로드 시작...
+      📥 다운로드 완료
+      🔍 이미지 크기 확인 중... (/tmp/naver-input-1768524763451-0.jpg)
+      ✅ 크기: 1200x1200
+      📏 원본: 1200x1200 ✓
+      🔍 크롭 좌표 요청 중...
+      📥 이미지 다운로드 완료 (Base64 생성)
+      🤖 Gemini API 호출 중... (타임아웃 30초)
+      ✅ Gemini 응답 받음
+      📍 좌표: (370, 0) 254x739
+      📐 확장: (345, 0) 305x887
+      🔪 크롭 실행 중...
+      ✅ 크롭 완료
+      🎨 배경 제거 + 흰색 배경 중...
+      📍 Step 1: rembg 실행...
+      📍 Step 2: 흰색 배경 추가...
+      ✅ 완료!
+      📤 크롭 & rembg 완료!
+
+      ⏳ 10초 대기... (Gemini API)
+
+   네이버 2/12:
+   URL: http://shop1.phinf.naver.net/20251231_200/1767142758123mgk0S_JPEG/10127560522813...
+      ⬇️  다운로드 시작...
+      📥 다운로드 완료
+      🔍 이미지 크기 확인 중... (/tmp/naver-input-1768524784571-1.jpg)
+      ✅ 크기: 1000x1000
+      📏 원본: 1000x1000 ✓
+      🔍 크롭 좌표 요청 중...
+      📥 이미지 다운로드 완료 (Base64 생성)
+      🤖 Gemini API 호출 중... (타임아웃 30초)
+      ✅ Gemini 응답 받음
+      📍 좌표: (500, 25) 241x511
+      📐 확장: (476, 0) 289x613
+      🔪 크롭 실행 중...
+      ✅ 크롭 완료
+      🎨 배경 제거 + 흰색 배경 중...
+      📍 Step 1: rembg 실행...
+      📍 Step 2: 흰색 배경 추가...
+      ✅ 완료!
+      📤 크롭 & rembg 완료!
+
+      ⏳ 10초 대기... (Gemini API)
+
+   네이버 3/12:
+   URL: http://blogfiles.naver.net/MjAyNTEyMTNfMTM5/MDAxNzY1NjE1NDk5NDk3.XaeqjBfCJOi_3FE...
+      ⬇️  다운로드 시작...
+      📥 다운로드 완료
+      🔍 이미지 크기 확인 중... (/tmp/naver-input-1768524802341-2.jpg)
+      ✅ 크기: 1019x1020
+      📏 원본: 1019x1020 ✓
+      🔍 크롭 좌표 요청 중...
+      📥 이미지 다운로드 완료 (Base64 생성)
+      🤖 Gemini API 호출 중... (타임아웃 30초)
+      ✅ Gemini 응답 받음
+      📍 좌표: (242, 42) 535x935
+      📐 확장: (189, 0) 642x1020
+      🔪 크롭 실행 중...
+      ✅ 크롭 완료
+      🎨 배경 제거 + 흰색 배경 중...
+      📍 Step 1: rembg 실행...
+      📍 Step 2: 흰색 배경 추가...
+      ✅ 완료!
+      📤 크롭 & rembg 완료!
+
+      ⏳ 10초 대기... (Gemini API)
+
+   네이버 4/12:
+   URL: http://image.nmv.naver.net/blog_2025_12_03_1708/68rnG4AsOH_01.jpg...
+      ⬇️  다운로드 시작...
+      📥 다운로드 완료
+      🔍 이미지 크기 확인 중... (/tmp/naver-input-1768524820013-3.jpg)
+      ✅ 크기: 560x560
+      📏 원본: 560x560 ✓
+      🔍 크롭 좌표 요청 중...
+      📥 이미지 다운로드 완료 (Base64 생성)
+      🤖 Gemini API 호출 중... (타임아웃 30초)
+      ✅ Gemini 응답 받음
+      📍 좌표: (30, 7) 268x251
+      📐 확장: (3, 0) 322x301
+      🔪 크롭 실행 중...
+      ✅ 크롭 완료
+      🎨 배경 제거 + 흰색 배경 중...
+      📍 Step 1: rembg 실행...
+      📍 Step 2: 흰색 배경 추가...
+      ✅ 완료!
+      📤 크롭 & rembg 완료!
+
+      ⏳ 10초 대기... (Gemini API)
+
+   네이버 5/12:
+   URL: http://blogfiles.naver.net/MjAyNjAxMDdfMTc3/MDAxNzY3NzE0NTIyNjg2.jHpn21ZJ88eBc18...
+      ⬇️  다운로드 시작...
+      📥 다운로드 완료
+      🔍 이미지 크기 확인 중... (/tmp/naver-input-1768524848323-4.jpg)
+      ✅ 크기: 316x460
+      ❌ 해상도 부족: 316x460
+
+   네이버 6/12:
+   URL: http://blogfiles.naver.net/MjAyNTEyMTFfMTUy/MDAxNzY1NDYxNDUzNzEw.T9QCtt30XW8rdMv...
+      ⬇️  다운로드 시작...
+      📥 다운로드 완료
+      🔍 이미지 크기 확인 중... (/tmp/naver-input-1768524848864-5.jpg)
+      ✅ 크기: 948x1352
+      📏 원본: 948x1352 ✓
+      🔍 크롭 좌표 요청 중...
+      📥 이미지 다운로드 완료 (Base64 생성)
+      🤖 Gemini API 호출 중... (타임아웃 30초)
+      ✅ Gemini 응답 받음
+      ⚠️  제품 못 찾음: 이미지에서 제품을 찾을 수 없습니다.
+      ⚠️  제품 위치 찾기 실패 - 원본 rembg만 적용
+      🎨 배경 제거 + 흰색 배경 중...
+      📍 Step 1: rembg 실행...
+      📍 Step 2: 흰색 배경 추가...
+      ✅ 완료!
+      📤 원본 rembg 처리 & 저장 완료!
+
+   네이버 7/12:
+   URL: http://blogfiles.naver.net/MjAyNTEyMDNfNTcg/MDAxNzY0NzM3NzkyMTEx.WJixdTFbQO4QWbM...
+      ⬇️  다운로드 시작...
+      📥 다운로드 완료
+      🔍 이미지 크기 확인 중... (/tmp/naver-input-1768524855597-6.jpg)
+      ✅ 크기: 548x547
+      📏 원본: 548x547 ✓
+      🔍 크롭 좌표 요청 중...
+      📥 이미지 다운로드 완료 (Base64 생성)
+      🤖 Gemini API 호출 중... (타임아웃 30초)
+      ✅ Gemini 응답 받음
+      📍 좌표: (107, 21) 329x504
+      📐 확장: (74, 0) 395x547
+      🔪 크롭 실행 중...
+      ✅ 크롭 완료
+      🎨 배경 제거 + 흰색 배경 중...
+      📍 Step 1: rembg 실행...
+      📍 Step 2: 흰색 배경 추가...
+      ✅ 완료!
+      📤 크롭 & rembg 완료!
+
+      ⏳ 10초 대기... (Gemini API)
+
+   네이버 8/12:
+   URL: http://blogfiles.naver.net/MjAyNTA2MjZfOTkg/MDAxNzUwOTMzNTg4Mjgz.XQDy2cdHRG6jRLB...
+      ⬇️  다운로드 시작...
+      📥 다운로드 완료
+      🔍 이미지 크기 확인 중... (/tmp/naver-input-1768524871921-7.jpg)
+      ✅ 크기: 1000x1280
+      📏 원본: 1000x1280 ✓
+      🔍 크롭 좌표 요청 중...
+      📥 이미지 다운로드 완료 (Base64 생성)
+      🤖 Gemini API 호출 중... (타임아웃 30초)
+      ✅ Gemini 응답 받음
+      📍 좌표: (119, 362) 206x287
+      📐 확장: (98, 333) 247x344
+      🔪 크롭 실행 중...
+      ✅ 크롭 완료
+      🎨 배경 제거 + 흰색 배경 중...
+      📍 Step 1: rembg 실행...
+      📍 Step 2: 흰색 배경 추가...
+      ✅ 완료!
+      📤 크롭 & rembg 완료!
+
+      ⏳ 10초 대기... (Gemini API)
+
+   네이버 9/12:
+   URL: http://blogfiles.naver.net/MjAyNDA3MDFfMTE1/MDAxNzE5ODMyNDk5MDIz.5HcSDIU4zWnTZQq...
+      ⬇️  다운로드 시작...
+      📥 다운로드 완료
+      🔍 이미지 크기 확인 중... (/tmp/naver-input-1768524889425-8.jpg)
+      ✅ 크기: 1170x324
+      ❌ 해상도 부족: 1170x324
+
+   네이버 10/12:
+   URL: http://blogfiles.naver.net/MjAyNTEyMDJfMjAw/MDAxNzY0NjA2MTgxNzY0.8h8BSOdSUbfHwX4...
+      ⬇️  다운로드 시작...
+      📥 다운로드 완료
+      🔍 이미지 크기 확인 중... (/tmp/naver-input-1768524889641-9.jpg)
+      ✅ 크기: 1344x768
+      📏 원본: 1344x768 ✓
+      🔍 크롭 좌표 요청 중...
+      📥 이미지 다운로드 완료 (Base64 생성)
+      🤖 Gemini API 호출 중... (타임아웃 30초)
+      ✅ Gemini 응답 받음
+      📍 좌표: (369, 168) 175x435
+      📐 확장: (352, 125) 210x522
+      🔪 크롭 실행 중...
+      ✅ 크롭 완료
+      🎨 배경 제거 + 흰색 배경 중...
+      📍 Step 1: rembg 실행...
+      📍 Step 2: 흰색 배경 추가...
+      ✅ 완료!
+      📤 크롭 & rembg 완료!
+
+      ⏳ 10초 대기... (Gemini API)
+
+   네이버 11/12:
+   URL: http://shop1.phinf.naver.net/20250710_261/1752104750961YrgpM_PNG/506628183761859...
+      ⬇️  다운로드 시작...
+      📥 다운로드 완료
+      🔍 이미지 크기 확인 중... (/tmp/naver-input-1768524907014-10.jpg)
+      ✅ 크기: 239x479
+      ❌ 해상도 부족: 239x479
+
+   네이버 12/12:
+   URL: http://blogfiles.naver.net/MjAyNjAxMDFfMTYg/MDAxNzY3MjQxMDExNDk3.x3Jo9QKMhhdcb2A...
+      ⬇️  다운로드 시작...
+      📥 다운로드 완료
+      🔍 이미지 크기 확인 중... (/tmp/naver-input-1768524908647-11.jpg)
+      ✅ 크기: 6145x6145
+      📏 원본: 6145x6145 ✓
+      🔍 크롭 좌표 요청 중...
+      📥 이미지 다운로드 완료 (Base64 생성)
+      🤖 Gemini API 호출 중... (타임아웃 30초)
+      ✅ Gemini 응답 받음
+      📍 좌표: (2214, 843) 1175x2908
+      📐 확장: (2097, 552) 1410x3490
+      🔪 크롭 실행 중...
+      ✅ 크롭 완료
+      🎨 배경 제거 + 흰색 배경 중...
+      📍 Step 1: rembg 실행...
+      📍 Step 2: 흰색 배경 추가...
+      ✅ 완료!
+      📤 크롭 & rembg 완료!
+
+✅ 네이버 처리 완료: 9개
+
+📊 Step 9: 네이버 이미지 평가
+──────────────────────────────────────────────────────────────────────
+
+   이미지 1 평가:
+   ──────────────────────────────────────────────────────────────────
+      📏 해상도: 10/30점 (305x887)
+      🔍 여러 제품 감지 중... (개별 제품)
+      ❌ 여러 제품 감지됨! (2개) - 두 개의 "Ongreedients Skin Barrier Calming Lotion EX 220ml" 제품의 일부가 보인다.
+      ⚠️  개별 제품인데 2개 감지 → 즉시 탈락!
+      🎯 총점: 0/125점 (여러 제품 탈락)
+
+
+      ⏳ 10초 대기... (Gemini API)
+
+   이미지 2 평가:
+   ──────────────────────────────────────────────────────────────────
+      📏 해상도: 10/30점 (289x613)
+      🔍 여러 제품 감지 중... (개별 제품)
+      ✅ 단일 제품 확인 (1개) - 이미지에 보이는 실물 제품은 로션 1개입니다.
+      📦 포장박스 감지 중...
+      ✅ 포장박스 없음 - 이미지에는 제품 용기만 보이고 포장 박스는 보이지 않습니다.
+      🔍 제품 완성도 검증 시작...
+      ❌ 완성도: 0/25점 - The top and likely the bottom of the product are cut off in the image.
+      ⚠️  제품 불완전 → 나머지 평가 생략
+      🎯 총점: 0/125점 (자동 탈락)
+
+
+      ⏳ 10초 대기... (Gemini API)
+
+   이미지 3 평가:
+   ──────────────────────────────────────────────────────────────────
+      📏 해상도: 20/30점 (642x1020)
+      🔍 여러 제품 감지 중... (개별 제품)
+      ✅ 단일 제품 확인 (1개) - 이미지에는 "Ongreedients Skin Barrier Calming Lotion EX 220ml" 제품 1개가 보입니다.
+      📦 포장박스 감지 중...
+      ✅ 포장박스 없음 - 이미지에는 제품 자체만 있고 포장박스가 보이지 않습니다.
+      🔍 제품 완성도 검증 시작...
+      ✅ 완성도: 25/25점 - The product is fully visible and not cut off at any point.
+      🔍 타이틀 매칭 확인 시작...
+      📄 Gemini 응답:
+         EXACT_MATCH: NO
+         BRAND: ongreedients
+         PRODUCT_LINE: Skin Barrier Calming Lotion
+         VOLUME: UNKNOWN
+         COUNT: 1
+         REASON: The image shows "Ongreedients Skin Barrier Calming Lotion", but the EX version and volume are not specified.
+      ❌ 타이틀 매칭: 0/30점 (다른 제품 라인!)
+         → 타겟: skin barrier calming lotion ex
+         → 감지: skin barrier calming lotion
+         → The image shows "Ongreedients Skin Barrier Calming Lotion", but the EX version and volume are not specified.
+      ⚠️  다른 제품 감지 → 나머지 평가 생략
+      🎯 총점: 0/125점 (자동 탈락)
+
+
+      ⏳ 10초 대기... (Gemini API)
+
+   이미지 4 평가:
+   ──────────────────────────────────────────────────────────────────
+      📏 해상도: 10/30점 (322x301)
+      🔍 여러 제품 감지 중... (개별 제품)
+      ✅ 단일 제품 확인 (0개) - 제품의 일부분만 희미하게 보여 정확한 개수를 파악할 수 없습니다.
+      📦 포장박스 감지 중...
+      ✅ 포장박스 없음 - 이미지에 제품 용기만 보이고 종이 상자는 보이지 않습니다.
+      🔍 제품 완성도 검증 시작...
+      ❌ 완성도: 0/25점 - 제품의 대부분이 잘려 이미지에 나타나지 않아 완전한지 판단할 수 없습니다.
+      ⚠️  제품 불완전 → 나머지 평가 생략
+      🎯 총점: 0/125점 (자동 탈락)
+
+
+      ⏳ 10초 대기... (Gemini API)
+
+   이미지 5 평가:
+   ──────────────────────────────────────────────────────────────────
+      📏 해상도: 25/30점 (948x1352)
+      🔍 여러 제품 감지 중... (개별 제품)
+      ✅ 단일 제품 확인 (0개) - 제품 용기 자체가 보이지 않고, 로션이 피부에 발려있는 모습만 보입니다.
+      📦 포장박스 감지 중...
+      ✅ 포장박스 없음 - 제품 용기 외에 별도의 포장 박스가 보이지 않습니다.
+      🔍 제품 완성도 검증 시작...
+      ❌ 완성도: 0/25점 - There is no product "Ongreedients Skin Barrier Calming Lotion EX 220ml" in the image.
+      ⚠️  제품 불완전 → 나머지 평가 생략
+      🎯 총점: 0/125점 (자동 탈락)
+
+
+      ⏳ 10초 대기... (Gemini API)
+
+   이미지 6 평가:
+   ──────────────────────────────────────────────────────────────────
+      📏 해상도: 10/30점 (395x547)
+      🔍 여러 제품 감지 중... (개별 제품)
+      ✅ 단일 제품 확인 (1개) - 이미지에는 Ongreedients Skin Barrier Calming Lotion EX 220ml 제품 실물 1개만 보입니다.
+      📦 포장박스 감지 중...
+      ✅ 포장박스 없음 - The image only shows the product itself, not a packaging box.
+      🔍 제품 완성도 검증 시작...
+      ✅ 완성도: 25/25점 - The product is entirely visible within the image frame, with no parts of the cap, body, or bottom being cut off.
+      🔍 타이틀 매칭 확인 시작...
+      📄 Gemini 응답:
+         EXACT_MATCH: NO
+         BRAND: ongreedients
+         PRODUCT_LINE: skin barrier calming lotion
+         VOLUME: UNKNOWN
+         COUNT: 1
+         REASON: The image shows "Ongreedients Skin Barrier Calming Lotion" but does not show the "EX" or the volume "220ml."
+      ❌ 타이틀 매칭: 0/30점 (다른 제품 라인!)
+         → 타겟: skin barrier calming lotion ex
+         → 감지: skin barrier calming lotion
+         → The image shows "Ongreedients Skin Barrier Calming Lotion" but does not show the "EX" or the volume "220ml."
+      ⚠️  다른 제품 감지 → 나머지 평가 생략
+      🎯 총점: 0/125점 (자동 탈락)
+
+
+      ⏳ 10초 대기... (Gemini API)
+
+   이미지 7 평가:
+   ──────────────────────────────────────────────────────────────────
+      📏 해상도: 10/30점 (247x344)
+      🔍 여러 제품 감지 중... (개별 제품)
+      ✅ 단일 제품 확인 (1개) - 응답 파싱 실패
+      📦 포장박스 감지 중...
+      ✅ 포장박스 없음 - 제품 용기 외에 종이 상자 형태의 포장 박스는 보이지 않습니다.
+      🔍 제품 완성도 검증 시작...
+      ❌ 완성도: 0/25점 - 제품이 이미지에 완전히 나타나 있지 않고 잘려 있습니다.
+      ⚠️  제품 불완전 → 나머지 평가 생략
+      🎯 총점: 0/125점 (자동 탈락)
+
+
+      ⏳ 10초 대기... (Gemini API)
+
+   이미지 8 평가:
+   ──────────────────────────────────────────────────────────────────
+      📏 해상도: 10/30점 (210x522)
+      🔍 여러 제품 감지 중... (개별 제품)
+      ✅ 단일 제품 확인 (1개) - 이미지에 화장품 용기 1개가 보입니다.
+      📦 포장박스 감지 중...
+      ✅ 포장박스 없음 - 이미지에는 제품 용기만 보이고 포장 상자는 없습니다.
+      🔍 제품 완성도 검증 시작...
+      ❌ 완성도: 0/25점 - The product's bottom part is cut off in the image.
+      ⚠️  제품 불완전 → 나머지 평가 생략
+      🎯 총점: 0/125점 (자동 탈락)
+
+
+      ⏳ 10초 대기... (Gemini API)
+
+   이미지 9 평가:
+   ──────────────────────────────────────────────────────────────────
+      📏 해상도: 30/30점 (1410x3490)
+      🔍 여러 제품 감지 중... (개별 제품)
+      ✅ 단일 제품 확인 (1개) - 제품 용기의 일부만 보이지만, 보이는 부분을 기준으로 실물 제품은 1개입니다.
+      📦 포장박스 감지 중...
+      ✅ 포장박스 없음 - 이미지에 제품 본체만 있고 포장 박스는 보이지 않습니다.
+      🔍 제품 완성도 검증 시작...
+      ❌ 완성도: 0/25점 - The product is cut off on the right side of the image.
+      ⚠️  제품 불완전 → 나머지 평가 생략
+      🎯 총점: 0/125점 (자동 탈락)
+
+
+📊 네이버 평가 결과: 70점 이상 & 제품 라인 일치 0개
+   ⚠️  적합한 네이버 이미지 없음
+   💡 제품 라인이 정확히 일치하는 이미지가 없습니다.
+
+======================================================================
+⏳ 다음 제품 처리 전 20초 대기...
+
+
+======================================================================
+📦 제품 2/3 - ID: 2
+
+🗑️  Step 0: 초기화 (오래된 이미지 제거)
+   ✅ 초기화 완료!
+
+🔍 Step 1: Oliveyoung 테이블에서 제품 정보 조회 중...
+✅ 제품명 (EN): Anua PRDN Hyaluronic Acid 100 Moisture Cream 60mL (Set of 2)
+✅ 제품명 (KR): 아누아 피디알엔 히알루론산 100 수분크림 60mL 2입
+📋 제품 정보:
+   - 브랜드: anua
+   - 제품 라인: prdn hyaluronic acid 100 moisture cream
+   - 용량: 60ml
+   - 세트 여부: ✅ 세트 제품
+   - 세트 개수: 2개
+📸 검증된 이미지 (올리브영): 5개
+
+📊 Step 2: validated_images 평가 시작
+──────────────────────────────────────────────────────────────────────
+
+   이미지 1 평가:
+   ──────────────────────────────────────────────────────────────────
+      📏 해상도: 15/30점 (695x899)
+      🎁 세트 제품 → 여러 제품 검사 생략
+      📦 포장박스 감지 중...
+      ✅ 포장박스 없음 - 제품 본체 (튜브)만 있고, 포장 박스는 보이지 않습니다.
+      🔍 제품 완성도 검증 시작...
+      ✅ 완성도: 25/25점 - 두 제품 모두 이미지 내에 완전히 보이며 잘린 부분이 없습니다.
+      🔍 타이틀 매칭 확인 시작...
+      📄 Gemini 응답:
+         EXACT_MATCH: YES
+         BRAND: anua
+         PRODUCT_LINE: prdn hyaluronic acid 100 moisture cream
+         VOLUME: 60ml
+         COUNT: 2
+         REASON: The image shows two tubes of Anua PDRN Hyaluronic Acid 100 Moisture Cream, each with a volume of 60ml.
+      ✅ 정확한 제품 매칭! (+20점)
+      📊 타이틀 매칭: 30/30점
+      🔍 세트 구성 분석 시작...
+      🎁 세트 제품: 2개 예상
+      📊 세트 구성: 16/20점
+      🤖 이미지 품질 평가 중...
+      📊 이미지 품질: 17/20점
+      🎯 총점: 103/125점
+
+      ⏳ 10초 대기... (Gemini API)
+
+   이미지 2 평가:
+   ──────────────────────────────────────────────────────────────────
+      📏 해상도: 20/30점 (780x852)
+      🎁 세트 제품 → 여러 제품 검사 생략
+      📦 포장박스 감지 중...
+      ✅ 포장박스 없음 - There is no packaging box in the image, only the product tubes.
+      🔍 제품 완성도 검증 시작...
+      ✅ 완성도: 25/25점 - Both products are fully visible within the image, from top to bottom.
+      🔍 타이틀 매칭 확인 시작...
+      📄 Gemini 응답:
+         EXACT_MATCH: YES
+         BRAND: anua
+         PRODUCT_LINE: prdn hyaluronic acid 100 moisture cream
+         VOLUME: 60ml
+         COUNT: 2
+         REASON: 이미지에 제품명, 브랜드, 제품 라인, 용량 정보가 모두 일치하며 제품이 2개 보인다.
+      ✅ 정확한 제품 매칭! (+20점)
+      📊 타이틀 매칭: 30/30점
+      🔍 세트 구성 분석 시작...
+      🎁 세트 제품: 2개 예상
+      📊 세트 구성: 16/20점
+      🤖 이미지 품질 평가 중...
+      📊 이미지 품질: 17/20점
+      🎯 총점: 108/125점
+
+      ⏳ 10초 대기... (Gemini API)
+
+   이미지 3 평가:
+   ──────────────────────────────────────────────────────────────────
+      📏 해상도: 20/30점 (843x828)
+      🎁 세트 제품 → 여러 제품 검사 생략
+      📦 포장박스 감지 중...
+      ✅ 포장박스 없음 - 이미지에는 제품 튜브만 보이고 종이 포장 박스는 없습니다.
+      🔍 제품 완성도 검증 시작...
+      ❌ 완성도: 0/25점 - One of the product tops is cut off.
+      ⚠️  제품 불완전 → 나머지 평가 생략
+      🎯 총점: 0/125점 (자동 탈락)
+
+
+      ⏳ 10초 대기... (Gemini API)
+
+   이미지 4 평가:
+   ──────────────────────────────────────────────────────────────────
+      📏 해상도: 20/30점 (850x1000)
+      🎁 세트 제품 → 여러 제품 검사 생략
+      📦 포장박스 감지 중...
+      ✅ 포장박스 없음 - 이미지에는 제품 튜브만 보이고, 외부 포장 상자는 없습니다.
+      🔍 제품 완성도 검증 시작...
+      ❌ 완성도: 0/25점 - The image only shows one product, not two as described in the product name.
+      ⚠️  제품 불완전 → 나머지 평가 생략
+      🎯 총점: 0/125점 (자동 탈락)
+
+
+      ⏳ 10초 대기... (Gemini API)
+
+   이미지 5 평가:
+   ──────────────────────────────────────────────────────────────────
+      📏 해상도: 20/30점 (839x839)
+      🎁 세트 제품 → 여러 제품 검사 생략
+      📦 포장박스 감지 중...
+      ✅ 포장박스 없음 - 이미지에는 제품 용기만 보이고 포장 박스는 보이지 않습니다.
+      🔍 제품 완성도 검증 시작...
+      ❌ 완성도: 0/25점 - The image only shows a small portion of one product, and it is not a complete product as the rest of the tube is cut off.
+      ⚠️  제품 불완전 → 나머지 평가 생략
+      🎯 총점: 0/125점 (자동 탈락)
+
+
+📊 평가 결과:
+   - 올바른 제품: 2개
+   - 포장박스 탈락: 0개
+   - 여러 제품 탈락: 0개
+
+✂️  Step 3: Main 1개 + Gallery 0-2개 선별
+   - Main: 1개
+   - Gallery 후보: 1개
+
+📐 Step 4: 정규화 + 업로드
+
+   1/2 처리 중...
+      📐 크기 정규화 중...
+      ✅ 정규화 완료: 1200x1200px
+      📤 NocoDB 업로드 중...
+      ✅ 완료!
+
+   2/2 처리 중...
+      📐 크기 정규화 중...
+      ✅ 정규화 완료: 1200x1200px
+      📤 NocoDB 업로드 중...
+      ✅ 완료!
+
+💾 Step 5: main_image, gallery_images 저장
+✅ 저장 완료!
+   - main_image: 1개
+   - gallery_images: 1개
+
+🔍 Step 6: DB에서 실제 저장된 개수 확인
+   ✅ DB 확인 완료:
+      - Main: 1개
+      - Gallery: 1개
+   - 총: 2개
+
+⚠️  부족함! (2/3개) → 네이버 보충 필요
+   필요한 개수: 1개
+
+🌐 Step 7: 네이버 원본 이미지 검색
+======================================================================
+
+🔍 네이버 이미지 검색 시작: "아누아 피디알엔 히알루론산 100 수분크림 60mL 2입"
+   목표: 원본 이미지 10개 수집
+   💡 전략: 썸네일 URL 파싱 → 원본 URL 추출 (클릭 불필요!)
+   🔗 검색 URL: https://search.naver.com/search.naver?ssc=tab.image.all&where=image&sm=tab_jum&query=%EC%95%84%EB%88...
+[32mINFO[39m [33m PlaywrightCrawler:[39m Starting the crawler.
+[32mINFO[39m [33m PlaywrightCrawler:[39m Crawler reached the maxRequestsPerCrawl limit of 1 requests and will shut down soon. Requests that are in progress will be allowed to finish.
+[32mINFO[39m [33m PlaywrightCrawler:[39m Earlier, the crawler reached the maxRequestsPerCrawl limit of 1 requests and all requests that were in progress at that time have now finished. In total, the crawler processed 1 requests and will shut down.
+[32mINFO[39m [33m PlaywrightCrawler:[39m Final request statistics:[90m {"requestsFinished":0,"requestsFailed":0,"retryHistogram":[],"requestAvgFailedDurationMillis":null,"requestAvgFinishedDurationMillis":null,"requestsFinishedPerMinute":0,"requestsFailedPerMinute":0,"requestTotalDurationMillis":0,"requestsTotal":0,"crawlerRuntimeMillis":319}[39m
+[32mINFO[39m [33m PlaywrightCrawler:[39m Finished! Total 0 requests: 0 succeeded, 0 failed.[90m {"terminal":true}[39m
+   🧹 Playwright 메모리 해제 중...
+   ✅ 메모리 해제 완료
+
+   ✅ 최종 수집: 0개 원본 이미지
+   ❌ 네이버 이미지를 찾을 수 없습니다.
+   현재 상태로 완료: Main 1개 + Gallery 1개
+
+======================================================================
+⏳ 다음 제품 처리 전 20초 대기...
+
+
+======================================================================
+📦 제품 3/3 - ID: 3
+
+🗑️  Step 0: 초기화 (오래된 이미지 제거)
+   ✅ 초기화 완료!
+
+🔍 Step 1: Oliveyoung 테이블에서 제품 정보 조회 중...
+✅ 제품명 (EN): Dalba First Spray Serum 100ml (Set of 2)
+✅ 제품명 (KR): 달바 퍼스트 스프레이 세럼 100ml 2개
+📋 제품 정보:
+   - 브랜드: dalba
+   - 제품 라인: first spray serum
+   - 용량: 100ml
+   - 세트 여부: ✅ 세트 제품
+   - 세트 개수: 2개
+📸 검증된 이미지 (올리브영): 3개
+
+📊 Step 2: validated_images 평가 시작
+──────────────────────────────────────────────────────────────────────
+
+   이미지 1 평가:
+   ──────────────────────────────────────────────────────────────────
+      📏 해상도: 25/30점 (1000x1000)
+      🎁 세트 제품 → 여러 제품 검사 생략
+      📦 포장박스 감지 중...
+      ✅ 포장박스 없음 - 이미지에는 제품 본체만 있고, 종이 상자나 패키지 박스는 보이지 않습니다.
+      🔍 제품 완성도 검증 시작...
+      ✅ 완성도: 25/25점 - Both products are entirely visible from top to bottom, with no part of either product being cut off in the image.
+      🔍 타이틀 매칭 확인 시작...
+      📄 Gemini 응답:
+         EXACT_MATCH: NO
+         BRAND: dalba
+         PRODUCT_LINE: first spray serum
+         VOLUME: UNKNOWN
+         COUNT: 2
+         REASON: The image shows two bottles of "Dalba First Spray Serum," but the volume is not explicitly stated on the bottle, so the exact match can't be confirmed.
+      ❌ 타이틀 매칭: 0/30점 (다른 제품 라인!)
+         → 타겟: first spray serum
+         → 감지: first spray serum
+         → The image shows two bottles of "Dalba First Spray Serum," but the volume is not explicitly stated on the bottle, so the exact match can't be confirmed.
+      ⚠️  다른 제품 감지 → 나머지 평가 생략
+      🎯 총점: 0/125점 (자동 탈락)
+
+
+      ⏳ 10초 대기... (Gemini API)
+
+   이미지 2 평가:
+   ──────────────────────────────────────────────────────────────────
+      📏 해상도: 25/30점 (1000x1000)
+      🎁 세트 제품 → 여러 제품 검사 생략
+      📦 포장박스 감지 중...
+      ✅ 포장박스 없음 - The image only shows the product bottles, without any visible packaging box.
+      🔍 제품 완성도 검증 시작...
+      ✅ 완성도: 25/25점 - 두 제품 모두 캡, 몸통, 하단이 잘린 부분 없이 이미지 안에 완전히 들어와 있습니다.
+      🔍 타이틀 매칭 확인 시작...
+      📄 Gemini 응답:
+         EXACT_MATCH: NO
+         BRAND: dalba
+         PRODUCT_LINE: first spray serum
+         VOLUME: UNKNOWN
+         COUNT: 2
+         REASON: 용량 정보가 이미지에 명확히 나타나 있지 않고, 세트 상품인지 여부도 확인할 수 없습니다.
+      ❌ 타이틀 매칭: 0/30점 (다른 제품 라인!)
+         → 타겟: first spray serum
+         → 감지: first spray serum
+         → 용량 정보가 이미지에 명확히 나타나 있지 않고, 세트 상품인지 여부도 확인할 수 없습니다.
+      ⚠️  다른 제품 감지 → 나머지 평가 생략
+      🎯 총점: 0/125점 (자동 탈락)
+
+
+      ⏳ 10초 대기... (Gemini API)
+
+   이미지 3 평가:
+   ──────────────────────────────────────────────────────────────────
+      📏 해상도: 20/30점 (840x1000)
+      🎁 세트 제품 → 여러 제품 검사 생략
+      📦 포장박스 감지 중...
+      ✅ 포장박스 없음 - 이미지에는 제품 본체만 보이고, 종이 상자나 패키지 박스는 보이지 않습니다.
+      🔍 제품 완성도 검증 시작...
+      ✅ 완성도: 25/25점 - Both products are fully visible from top to bottom and not cut off in any way.
+      🔍 타이틀 매칭 확인 시작...
+      📄 Gemini 응답:
+         EXACT_MATCH: NO
+         BRAND: dalba
+         PRODUCT_LINE: first spray serum
+         VOLUME: UNKNOWN
+         COUNT: 2
+         REASON: The image shows two bottles of dalba first spray serum but the volume is not specified on the bottle in the image.
+      ❌ 타이틀 매칭: 0/30점 (다른 제품 라인!)
+         → 타겟: first spray serum
+         → 감지: first spray serum
+         → The image shows two bottles of dalba first spray serum but the volume is not specified on the bottle in the image.
+      ⚠️  다른 제품 감지 → 나머지 평가 생략
+      🎯 총점: 0/125점 (자동 탈락)
+
+
+📊 평가 결과:
+   - 올바른 제품: 0개
+   - 포장박스 탈락: 0개
+   - 여러 제품 탈락: 0개
+
+⚠️  사용 가능한 이미지가 없습니다!
+
+======================================================================
+🎉 Phase 2.6 완료!
+======================================================================
+✅ 3개 제품 처리 완료
+
+✨ v6 개선 사항:
+   ✅ 네이버 이미지: 제품 라인 이름까지 매칭
+   ✅ 세트 제품: 세트 이미지 우선, 없으면 개별 허용
+   ✅ v5 기능 유지: 여러 제품 감지, 포장박스 감지
+
