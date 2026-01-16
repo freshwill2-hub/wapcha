@@ -18,6 +18,11 @@
             border-color: #22d3ee;
             outline: none;
         }
+        .input-field:disabled {
+            background-color: #1e293b;
+            color: #64748b;
+            cursor: not-allowed;
+        }
         .btn-primary {
             background: linear-gradient(135deg, #22d3ee, #0ea5e9);
         }
@@ -28,7 +33,16 @@
         .status-processing { color: #22d3ee; }
         .status-completed { color: #22c55e; }
         .status-error { color: #ef4444; }
-        .drag-over { border: 2px dashed #22d3ee !important; }
+        .log-time { color: #64748b; font-size: 0.75rem; min-width: 60px; }
+        .log-info { color: #94a3b8; }
+        .log-success { color: #22c55e; }
+        .log-error { color: #ef4444; }
+        .log-warning { color: #fbbf24; }
+        .checkbox-custom {
+            width: 18px;
+            height: 18px;
+            accent-color: #22d3ee;
+        }
     </style>
 </head>
 <body class="text-gray-100 min-h-screen">
@@ -82,6 +96,9 @@
             <button id="tab-list" class="px-6 py-2 rounded-lg bg-slate-700 text-gray-300" onclick="showTab('list')">
                 📋 등록된 제품
             </button>
+            <button id="tab-logs" class="px-6 py-2 rounded-lg bg-slate-700 text-gray-300" onclick="showTab('logs')">
+                📜 로그
+            </button>
         </div>
 
         <!-- 카테고리 큐 탭 -->
@@ -103,18 +120,23 @@
                     </div>
                 </div>
                 
-                <!-- ✅ 신규: 최대 수집 개수 + 최대 페이지 수 -->
+                <!-- ✅ 수집 개수 + 페이지 제한 설정 -->
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                     <div>
                         <label class="block text-sm text-gray-400 mb-2">최대 수집 개수</label>
                         <input type="number" id="category-max" class="input-field w-full px-4 py-3 rounded-lg" 
-                               value="100" min="1" max="500">
+                               value="100" min="1" max="1000">
                     </div>
                     <div>
-                        <label class="block text-sm text-gray-400 mb-2">최대 페이지 수</label>
-                        <input type="number" id="category-max-pages" class="input-field w-full px-4 py-3 rounded-lg" 
-                               value="10" min="1" max="50">
-                        <p class="text-xs text-gray-500 mt-1">페이지당 약 24개 제품</p>
+                        <label class="block text-sm text-gray-400 mb-2">
+                            <input type="checkbox" id="limit-pages-checkbox" class="checkbox-custom mr-2" onchange="togglePageLimit()">
+                            페이지 수 제한
+                        </label>
+                        <div class="flex items-center gap-2">
+                            <input type="number" id="category-max-pages" class="input-field w-full px-4 py-3 rounded-lg" 
+                                   value="10" min="1" max="100" disabled>
+                            <span id="pages-label" class="text-cyan-400 text-sm whitespace-nowrap">무제한</span>
+                        </div>
                     </div>
                     <div class="md:col-span-2 flex items-end">
                         <button onclick="addCategory()" class="btn-primary px-6 py-3 rounded-lg font-medium">
@@ -124,7 +146,7 @@
                 </div>
                 
                 <p class="text-sm text-gray-500">
-                    💡 팁: 올리브영 → 랭킹 → 원하는 카테고리 선택 → URL 복사
+                    💡 팁: 체크 해제 시 마지막 페이지까지 자동 수집 | SKU 중복 제품은 자동 스킵
                 </p>
             </div>
 
@@ -143,7 +165,6 @@
                 </div>
                 
                 <div id="category-queue" class="space-y-3">
-                    <!-- 동적으로 추가됨 -->
                     <p class="text-gray-500 text-center py-8">카테고리가 없습니다. 위에서 추가해주세요.</p>
                 </div>
             </div>
@@ -163,7 +184,7 @@
                 </div>
                 
                 <p class="text-sm text-gray-500 mb-6">
-                    💡 올리브영 제품 상세 페이지 URL을 입력하세요
+                    💡 올리브영 제품 상세 페이지 URL을 입력하세요 (SKU 중복 시 자동 스킵)
                 </p>
                 
                 <!-- 여러 URL 한번에 추가 -->
@@ -224,6 +245,28 @@
                 </div>
             </div>
         </div>
+
+        <!-- ✅ 로그 탭 (시간 표시) -->
+        <div id="content-logs" class="hidden space-y-6">
+            <div class="card p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold">실시간 로그</h3>
+                    <div class="flex gap-2">
+                        <button onclick="clearLogs()" class="px-4 py-2 rounded-lg text-sm bg-slate-700 hover:bg-slate-600">
+                            🗑️ 로그 지우기
+                        </button>
+                        <label class="flex items-center gap-2 text-sm text-gray-400">
+                            <input type="checkbox" id="auto-scroll" checked class="checkbox-custom">
+                            자동 스크롤
+                        </label>
+                    </div>
+                </div>
+                
+                <div id="log-container" class="bg-slate-900 rounded-lg p-4 h-96 overflow-y-auto font-mono text-sm">
+                    <p class="text-gray-500">로그가 여기에 표시됩니다...</p>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -231,10 +274,30 @@
         let currentPage = 0;
         const pageSize = 50;
         let totalProducts = 0;
+        let logMessages = [];
+        
+        // ✅ 페이지 제한 체크박스 토글
+        function togglePageLimit() {
+            const checkbox = document.getElementById('limit-pages-checkbox');
+            const input = document.getElementById('category-max-pages');
+            const label = document.getElementById('pages-label');
+            
+            if (checkbox.checked) {
+                input.disabled = false;
+                label.textContent = '페이지';
+                label.classList.remove('text-cyan-400');
+                label.classList.add('text-gray-400');
+            } else {
+                input.disabled = true;
+                label.textContent = '무제한';
+                label.classList.remove('text-gray-400');
+                label.classList.add('text-cyan-400');
+            }
+        }
         
         // 탭 전환
         function showTab(tab) {
-            ['category', 'product', 'list'].forEach(t => {
+            ['category', 'product', 'list', 'logs'].forEach(t => {
                 document.getElementById(`content-${t}`).classList.add('hidden');
                 document.getElementById(`tab-${t}`).classList.remove('bg-cyan-500', 'text-white');
                 document.getElementById(`tab-${t}`).classList.add('bg-slate-700', 'text-gray-300');
@@ -249,12 +312,13 @@
             }
         }
         
-        // ✅ 카테고리 추가 (maxPages 포함)
+        // ✅ 카테고리 추가 (limitPages 포함)
         async function addCategory() {
             const url = document.getElementById('category-url').value.trim();
             const name = document.getElementById('category-name').value.trim();
             const maxProducts = parseInt(document.getElementById('category-max').value) || 100;
-            const maxPages = parseInt(document.getElementById('category-max-pages').value) || 10;  // ✅ 추가
+            const limitPages = document.getElementById('limit-pages-checkbox').checked;
+            const maxPages = parseInt(document.getElementById('category-max-pages').value) || 10;
             
             if (!url) {
                 alert('카테고리 URL을 입력해주세요');
@@ -265,7 +329,13 @@
                 const response = await fetch('/api/url-queue/category', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ url, name, maxProducts, maxPages })  // ✅ maxPages 전송
+                    body: JSON.stringify({ 
+                        url, 
+                        name, 
+                        maxProducts, 
+                        maxPages: limitPages ? maxPages : 0,  // ✅ 체크 해제 시 0 (무제한)
+                        limitPages 
+                    })
                 });
                 
                 const data = await response.json();
@@ -310,7 +380,6 @@
         
         // 완료 항목 삭제
         async function clearCompleted() {
-            // 완료된 항목만 삭제 API 호출
             const queue = await (await fetch('/api/url-queue')).json();
             
             for (const cat of queue.categories) {
@@ -342,7 +411,7 @@
                 
                 if (data.success) {
                     document.getElementById('product-url').value = '';
-                    alert('URL이 추가되었습니다');
+                    alert(`URL이 추가되었습니다 (SKU: ${data.sku})`);
                     loadRecentUrls();
                 } else {
                     alert(data.error || '추가 실패');
@@ -364,6 +433,7 @@
             
             let success = 0;
             let failed = 0;
+            let duplicates = 0;
             
             for (const url of urls) {
                 try {
@@ -375,18 +445,19 @@
                     
                     const data = await response.json();
                     if (data.success) success++;
+                    else if (data.error?.includes('이미 등록')) duplicates++;
                     else failed++;
                 } catch {
                     failed++;
                 }
             }
             
-            alert(`추가 완료: 성공 ${success}개, 실패 ${failed}개`);
+            alert(`추가 완료: 성공 ${success}개, 중복 ${duplicates}개, 실패 ${failed}개`);
             document.getElementById('product-urls-bulk').value = '';
             loadRecentUrls();
         }
         
-        // ✅ URL 큐 로드 (maxPages 표시)
+        // ✅ URL 큐 로드 (무제한 표시)
         async function loadUrlQueue() {
             try {
                 const response = await fetch('/api/url-queue');
@@ -399,20 +470,24 @@
                     return;
                 }
                 
-                container.innerHTML = queue.categories.map((cat, index) => `
-                    <div class="flex items-center gap-4 p-4 bg-slate-800 rounded-lg" draggable="true" data-id="${cat.id}">
-                        <span class="text-gray-500 cursor-move">☰</span>
+                container.innerHTML = queue.categories.map((cat, index) => {
+                    const pagesText = cat.maxPages === 0 ? '무제한' : `${cat.maxPages}페이지`;
+                    const pagesClass = cat.maxPages === 0 ? 'text-cyan-400' : 'text-yellow-400';
+                    
+                    return `
+                    <div class="flex items-center gap-4 p-4 bg-slate-800 rounded-lg">
+                        <span class="text-gray-500">☰</span>
                         <span class="w-8 h-8 flex items-center justify-center bg-slate-700 rounded-full text-sm">${index + 1}</span>
                         <div class="flex-1">
                             <p class="font-medium">${cat.name || '이름 없음'}</p>
                             <p class="text-sm text-gray-400 truncate">${cat.url.substring(0, 60)}...</p>
                         </div>
                         <span class="text-sm text-cyan-400">최대 ${cat.maxProducts}개</span>
-                        <span class="text-sm text-yellow-400">${cat.maxPages || 10}페이지</span>
-                        <span class="status-${cat.status} text-sm capitalize">${getStatusText(cat.status)}</span>
+                        <span class="text-sm ${pagesClass}">${pagesText}</span>
+                        <span class="status-${cat.status} text-sm">${getStatusText(cat.status)}</span>
                         <button onclick="deleteCategory('${cat.id}')" class="text-red-400 hover:text-red-300 px-2">🗑️</button>
                     </div>
-                `).join('');
+                `}).join('');
                 
             } catch (error) {
                 console.error('URL 큐 로드 실패:', error);
@@ -446,7 +521,7 @@
                     <div class="flex items-center gap-4 p-3 bg-slate-800 rounded-lg">
                         <div class="flex-1">
                             <p class="text-sm font-medium">${p.title_kr || p.sku || '제목 없음'}</p>
-                            <p class="text-xs text-gray-500">${p.product_url?.substring(0, 50)}...</p>
+                            <p class="text-xs text-gray-500">SKU: ${p.sku || '-'}</p>
                         </div>
                         <span class="text-xs text-gray-400">${new Date(p.collected_at).toLocaleDateString()}</span>
                     </div>
@@ -479,7 +554,7 @@
                 tbody.innerHTML = data.list.map(p => `
                     <tr class="border-b border-slate-700 hover:bg-slate-800">
                         <td class="py-3 pl-4">${p.Id}</td>
-                        <td class="py-3 text-sm text-gray-400">${p.sku || '-'}</td>
+                        <td class="py-3 text-sm text-cyan-400 font-mono">${p.sku || '-'}</td>
                         <td class="py-3">${(p.title_kr || '').substring(0, 30)}${(p.title_kr || '').length > 30 ? '...' : ''}</td>
                         <td class="py-3">₩${(p.price_current || 0).toLocaleString()}</td>
                         <td class="py-3 text-sm text-gray-400">${p.collected_at ? new Date(p.collected_at).toLocaleDateString() : '-'}</td>
@@ -525,6 +600,48 @@
             }
         }
         
+        // ✅ 로그 추가 (시간 표시)
+        function addLogMessage(log) {
+            const container = document.getElementById('log-container');
+            
+            // 첫 로그면 기본 메시지 제거
+            if (logMessages.length === 0) {
+                container.innerHTML = '';
+            }
+            
+            logMessages.push(log);
+            
+            // 최대 500개 유지
+            if (logMessages.length > 500) {
+                logMessages.shift();
+                container.removeChild(container.firstChild);
+            }
+            
+            const logDiv = document.createElement('div');
+            logDiv.className = 'flex gap-2 py-1';
+            
+            // ✅ 시간 표시
+            const time = log.timeFormatted || new Date(log.timestamp).toLocaleTimeString('ko-KR', {hour: '2-digit', minute: '2-digit', second: '2-digit'});
+            
+            logDiv.innerHTML = `
+                <span class="log-time">[${time}]</span>
+                <span class="log-${log.type}">${log.message}</span>
+            `;
+            
+            container.appendChild(logDiv);
+            
+            // 자동 스크롤
+            if (document.getElementById('auto-scroll').checked) {
+                container.scrollTop = container.scrollHeight;
+            }
+        }
+        
+        // 로그 지우기
+        function clearLogs() {
+            logMessages = [];
+            document.getElementById('log-container').innerHTML = '<p class="text-gray-500">로그가 여기에 표시됩니다...</p>';
+        }
+        
         // 상태 업데이트
         socket.on('state', (state) => {
             const dot = document.getElementById('status-dot');
@@ -544,6 +661,16 @@
         
         socket.on('urlQueue', (queue) => {
             loadUrlQueue();
+        });
+        
+        // ✅ 실시간 로그 수신
+        socket.on('log', (log) => {
+            addLogMessage(log);
+        });
+        
+        // ✅ 기존 로그 로드
+        socket.on('logs', (existingLogs) => {
+            existingLogs.forEach(log => addLogMessage(log));
         });
         
         // 초기 로드

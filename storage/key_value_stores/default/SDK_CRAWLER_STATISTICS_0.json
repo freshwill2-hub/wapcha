@@ -1,29 +1,48 @@
 {
-  "requestsFinished": 1,
+  "requestsFinished": 17,
   "requestsFailed": 0,
   "requestsRetries": 0,
   "requestsFailedPerMinute": 0,
-  "requestsFinishedPerMinute": 5,
-  "requestMinDurationMillis": 11050,
-  "requestMaxDurationMillis": 11050,
+  "requestsFinishedPerMinute": 6,
+  "requestMinDurationMillis": 6412,
+  "requestMaxDurationMillis": 19662,
   "requestTotalFailedDurationMillis": 0,
-  "requestTotalFinishedDurationMillis": 11050,
-  "crawlerStartedAt": "2026-01-16T01:39:14.025Z",
-  "crawlerFinishedAt": "2026-01-16T01:39:25.218Z",
-  "statsPersistedAt": "2026-01-16T01:39:25.218Z",
-  "crawlerRuntimeMillis": 11416,
-  "crawlerLastStartTimestamp": 1768527553802,
+  "requestTotalFinishedDurationMillis": 170227,
+  "crawlerStartedAt": "2026-01-16T08:55:38.499Z",
+  "crawlerFinishedAt": null,
+  "statsPersistedAt": "2026-01-16T08:58:38.504Z",
+  "crawlerRuntimeMillis": 180026,
+  "crawlerLastStartTimestamp": 1768553738478,
   "requestRetryHistogram": [
-    1
+    17
   ],
   "statsId": 0,
   "requestAvgFailedDurationMillis": null,
-  "requestAvgFinishedDurationMillis": 11050,
-  "requestTotalDurationMillis": 11050,
-  "requestsTotal": 1,
+  "requestAvgFinishedDurationMillis": 10013,
+  "requestTotalDurationMillis": 170227,
+  "requestsTotal": 17,
   "requestsWithStatusCode": {
-    "200": 1
+    "200": 19
   },
   "errors": {},
-  "retryErrors": {}
+  "retryErrors": {
+    "/root/copychu-scraper/phase0-url-collector.js:337:28": {
+      "missing error code": {
+        "Error": {
+          "page.waitForLoadState: Target page, context or browser has been closed": {
+            "count": 1
+          }
+        }
+      }
+    },
+    "/root/copychu-scraper/node_modules/@crawlee/browser-pool/browser-pool.js:405:19": {
+      "missing error code": {
+        "Error": {
+          "browserController.newPage() failed: zoXWfwG5uyonOYgzXSOcZ": {
+            "count": 1
+          }
+        }
+      }
+    }
+  }
 }

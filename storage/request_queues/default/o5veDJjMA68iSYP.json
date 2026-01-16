@@ -1,0 +1,9 @@
+{
+	"id": "o5veDJjMA68iSYP",
+	"json": "{\"id\":\"o5veDJjMA68iSYP\",\"url\":\"https://www.oliveyoung.co.kr/store/goods/getGoodsDetail.do?goodsNo=A000000224494\",\"loadedUrl\":\"https://www.oliveyoung.co.kr/store/goods/getGoodsDetail.do?goodsNo=A000000224494\",\"uniqueKey\":\"https://www.oliveyoung.co.kr/store/goods/getGoodsDetail.do?goodsNo=A000000224494\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":1,\"errorMessages\":[\"page.waitForTimeout: Target page, context or browser has been closed\\n    at PlaywrightCrawler.requestHandler (/root/copychu-scraper/phase0-url-collector.js:338:28)\\n    at async wrap (/root/copychu-scraper/node_modules/@apify/timeout/cjs/index.cjs:54:21)\"],\"headers\":{},\"userData\":{\"type\":\"product\",\"sku\":\"A000000224494\",\"__crawlee\":{\"state\":5}}}",
+	"method": "GET",
+	"orderNo": 1768553958844,
+	"retryCount": 1,
+	"uniqueKey": "https://www.oliveyoung.co.kr/store/goods/getGoodsDetail.do?goodsNo=A000000224494",
+	"url": "https://www.oliveyoung.co.kr/store/goods/getGoodsDetail.do?goodsNo=A000000224494"
+}
