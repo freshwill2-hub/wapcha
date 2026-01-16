@@ -6,8 +6,9 @@
       "name": "크림",
       "maxProducts": 30,
       "maxPages": 2,
-      "status": "processing",
-      "createdAt": "2026-01-16T11:55:59.895Z"
+      "status": "completed",
+      "createdAt": "2026-01-16T11:55:59.895Z",
+      "completedAt": "2026-01-16T12:00:18.531Z"
     }
   ],
   "products": []
