@@ -8,53 +8,34 @@ const NOCODB_API_URL = process.env.NOCODB_API_URL || 'http://77.42.67.165:8080';
 const NOCODB_TOKEN = process.env.NOCODB_API_TOKEN;
 const OLIVEYOUNG_TABLE_ID = process.env.OLIVEYOUNG_TABLE_ID || 'mufuxqsjgqcvh80';
 
-// 환경변수로 처리 개수 설정 가능
-const PRODUCT_LIMIT = parseInt(process.env.PRODUCT_LIMIT) || parseInt(process.argv[2]) || 3;
-const PRODUCT_OFFSET = parseInt(process.env.PRODUCT_OFFSET) || parseInt(process.argv[3]) || 0;
-
 console.log('🔧 설정 확인:');
 console.log(`- NocoDB URL: ${NOCODB_API_URL}`);
-console.log(`- Table ID: ${OLIVEYOUNG_TABLE_ID}`);
-console.log(`- 처리 개수: ${PRODUCT_LIMIT}`);
-console.log(`- 오프셋: ${PRODUCT_OFFSET}\n`);
+console.log(`- Table ID: ${OLIVEYOUNG_TABLE_ID}\n`);
 
 // ==================== 전역 변수 ====================
 let processedCount = 0;
 let successCount = 0;
 let failedCount = 0;
+const productResults = new Map(); // URL -> 추출된 이미지 매핑
 
-// ==================== NocoDB: 제품 가져오기 (✅ 수정됨: scraped_at이 없는 제품만) ====================
+// ==================== NocoDB: 제품 가져오기 ====================
 async function getOliveyoungProducts(limit = 100, offset = 0) {
     try {
         console.log(`📥 NocoDB에서 제품 가져오는 중 (offset: ${offset}, limit: ${limit})...`);
         
-        // ✅ scraped_at이 없는 제품 = Phase 0에서 URL만 저장된 제품
         const response = await axios.get(
             `${NOCODB_API_URL}/api/v2/tables/${OLIVEYOUNG_TABLE_ID}/records`,
             {
                 headers: { 'xc-token': NOCODB_TOKEN },
                 params: {
                     offset: offset,
-                    limit: limit,
-                    where: '(scraped_at,isnull)',  // ✅ 핵심: 아직 스크래핑 안 된 제품만!
-                    sort: '-collected_at'  // ✅ 최근 수집된 것 먼저
+                    limit: limit
                 }
             }
         );
 
-        let products = response.data.list;
-        
-        console.log(`✅ ${products.length}개 미처리 제품 가져옴`);
-        
-        // ✅ 미처리 제품이 없으면 메시지 출력 (전체에서 가져오지 않음!)
-        if (products.length === 0) {
-            console.log('');
-            console.log('⚠️  스크래핑할 새 제품이 없습니다!');
-            console.log('   → Phase 0을 먼저 실행하여 URL을 수집하세요.');
-            console.log('   → 또는 NocoDB에서 scraped_at 필드를 비워주세요.\n');
-        }
-
-        return products;
+        console.log(`✅ ${response.data.list.length}개 제품 가져옴\n`);
+        return response.data.list;
 
     } catch (error) {
         console.error('❌ 제품 가져오기 실패:', error.response?.data || error.message);
@@ -117,12 +98,12 @@ async function uploadToNocoDB(fileBuffer, filename) {
     }
 }
 
-// ==================== NocoDB: 제품 업데이트 (정보 + 이미지) ====================
-async function updateProduct(recordId, productInfo, uploadedFiles) {
+// ==================== NocoDB: 제품 업데이트 (✅ 수정됨) ====================
+async function updateProductImages(recordId, uploadedFiles) {
     try {
         console.log(`\n📝 제품 레코드 업데이트 중 (ID: ${recordId})...`);
+        console.log(`📋 업로드된 파일 ${uploadedFiles.length}개`);
         
-        // 이미지 첨부 파일 포맷
         const attachments = uploadedFiles.map((file, index) => {
             let fullUrl = file.url;
             if (!fullUrl && file.path) {
@@ -140,10 +121,12 @@ async function updateProduct(recordId, productInfo, uploadedFiles) {
             };
         });
         
-        // ✅ scraped_at 저장 → 이 제품은 스크래핑 완료됨을 표시
+        console.log(`\n📋 첫 번째 attachment 예시:`);
+        console.log(JSON.stringify(attachments[0], null, 2));
+        
         const scrapedAt = new Date().toISOString();
         
-        // 1단계: 기존 이미지 삭제
+        // ✅ 1단계: 기존 데이터 삭제
         console.log(`🗑️  기존 product_images 삭제 중...`);
         await axios.patch(
             `${NOCODB_API_URL}/api/v2/tables/${OLIVEYOUNG_TABLE_ID}/records`,
@@ -159,28 +142,15 @@ async function updateProduct(recordId, productInfo, uploadedFiles) {
             }
         );
         
-        // 2단계: 제품 정보 + 이미지 저장
-        console.log(`💾 제품 정보 + 이미지 저장 중...`);
-        
-        const updateData = { 
-            Id: recordId,
-            scraped_at: scrapedAt  // ✅ 핵심: 스크래핑 완료 표시
-        };
-        
-        // 제품 정보 추가
-        if (productInfo.title_kr) updateData.title_kr = productInfo.title_kr;
-        if (productInfo.brand) updateData.brand = productInfo.brand;
-        if (productInfo.price_current) updateData.price_current = productInfo.price_current;
-        if (productInfo.price_original) updateData.price_original = productInfo.price_original;
-        
-        // 이미지 추가
-        if (attachments.length > 0) {
-            updateData.product_images = attachments;
-        }
-        
+        // ✅ 2단계: 새 데이터 저장
+        console.log(`💾 새 product_images 저장 중...`);
         await axios.patch(
             `${NOCODB_API_URL}/api/v2/tables/${OLIVEYOUNG_TABLE_ID}/records`,
-            [updateData],
+            [{ 
+                Id: recordId, 
+                product_images: attachments,
+                scraped_at: scrapedAt
+            }],
             { 
                 headers: { 
                     'xc-token': NOCODB_TOKEN,
@@ -189,13 +159,7 @@ async function updateProduct(recordId, productInfo, uploadedFiles) {
             }
         );
         
-        console.log(`✅ 업데이트 완료!`);
-        console.log(`   - title_kr: ${productInfo.title_kr?.substring(0, 30) || 'N/A'}...`);
-        console.log(`   - brand: ${productInfo.brand || 'N/A'}`);
-        console.log(`   - price: ₩${productInfo.price_current?.toLocaleString() || 'N/A'}`);
-        console.log(`   - images: ${attachments.length}개`);
-        console.log(`   - scraped_at: ${scrapedAt}\n`);
-        
+        console.log(`✅ 제품 레코드 업데이트 완료! (시간: ${scrapedAt})\n`);
         return true;
 
     } catch (error) {
@@ -204,21 +168,16 @@ async function updateProduct(recordId, productInfo, uploadedFiles) {
     }
 }
 
-// ==================== 단일 제품 처리 ====================
-async function processProductImages(product, productInfo, galleryImages) {
+// ==================== 단일 제품 처리 (이미지 다운로드 & 업로드) ====================
+async function processProductImages(product, galleryImages) {
     try {
         if (galleryImages.length === 0) {
-            console.log('⚠️  메인 갤러리 이미지를 찾을 수 없습니다.');
-            
-            // 이미지 없어도 제품 정보는 저장 (scraped_at도 저장되어 다음에 안 나옴)
-            if (productInfo.title_kr) {
-                return await updateProduct(product.Id, productInfo, []);
-            }
+            console.log('❌ 메인 갤러리 이미지를 찾을 수 없습니다.\n');
             return false;
         }
         
         console.log(`📊 추출된 이미지: ${galleryImages.length}개`);
-        galleryImages.slice(0, 3).forEach((img, i) => {
+        galleryImages.forEach((img, i) => {
             console.log(`   ${i + 1}. ${img.src.substring(0, 70)}... (${img.width}×${img.height})`);
         });
         
@@ -241,13 +200,23 @@ async function processProductImages(product, productInfo, galleryImages) {
                 uploadedFiles.push(uploadResult);
             }
             
-            await new Promise(resolve => setTimeout(resolve, 300));
+            await new Promise(resolve => setTimeout(resolve, 500));
         }
         
-        // 제품 정보 + 이미지 함께 저장
-        const updateSuccess = await updateProduct(product.Id, productInfo, uploadedFiles);
-        
-        return updateSuccess;
+        if (uploadedFiles.length > 0) {
+            const updateSuccess = await updateProductImages(product.Id, uploadedFiles);
+            
+            if (updateSuccess) {
+                console.log(`✅ 총 ${uploadedFiles.length}개 이미지 저장 완료\n`);
+                return true;
+            } else {
+                console.log(`❌ NocoDB 업데이트 실패\n`);
+                return false;
+            }
+        } else {
+            console.log(`❌ 업로드된 이미지가 없습니다.\n`);
+            return false;
+        }
         
     } catch (error) {
         console.error(`\n❌ 처리 중 오류:`, error.message);
@@ -257,38 +226,21 @@ async function processProductImages(product, productInfo, galleryImages) {
 
 // ==================== 메인 ====================
 async function main() {
-    console.log('🚀 Phase 1: 제품 정보 + 메인 갤러리 이미지 추출\n');
+    console.log('🚀 Phase 1: 메인 갤러리 이미지 추출\n');
     console.log('=' .repeat(70) + '\n');
     
     try {
-        // 1. NocoDB에서 제품 가져오기 (scraped_at이 없는 것만!)
-        const products = await getOliveyoungProducts(PRODUCT_LIMIT, PRODUCT_OFFSET);
+        // 1. NocoDB에서 제품 가져오기
+        const products = await getOliveyoungProducts(3, 0);
         
         if (products.length === 0) {
             console.log('⚠️  처리할 제품이 없습니다.');
             return;
         }
         
-        // URL이 있는 제품만 필터링
-        const validProducts = products.filter(p => p.product_url);
+        const totalProducts = products.length;
         
-        if (validProducts.length === 0) {
-            console.log('⚠️  product_url이 있는 제품이 없습니다.');
-            console.log('   Phase 0을 먼저 실행하세요: node phase0-url-collector.js');
-            return;
-        }
-        
-        const totalProducts = validProducts.length;
-        console.log(`📦 처리할 제품: ${totalProducts}개\n`);
-        
-        // ✅ 처리할 제품 목록 미리보기
-        console.log('📋 처리 대상 제품:');
-        validProducts.forEach((p, i) => {
-            console.log(`   ${i + 1}. SKU: ${p.sku} | URL: ${p.product_url?.substring(0, 60)}...`);
-        });
-        console.log('');
-        
-        // 2. Crawlee 설정
+        // 2. Crawlee 설정 (✅ 1번만 생성!)
         const crawler = new PlaywrightCrawler({
             launchContext: {
                 launchOptions: {
@@ -298,124 +250,25 @@ async function main() {
                         '--disable-setuid-sandbox',
                         '--disable-dev-shm-usage',
                         '--disable-gpu',
-                        '--single-process',
-                        '--disable-extensions'
+                        '--single-process'
                     ]
                 }
             },
             
+            // ✅ 핵심: 각 URL 처리 시 실행되는 함수
             requestHandler: async ({ page, request }) => {
                 const product = request.userData.product;
                 const index = request.userData.index;
                 
                 console.log(`\n${'='.repeat(70)}`);
-                console.log(`📦 [${index + 1}/${totalProducts}] SKU: ${product.sku}`);
-                console.log(`🔗 URL: ${request.url.substring(0, 80)}...`);
+                console.log(`📦 [${index + 1}/${totalProducts}] 제품: ${product.title_kr}`);
+                console.log(`🔗 URL: ${request.url.substring(0, 100)}...`);
                 console.log('='.repeat(70) + '\n');
                 console.log(`📄 페이지 로딩 중...\n`);
                 
                 try {
                     await page.waitForLoadState('networkidle', { timeout: 30000 });
-                    await page.waitForTimeout(2000);
-                    
-                    // 제품 정보 추출 (개선된 선택자)
-                    const productInfo = await page.evaluate(() => {
-                        // 제품명 (한국어) - 여러 선택자 시도
-                        let titleKr = '';
-                        const titleSelectors = [
-                            '.prd_name',
-                            '.goods_name', 
-                            '.product-name',
-                            'h1.tit',
-                            '.tit_prd',
-                            '[class*="prdName"]',
-                            '[class*="goods"] h1',
-                            'h1'
-                        ];
-                        
-                        for (const selector of titleSelectors) {
-                            const el = document.querySelector(selector);
-                            if (el && el.textContent.trim().length > 5) {
-                                titleKr = el.textContent.trim();
-                                break;
-                            }
-                        }
-                        
-                        // 브랜드
-                        let brand = '';
-                        const brandSelectors = [
-                            '.prd_brand',
-                            '.brand_name',
-                            '.brand',
-                            '[class*="brand"]',
-                            '.goods_brand'
-                        ];
-                        
-                        for (const selector of brandSelectors) {
-                            const el = document.querySelector(selector);
-                            if (el && el.textContent.trim().length > 1) {
-                                brand = el.textContent.trim();
-                                break;
-                            }
-                        }
-                        
-                        // 할인 가격 (현재 가격)
-                        let priceCurrent = 0;
-                        const priceSelectors = [
-                            '.price-2 strong',
-                            '.tx_cur',
-                            '.price strong',
-                            '.final-price',
-                            '[class*="price"] strong',
-                            '.sale_price'
-                        ];
-                        
-                        for (const selector of priceSelectors) {
-                            const el = document.querySelector(selector);
-                            if (el) {
-                                const text = el.textContent.replace(/[^0-9]/g, '');
-                                const num = parseInt(text);
-                                if (num > 0) {
-                                    priceCurrent = num;
-                                    break;
-                                }
-                            }
-                        }
-                        
-                        // 원래 가격 (할인 전)
-                        let priceOriginal = priceCurrent;
-                        const originalPriceSelectors = [
-                            '.price-1 strike',
-                            '.tx_org',
-                            '.original-price',
-                            'del',
-                            '[class*="org"]'
-                        ];
-                        
-                        for (const selector of originalPriceSelectors) {
-                            const el = document.querySelector(selector);
-                            if (el) {
-                                const text = el.textContent.replace(/[^0-9]/g, '');
-                                const num = parseInt(text);
-                                if (num > 0) {
-                                    priceOriginal = num;
-                                    break;
-                                }
-                            }
-                        }
-                        
-                        return {
-                            title_kr: titleKr,
-                            brand: brand,
-                            price_current: priceCurrent,
-                            price_original: priceOriginal || priceCurrent
-                        };
-                    });
-                    
-                    console.log(`📋 제품 정보 추출:`);
-                    console.log(`   - 제품명: ${productInfo.title_kr?.substring(0, 40) || '❌ 없음'}...`);
-                    console.log(`   - 브랜드: ${productInfo.brand || '❌ 없음'}`);
-                    console.log(`   - 가격: ₩${productInfo.price_current?.toLocaleString() || '❌ 없음'}\n`);
+                    await page.waitForTimeout(3000);
                     
                     // 이미지 추출
                     const images = await page.evaluate(() => {
@@ -460,7 +313,6 @@ async function main() {
                             }
                         }
                         
-                        // 선택자로 못 찾으면 큰 이미지 찾기
                         if (results.length === 0) {
                             const allImages = Array.from(document.querySelectorAll('img'));
                             const largeImages = allImages.filter(img => {
@@ -483,6 +335,31 @@ async function main() {
                             }
                         }
                         
+                        if (results.length === 0) {
+                            const counterElements = Array.from(document.querySelectorAll('*')).filter(el => {
+                                const text = el.textContent?.trim();
+                                return text && /^\d+\s*\/\s*\d+$/.test(text);
+                            });
+                            
+                            if (counterElements.length > 0) {
+                                const counter = counterElements[0];
+                                const container = counter.closest('div');
+                                const imgs = container?.querySelectorAll('img') || [];
+                                
+                                if (imgs.length > 0) {
+                                    results.push({
+                                        method: 'Near page counter',
+                                        images: Array.from(imgs).map(img => ({
+                                            src: img.src,
+                                            width: img.naturalWidth || img.width,
+                                            height: img.naturalHeight || img.height,
+                                            alt: img.alt
+                                        }))
+                                    });
+                                }
+                            }
+                        }
+                        
                         return results;
                     });
                     
@@ -490,7 +367,7 @@ async function main() {
                     
                     if (images.length > 0) {
                         const result = images[0];
-                        console.log(`✅ 갤러리 추출 성공: ${result.method}`);
+                        console.log(`✅ 메인 갤러리 추출 성공: ${result.method}`);
                         console.log(`📸 ${result.images.length}개 이미지 발견\n`);
                         
                         galleryImages = result.images.filter(img => 
@@ -498,13 +375,13 @@ async function main() {
                             img.src.includes('image.oliveyoung')
                         );
                         
-                        console.log(`✅ 올리브영 이미지 필터링: ${galleryImages.length}개\n`);
+                        console.log(`✅ 올리브영 이미지만 필터링: ${galleryImages.length}개\n`);
                     } else {
                         console.log('⚠️  메인 갤러리를 찾을 수 없습니다.\n');
                     }
                     
-                    // 제품 정보 + 이미지 함께 처리
-                    const success = await processProductImages(product, productInfo, galleryImages);
+                    // ✅ 이미지 다운로드 & 업로드
+                    const success = await processProductImages(product, galleryImages);
                     
                     if (success) {
                         successCount++;
@@ -521,27 +398,28 @@ async function main() {
                 }
             },
             
-            maxRequestsPerCrawl: 1000,
-            maxConcurrency: 1,
-            requestHandlerTimeoutSecs: 180
+            // ✅ 설정
+            maxRequestsPerCrawl: 1000,  // 충분히 큰 값
+            maxConcurrency: 1,  // 한 번에 1개씩 처리
+            requestHandlerTimeoutSecs: 180  // 3분 타임아웃
         });
         
-        // 3. 모든 URL 처리
-        const requests = validProducts.map((product, index) => ({
+        // 3. ✅ 모든 URL을 한 번에 전달!
+        const requests = products.map((product, index) => ({
             url: product.product_url,
-            userData: {
+            userData: {  // ✅ 제품 정보를 userData로 전달!
                 product: product,
                 index: index
             }
         }));
         
-        console.log(`🌐 Crawler 시작 - ${validProducts.length}개 제품 처리\n`);
+        console.log(`🌐 Crawler 시작 - ${products.length}개 제품 처리\n`);
         
         await crawler.run(requests);
         
-        // Playwright 완전 종료 (좀비 프로세스 방지)
+        // ✅ Playwright 완전 종료
         await crawler.teardown();
-        
+
         // 4. 최종 결과
         console.log('\n' + '='.repeat(70));
         console.log('🎉 Phase 1 완료!');

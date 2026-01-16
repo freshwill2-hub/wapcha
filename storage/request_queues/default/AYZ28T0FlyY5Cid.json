@@ -1,9 +1,0 @@
-{
-	"id": "AYZ28T0FlyY5Cid",
-	"json": "{\"id\":\"AYZ28T0FlyY5Cid\",\"url\":\"https://www.oliveyoung.co.kr/store/goods/getGoodsDetail.do?goodsNo=A000000138710\",\"loadedUrl\":\"https://www.oliveyoung.co.kr/store/goods/getGoodsDetail.do?goodsNo=A000000138710\",\"uniqueKey\":\"https://www.oliveyoung.co.kr/store/goods/getGoodsDetail.do?goodsNo=A000000138710\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":1,\"errorMessages\":[\"page.waitForLoadState: Target page, context or browser has been closed\\n    at PlaywrightCrawler.requestHandler (/root/copychu-scraper/phase0-url-collector.js:337:28)\\n    at /root/copychu-scraper/node_modules/@crawlee/browser/internals/browser-crawler.js:288:87\\n    at wrap (/root/copychu-scraper/node_modules/@apify/timeout/cjs/index.cjs:54:27)\\n    at /root/copychu-scraper/node_modules/@apify/timeout/cjs/index.cjs:68:7\\n    at /root/copychu-scraper/node_modules/@apify/timeout/cjs/index.cjs:67:13\\n    at addTimeoutToPromise (/root/copychu-scraper/node_modules/@apify/timeout/cjs/index.cjs:61:10)\\n    at PlaywrightCrawler._runRequestHandler (/root/copychu-scraper/node_modules/@crawlee/browser/internals/browser-crawler.js:288:53)\\n    at async PlaywrightCrawler._runRequestHandler (/root/copychu-scraper/node_modules/@crawlee/playwright/internals/playwright-crawler.js:114:9)\\n    at async wrap (/root/copychu-scraper/node_modules/@apify/timeout/cjs/index.cjs:54:21)\"],\"headers\":{},\"userData\":{\"type\":\"product\",\"sku\":\"A000000138710\",\"__crawlee\":{\"state\":5}}}",
-	"method": "GET",
-	"orderNo": 1768554134940,
-	"retryCount": 1,
-	"uniqueKey": "https://www.oliveyoung.co.kr/store/goods/getGoodsDetail.do?goodsNo=A000000138710",
-	"url": "https://www.oliveyoung.co.kr/store/goods/getGoodsDetail.do?goodsNo=A000000138710"
-}

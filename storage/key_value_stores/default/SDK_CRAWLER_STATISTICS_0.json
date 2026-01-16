@@ -1,45 +1,39 @@
 {
-  "requestsFinished": 17,
+  "requestsFinished": 1,
   "requestsFailed": 0,
-  "requestsRetries": 0,
+  "requestsRetries": 1,
   "requestsFailedPerMinute": 0,
-  "requestsFinishedPerMinute": 6,
-  "requestMinDurationMillis": 6412,
-  "requestMaxDurationMillis": 19662,
+  "requestsFinishedPerMinute": 0,
+  "requestMinDurationMillis": 26516,
+  "requestMaxDurationMillis": 26516,
   "requestTotalFailedDurationMillis": 0,
-  "requestTotalFinishedDurationMillis": 170227,
-  "crawlerStartedAt": "2026-01-16T08:55:38.499Z",
-  "crawlerFinishedAt": null,
-  "statsPersistedAt": "2026-01-16T08:58:38.504Z",
-  "crawlerRuntimeMillis": 180026,
-  "crawlerLastStartTimestamp": 1768553738478,
+  "requestTotalFinishedDurationMillis": 26516,
+  "crawlerStartedAt": "2026-01-16T09:42:03.938Z",
+  "crawlerFinishedAt": "2026-01-16T09:44:35.724Z",
+  "statsPersistedAt": "2026-01-16T09:44:35.724Z",
+  "crawlerRuntimeMillis": 151797,
+  "crawlerLastStartTimestamp": 1768556523927,
   "requestRetryHistogram": [
-    17
+    null,
+    null,
+    null,
+    1
   ],
   "statsId": 0,
   "requestAvgFailedDurationMillis": null,
-  "requestAvgFinishedDurationMillis": 10013,
-  "requestTotalDurationMillis": 170227,
-  "requestsTotal": 17,
+  "requestAvgFinishedDurationMillis": 26516,
+  "requestTotalDurationMillis": 26516,
+  "requestsTotal": 1,
   "requestsWithStatusCode": {
-    "200": 19
+    "200": 4
   },
   "errors": {},
   "retryErrors": {
-    "/root/copychu-scraper/phase0-url-collector.js:337:28": {
+    "/root/copychu-scraper/phase0-url-collector.js:138:24": {
       "missing error code": {
-        "Error": {
-          "page.waitForLoadState: Target page, context or browser has been closed": {
-            "count": 1
-          }
-        }
-      }
-    },
-    "/root/copychu-scraper/node_modules/@crawlee/browser-pool/browser-pool.js:405:19": {
-      "missing error code": {
-        "Error": {
-          "browserController.newPage() failed: zoXWfwG5uyonOYgzXSOcZ": {
-            "count": 1
+        "TimeoutError": {
+          "page.waitForLoadState: Timeout 30000ms exceeded.": {
+            "count": 3
           }
         }
       }

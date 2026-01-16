@@ -49,12 +49,11 @@ function convertKRWtoAUD(priceOriginal) {
     console.log(`      2단계 (÷1000): ${step1}`);
     
     // 3단계: 2 곱하기
-    const step2 = step1 * 2;
-    console.log(`      3단계 (×2): ${step2}`);
+    const step2 = step1 * 3;
+    console.log(`      3단계 (×3): ${step2}`);
     
     // 4단계: 10 더하기
-    let beforeAdjust = Math.round(step2 + 10);
-    console.log(`      4단계 (+10): ${beforeAdjust}`);
+    let beforeAdjust = Math.round(step2);
     
     // 5단계: 마지막 자리를 9로 만들기
     const lastDigit = beforeAdjust % 10;
@@ -64,20 +63,20 @@ function convertKRWtoAUD(priceOriginal) {
         // 0으로 끝나면 -1
         // 80 → 79, 90 → 89, 110 → 109
         finalPrice = beforeAdjust - 1;
-        console.log(`      5단계 (0으로 끝남 → -1): ${beforeAdjust} → ${finalPrice}`);
+        console.log(`      4단계 (0으로 끝남 → -1): ${beforeAdjust} → ${finalPrice}`);
     } else {
         // 그 외 숫자로 끝나면 마지막 자리를 9로 변경
         // 81 → 89, 91 → 99, 111 → 119, 121 → 129
         finalPrice = Math.floor(beforeAdjust / 10) * 10 + 9;
-        console.log(`      5단계 (마지막 자리 → 9): ${beforeAdjust} → ${finalPrice}`);
+        console.log(`      4단계 (마지막 자리 → 9): ${beforeAdjust} → ${finalPrice}`);
     }
     
     // 6단계: 최저가 체크
     if (finalPrice < 39) {
-        console.log(`      6단계 (최저가 체크): ${finalPrice} → 39`);
+        console.log(`      5단계 (최저가 체크): ${finalPrice} → 39`);
         finalPrice = 39;
     } else {
-        console.log(`      6단계 (최저가 체크): ${finalPrice} ✓`);
+        console.log(`      5단계 (최저가 체크): ${finalPrice} ✓`);
     }
     
     console.log(`   ✅ 최종 가격: $${finalPrice}`);

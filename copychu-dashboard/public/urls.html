@@ -158,6 +158,9 @@
                         <button onclick="processQueue()" id="btn-process" class="btn-primary px-4 py-2 rounded-lg text-sm font-medium">
                             ▶️ 큐 실행
                         </button>
+                        <button onclick="stopQueue()" id="btn-stop" class="btn-danger px-4 py-2 rounded-lg text-sm font-medium">
+                            ⏹️ 중지
+                        </button>
                         <button onclick="clearCompleted()" class="px-4 py-2 rounded-lg text-sm bg-slate-700 hover:bg-slate-600">
                             🗑️ 완료 항목 삭제
                         </button>
@@ -367,11 +370,30 @@
         // 큐 실행
         async function processQueue() {
             try {
-                const response = await fetch('/api/url-queue/process', { method: 'POST' });
+                const response = await fetch('/api/url-queue/process-full', { method: 'POST' });
                 const data = await response.json();
                 
                 if (!data.success) {
                     alert(data.error || '실행 실패');
+                }
+            } catch (error) {
+                alert('오류: ' + error.message);
+            }
+        }
+        
+        // ✅ 큐 중지
+        async function stopQueue() {
+            if (!confirm('정말 중지하시겠습니까?')) return;
+            
+            try {
+                const response = await fetch('/api/pipeline/stop', { method: 'POST' });
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('🛑 중지되었습니다');
+                    loadUrlQueue();
+                } else {
+                    alert(data.error || '중지 실패');
                 }
             } catch (error) {
                 alert('오류: ' + error.message);

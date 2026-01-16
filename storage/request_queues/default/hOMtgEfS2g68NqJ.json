@@ -1,9 +1,0 @@
-{
-	"id": "hOMtgEfS2g68NqJ",
-	"json": "{\"id\":\"hOMtgEfS2g68NqJ\",\"url\":\"https://www.oliveyoung.co.kr/store/goods/getGoodsDetail.do?goodsNo=A000000219717\",\"uniqueKey\":\"https://www.oliveyoung.co.kr/store/goods/getGoodsDetail.do?goodsNo=A000000219717\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":1,\"errorMessages\":[\"Error: browserController.newPage() failed: lT80s4ifidw6WPhENdf1W\\nCause:browserContext.newPage: Protocol error (Target.createTarget): Not supported.\\n    at BrowserPool._createPageForBrowser (/root/copychu-scraper/node_modules/@crawlee/browser-pool/browser-pool.js:405:19)\\n    at async /root/copychu-scraper/node_modules/@crawlee/browser-pool/browser-pool.js:295:20\"],\"headers\":{},\"userData\":{\"type\":\"product\",\"sku\":\"A000000219717\",\"__crawlee\":{\"state\":5}}}",
-	"method": "GET",
-	"orderNo": 1768554134940,
-	"retryCount": 1,
-	"uniqueKey": "https://www.oliveyoung.co.kr/store/goods/getGoodsDetail.do?goodsNo=A000000219717",
-	"url": "https://www.oliveyoung.co.kr/store/goods/getGoodsDetail.do?goodsNo=A000000219717"
-}
