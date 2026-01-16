@@ -27,17 +27,16 @@ const TARGET_SIZE = 1200;
 const PRODUCT_RATIO = 0.75;
 const MIN_SCORE_FOR_GALLERY = 50;  // ✅ v9: 70 → 50으로 완화
 
-console.log('🚀 Phase 4: 최고 이미지 선별 + 네이버 보충 (v10 개선 버전)');
+console.log('🚀 Phase 4: 최고 이미지 선별 + 네이버 보충 (v11 개선 버전)');
 console.log('='.repeat(70));
 console.log(`⚙️  설정:`);
 console.log(`   - Shopify Table: ${SHOPIFY_TABLE_ID}`);
 console.log(`   - 최종 크기: ${TARGET_SIZE}x${TARGET_SIZE}px`);
 console.log(`   - 제품 비율: ${PRODUCT_RATIO * 100}%`);
 console.log(`   - Gallery 최소 점수: ${MIN_SCORE_FOR_GALLERY}점`);
-console.log(`\n✨ v10 핵심 변경:`);
-console.log(`   ✅ v9 유지: 즉시 탈락 제거, 점수제 운영`);
-console.log(`   ✅ 용량 50% 이상 차이: -30점 감점 (다른 제품 방지)`);
-console.log(`   ✅ 품질 12점 미만: -20점 감점 (흐릿한 이미지 방지)\n`);
+console.log(`\n✨ v11 핵심 변경:`);
+console.log(`   ✅ v10 유지: 용량 50%+ 차이 -30점, 품질 12점 미만 -20점`);
+console.log(`   ✅ 여러 제품 감지: -20점 → -40점 (개별 제품에 다른 제품 포함 방지)\n`);
 
 // ==================== 유틸리티 ====================
 const cleanupFiles = (...files) => {
@@ -231,11 +230,11 @@ REASON: [한 줄 설명]`;
         const detectedCount = countMatch ? parseInt(countMatch[1]) : 1;
         const reason = reasonMatch ? reasonMatch[1].trim() : '응답 파싱 실패';
         
-        // ✅ v9: 탈락 대신 감점!
+        // ✅ v11: 여러 제품 감지 시 더 강한 감점!
         if (detectedCount >= 2) {
             console.log(`      ⚠️  여러 제품 감지 (${detectedCount}개) - ${reason}`);
-            console.log(`      📉 감점: -20점 (탈락 아님!)`);
-            return { hasMultiple: true, count: detectedCount, reason, penalty: -20 };
+            console.log(`      📉 감점: -40점 (개별 제품에 다른 제품 포함!)`);
+            return { hasMultiple: true, count: detectedCount, reason, penalty: -40 };
         } else {
             console.log(`      ✅ 단일 제품 확인 (${detectedCount}개) - ${reason}`);
             return { hasMultiple: false, count: detectedCount, reason, penalty: 0 };
@@ -1421,12 +1420,11 @@ async function main() {
         }
         
         console.log(`\n${'='.repeat(70)}`);
-        console.log('🎉 Phase 4 v10 완료!');
+        console.log('🎉 Phase 4 v11 완료!');
         console.log('='.repeat(70));
-        console.log(`\n✨ v10 핵심 변경:`);
-        console.log('   ✅ v9 유지: 즉시 탈락 제거, 점수제 운영');
-        console.log('   ✅ 용량 50% 이상 차이: -30점 (다른 제품 방지)');
-        console.log('   ✅ 품질 12점 미만: -20점 (흐릿한 이미지 방지)\n');
+        console.log(`\n✨ v11 핵심 변경:`);
+        console.log('   ✅ v10 유지: 용량 50%+ 차이 -30점, 품질 12점 미만 -20점');
+        console.log('   ✅ 여러 제품 감지: -40점 (개별 제품에 다른 제품 포함 방지)\n');
         
     } catch (error) {
         console.error('\n❌ 오류:', error.message);
