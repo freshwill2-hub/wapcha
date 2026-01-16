@@ -11,10 +11,14 @@ const OLIVEYOUNG_TABLE_ID = process.env.OLIVEYOUNG_TABLE_ID;
 const CATEGORY_URL = process.env.CATEGORY_URL || process.argv[2];
 const MAX_PRODUCTS = parseInt(process.env.MAX_PRODUCTS) || parseInt(process.argv[3]) || 100;
 
-console.log('🚀 Phase 0: 올리브영 URL 수집기');
+// ✅ 신규: 페이지네이션 설정
+const MAX_PAGES = parseInt(process.env.MAX_PAGES) || parseInt(process.argv[4]) || 10;  // 최대 페이지 수
+
+console.log('🚀 Phase 0: 올리브영 URL 수집기 (페이지네이션 지원)');
 console.log('='.repeat(70));
 console.log(`📂 카테고리 URL: ${CATEGORY_URL}`);
 console.log(`📊 최대 수집 개수: ${MAX_PRODUCTS}`);
+console.log(`📄 최대 페이지 수: ${MAX_PAGES}`);
 console.log(`💾 저장 테이블: ${OLIVEYOUNG_TABLE_ID}`);
 console.log('='.repeat(70) + '\n');
 
@@ -147,14 +151,31 @@ async function extractProductInfo(page, url) {
     }
 }
 
+// ✅ 신규: 페이지네이션 URL 생성
+function generatePageUrls(baseUrl, maxPages) {
+    const pageUrls = [];
+    
+    // URL 파싱
+    const url = new URL(baseUrl);
+    
+    for (let page = 1; page <= maxPages; page++) {
+        // pageIdx 파라미터 설정
+        url.searchParams.set('pageIdx', page.toString());
+        pageUrls.push(url.toString());
+    }
+    
+    console.log(`📄 ${pageUrls.length}개 페이지 URL 생성됨`);
+    return pageUrls;
+}
+
 // ==================== 메인: 카테고리 스크래핑 ====================
 async function collectUrls() {
     if (!CATEGORY_URL) {
         console.error('❌ 카테고리 URL이 필요합니다!');
         console.log('\n사용법:');
-        console.log('  node phase0-url-collector.js "카테고리URL" [최대개수]');
+        console.log('  node phase0-url-collector.js "카테고리URL" [최대개수] [최대페이지수]');
         console.log('\n예시:');
-        console.log('  node phase0-url-collector.js "https://www.oliveyoung.co.kr/store/main/getBestList.do?dispCatNo=900000100100001" 50');
+        console.log('  node phase0-url-collector.js "https://www.oliveyoung.co.kr/store/main/getBestList.do?dispCatNo=900000100100001" 50 5');
         return;
     }
     
@@ -165,6 +186,9 @@ async function collectUrls() {
     let processedCount = 0;
     let savedCount = 0;
     let skippedCount = 0;
+    
+    // ✅ 신규: 페이지네이션 URL 생성
+    const pageUrls = generatePageUrls(CATEGORY_URL, MAX_PAGES);
     
     // Playwright 크롤러 설정
     const crawler = new PlaywrightCrawler({
@@ -181,16 +205,20 @@ async function collectUrls() {
             }
         },
         
-        maxRequestsPerCrawl: MAX_PRODUCTS + 10,
+        maxRequestsPerCrawl: MAX_PRODUCTS + MAX_PAGES + 10,
         maxConcurrency: 1,
         requestHandlerTimeoutSecs: 120,
         
         requestHandler: async ({ page, request }) => {
             const url = request.url;
             
-            // 카테고리 페이지 처리
+            // 카테고리 페이지 처리 (페이지네이션 포함)
             if (url.includes('getBestList.do') || url.includes('dispCatNo')) {
-                console.log('📄 카테고리 페이지 로딩 중...');
+                // ✅ 신규: 현재 페이지 번호 표시
+                const pageMatch = url.match(/pageIdx=(\d+)/);
+                const currentPage = pageMatch ? parseInt(pageMatch[1]) : 1;
+                
+                console.log(`\n📄 카테고리 페이지 ${currentPage}/${MAX_PAGES} 로딩 중...`);
                 
                 await page.waitForLoadState('networkidle', { timeout: 30000 });
                 await page.waitForTimeout(3000);
@@ -208,8 +236,9 @@ async function collectUrls() {
                         return links.length;
                     });
                     
-                    if (currentCount >= MAX_PRODUCTS) {
-                        console.log(`   ✅ ${currentCount}개 제품 로드됨 (목표 달성)`);
+                    // ✅ 수정: 이미 충분히 수집했으면 중단
+                    if (collectedProducts.length + currentCount >= MAX_PRODUCTS) {
+                        console.log(`   ✅ 총 ${collectedProducts.length + currentCount}개 도달 (목표: ${MAX_PRODUCTS})`);
                         break;
                     }
                     
@@ -249,19 +278,27 @@ async function collectUrls() {
                     return Array.from(urls);
                 });
                 
-                console.log(`\n📊 총 ${productUrls.length}개 제품 URL 발견`);
+                console.log(`📊 페이지 ${currentPage}에서 ${productUrls.length}개 제품 URL 발견`);
                 
                 // 새 URL만 필터링
-                const newUrls = productUrls.filter(url => !existingUrls.has(url));
-                console.log(`🆕 새 URL: ${newUrls.length}개 (기존 ${productUrls.length - newUrls.length}개 제외)`);
+                const newUrls = productUrls.filter(url => 
+                    !existingUrls.has(url) && !collectedProducts.includes(url)
+                );
+                console.log(`🆕 새 URL: ${newUrls.length}개 (기존/중복 ${productUrls.length - newUrls.length}개 제외)`);
                 
-                // 최대 개수만큼만 처리
-                const urlsToProcess = newUrls.slice(0, MAX_PRODUCTS);
-                console.log(`🎯 처리할 URL: ${urlsToProcess.length}개\n`);
+                // ✅ 수정: 최대 개수까지만 추가
+                const remainingSlots = MAX_PRODUCTS - collectedProducts.length;
+                const urlsToAdd = newUrls.slice(0, remainingSlots);
                 
-                // 각 제품 URL을 큐에 추가
-                for (const productUrl of urlsToProcess) {
+                for (const productUrl of urlsToAdd) {
                     collectedProducts.push(productUrl);
+                }
+                
+                console.log(`📦 현재까지 수집: ${collectedProducts.length}/${MAX_PRODUCTS}개`);
+                
+                // ✅ 신규: 목표 달성 시 조기 종료
+                if (collectedProducts.length >= MAX_PRODUCTS) {
+                    console.log(`\n🎯 목표 수량 달성! (${collectedProducts.length}개)`);
                 }
             }
             
@@ -302,13 +339,30 @@ async function collectUrls() {
         }
     });
     
-    // 1단계: 카테고리 페이지에서 URL 수집
-    console.log('📥 1단계: 카테고리 페이지에서 제품 URL 수집\n');
-    await crawler.run([CATEGORY_URL]);
+    // ✅ 수정: 1단계 - 여러 페이지에서 URL 수집
+    console.log('📥 1단계: 카테고리 페이지들에서 제품 URL 수집\n');
+    
+    for (let i = 0; i < pageUrls.length; i++) {
+        // 목표 달성 시 조기 종료
+        if (collectedProducts.length >= MAX_PRODUCTS) {
+            console.log(`\n✅ 목표 수량 달성으로 페이지 수집 종료`);
+            break;
+        }
+        
+        console.log(`\n${'─'.repeat(70)}`);
+        await crawler.run([pageUrls[i]]);
+        
+        // 페이지 간 대기
+        if (i < pageUrls.length - 1 && collectedProducts.length < MAX_PRODUCTS) {
+            console.log(`⏳ 다음 페이지 로딩 전 2초 대기...`);
+            await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+    }
     
     // 2단계: 각 제품 페이지 방문하여 정보 수집
     if (collectedProducts.length > 0) {
-        console.log(`\n📥 2단계: ${collectedProducts.length}개 제품 정보 수집\n`);
+        console.log(`\n${'='.repeat(70)}`);
+        console.log(`📥 2단계: ${collectedProducts.length}개 제품 정보 수집\n`);
         console.log('='.repeat(70));
         
         await crawler.run(collectedProducts);
@@ -319,6 +373,7 @@ async function collectUrls() {
     console.log('🎉 Phase 0 완료!');
     console.log('='.repeat(70));
     console.log(`📊 결과:`);
+    console.log(`   - 수집된 페이지: ${Math.min(pageUrls.length, Math.ceil(collectedProducts.length / 24))}개`);
     console.log(`   - 발견된 URL: ${collectedProducts.length}개`);
     console.log(`   - 저장 성공: ${savedCount}개`);
     console.log(`   - 건너뜀/실패: ${skippedCount}개`);

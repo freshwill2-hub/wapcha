@@ -203,8 +203,8 @@ const PHASES = [
     { id: 'phase4', name: 'Phase 4: 이미지 선별', script: 'phase4-final-data.js' }
 ];
 
-// ==================== Phase 0: URL 수집 ====================
-async function runPhase0(categoryUrl, maxProducts, categoryName) {
+// ==================== Phase 0: URL 수집 (✅ maxPages 추가) ====================
+async function runPhase0(categoryUrl, maxProducts, categoryName, maxPages = 10) {
     return new Promise((resolve, reject) => {
         const scriptPath = path.join(SCRIPTS_DIR, 'phase0-url-collector.js');
         
@@ -214,12 +214,13 @@ async function runPhase0(categoryUrl, maxProducts, categoryName) {
             return;
         }
         
-        addLog('info', `🚀 Phase 0 시작: ${categoryName || '카테고리'} (최대 ${maxProducts}개)`, 'phase0');
+        addLog('info', `🚀 Phase 0 시작: ${categoryName || '카테고리'} (최대 ${maxProducts}개, ${maxPages}페이지)`, 'phase0');
         
         const env = {
             ...process.env,
             CATEGORY_URL: categoryUrl,
-            MAX_PRODUCTS: maxProducts.toString()
+            MAX_PRODUCTS: maxProducts.toString(),
+            MAX_PAGES: maxPages.toString()  // ✅ 추가
         };
         
         const child = spawn('node', [scriptPath], {
@@ -268,7 +269,7 @@ async function runPhase0(categoryUrl, maxProducts, categoryName) {
     });
 }
 
-// URL 큐 전체 처리
+// URL 큐 전체 처리 (✅ maxPages 지원)
 async function processUrlQueue() {
     if (systemState.status === 'running') {
         throw new Error('이미 실행 중입니다');
@@ -294,7 +295,8 @@ async function processUrlQueue() {
             saveUrlQueue();
             io.emit('urlQueue', urlQueue);
             
-            await runPhase0(category.url, category.maxProducts, category.name);
+            // ✅ maxPages 전달
+            await runPhase0(category.url, category.maxProducts, category.name, category.maxPages || 10);
             
             category.status = 'completed';
             category.completedAt = new Date().toISOString();
@@ -912,9 +914,9 @@ app.get('/api/url-queue', (req, res) => {
     res.json(urlQueue);
 });
 
-// 카테고리 추가
+// 카테고리 추가 (✅ maxPages 추가)
 app.post('/api/url-queue/category', (req, res) => {
-    const { url, name, maxProducts = 100 } = req.body;
+    const { url, name, maxProducts = 100, maxPages = 10 } = req.body;  // ✅ maxPages 추가
     
     if (!url) {
         return res.status(400).json({ error: 'URL이 필요합니다' });
@@ -929,6 +931,7 @@ app.post('/api/url-queue/category', (req, res) => {
         url: url.trim(),
         name: name?.trim() || '이름 없음',
         maxProducts: parseInt(maxProducts) || 100,
+        maxPages: parseInt(maxPages) || 10,  // ✅ maxPages 저장
         status: 'pending',
         createdAt: new Date().toISOString()
     };
@@ -937,7 +940,7 @@ app.post('/api/url-queue/category', (req, res) => {
     saveUrlQueue();
     
     io.emit('urlQueue', urlQueue);
-    addLog('info', `📂 카테고리 추가됨: ${category.name} (최대 ${category.maxProducts}개)`);
+    addLog('info', `📂 카테고리 추가됨: ${category.name} (최대 ${category.maxProducts}개, ${category.maxPages}페이지)`);
     
     res.json({ success: true, category });
 });

@@ -90,7 +90,7 @@
             <div class="card p-6">
                 <h3 class="text-lg font-semibold mb-4">카테고리 URL 추가</h3>
                 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                     <div class="md:col-span-2">
                         <label class="block text-sm text-gray-400 mb-2">올리브영 카테고리 URL</label>
                         <input type="text" id="category-url" class="input-field w-full px-4 py-3 rounded-lg" 
@@ -103,11 +103,18 @@
                     </div>
                 </div>
                 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <!-- ✅ 신규: 최대 수집 개수 + 최대 페이지 수 -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                     <div>
                         <label class="block text-sm text-gray-400 mb-2">최대 수집 개수</label>
                         <input type="number" id="category-max" class="input-field w-full px-4 py-3 rounded-lg" 
                                value="100" min="1" max="500">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">최대 페이지 수</label>
+                        <input type="number" id="category-max-pages" class="input-field w-full px-4 py-3 rounded-lg" 
+                               value="10" min="1" max="50">
+                        <p class="text-xs text-gray-500 mt-1">페이지당 약 24개 제품</p>
                     </div>
                     <div class="md:col-span-2 flex items-end">
                         <button onclick="addCategory()" class="btn-primary px-6 py-3 rounded-lg font-medium">
@@ -242,11 +249,12 @@
             }
         }
         
-        // 카테고리 추가
+        // ✅ 카테고리 추가 (maxPages 포함)
         async function addCategory() {
             const url = document.getElementById('category-url').value.trim();
             const name = document.getElementById('category-name').value.trim();
             const maxProducts = parseInt(document.getElementById('category-max').value) || 100;
+            const maxPages = parseInt(document.getElementById('category-max-pages').value) || 10;  // ✅ 추가
             
             if (!url) {
                 alert('카테고리 URL을 입력해주세요');
@@ -257,7 +265,7 @@
                 const response = await fetch('/api/url-queue/category', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ url, name, maxProducts })
+                    body: JSON.stringify({ url, name, maxProducts, maxPages })  // ✅ maxPages 전송
                 });
                 
                 const data = await response.json();
@@ -378,7 +386,7 @@
             loadRecentUrls();
         }
         
-        // URL 큐 로드
+        // ✅ URL 큐 로드 (maxPages 표시)
         async function loadUrlQueue() {
             try {
                 const response = await fetch('/api/url-queue');
@@ -399,7 +407,8 @@
                             <p class="font-medium">${cat.name || '이름 없음'}</p>
                             <p class="text-sm text-gray-400 truncate">${cat.url.substring(0, 60)}...</p>
                         </div>
-                        <span class="text-sm">최대 ${cat.maxProducts}개</span>
+                        <span class="text-sm text-cyan-400">최대 ${cat.maxProducts}개</span>
+                        <span class="text-sm text-yellow-400">${cat.maxPages || 10}페이지</span>
                         <span class="status-${cat.status} text-sm capitalize">${getStatusText(cat.status)}</span>
                         <button onclick="deleteCategory('${cat.id}')" class="text-red-400 hover:text-red-300 px-2">🗑️</button>
                     </div>
