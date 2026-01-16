@@ -1,7 +1,7 @@
 import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
-import { spawn } from 'child_process';
+import { spawn, execSync } from 'child_process';  // ✅ execSync 추가
 import cron from 'node-cron';
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
@@ -1175,6 +1175,52 @@ app.delete('/api/oliveyoung/products/:id', async (req, res) => {
     }
 });
 
+// ==================== 강제 종료 API ==================== ✅ 추가됨!
+app.post('/api/force-kill', async (req, res) => {
+    console.log('🛑 강제 종료 요청됨...');
+    addLog('warning', '🔴 강제 종료 요청됨...');
+    
+    const results = { message: [] };
+    
+    // 1. 현재 프로세스 종료
+    if (currentProcess) {
+        try {
+            currentProcess.kill('SIGKILL');
+            currentProcess = null;
+            results.message.push('✅ 현재 프로세스 종료됨');
+        } catch (e) {
+            results.message.push('⚠️ 현재 프로세스 종료 실패: ' + e.message);
+        }
+    }
+    
+    // 2. Phase 관련 node 프로세스 종료
+    try {
+        execSync('pkill -f "node phase" 2>/dev/null || true', { timeout: 5000 });
+        results.message.push('✅ Phase 프로세스 종료됨');
+    } catch (e) {
+        results.message.push('⚠️ Phase 프로세스 없거나 종료 실패');
+    }
+    
+    // 3. Chromium/Playwright 종료
+    try {
+        execSync('pkill -f chromium 2>/dev/null || true', { timeout: 5000 });
+        results.message.push('✅ Chromium 프로세스 종료됨');
+    } catch (e) {
+        results.message.push('⚠️ Chromium 프로세스 없거나 종료 실패');
+    }
+    
+    // 4. 상태 초기화
+    isPaused = false;
+    systemState.status = 'idle';
+    systemState.currentPhase = null;
+    io.emit('state', systemState);
+    
+    addLog('success', '🛑 강제 종료 완료!');
+    console.log('🛑 강제 종료 완료:', results.message.join(', '));
+    
+    res.json({ success: true, message: results.message.join('\n') });
+});
+
 // ==================== Socket.io ====================
 io.on('connection', (socket) => {
     console.log('🔌 클라이언트 연결됨:', socket.id);
@@ -1204,5 +1250,6 @@ httpServer.listen(PORT, '0.0.0.0', () => {
     console.log('   - POST /api/url-queue/category');
     console.log('   - POST /api/url-queue/process');
     console.log('   - POST /api/url-queue/process-full');
+    console.log('   - POST /api/force-kill  ← 🆕 강제 종료');
     console.log('='.repeat(60));
 });

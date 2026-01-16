@@ -1,5 +1,5 @@
 import express from 'express';
-import { spawn } from 'child_process';
+import { spawn, execSync } from 'child_process';
 import { WebSocketServer } from 'ws';
 import { createServer } from 'http';
 import axios from 'axios';
@@ -346,6 +346,62 @@ app.post('/api/stop', (req, res) => {
             message: '실행 중인 프로세스가 없습니다.'
         });
     }
+});
+
+// ==================== 🆕 강제 종료 API ====================
+app.post('/api/force-kill', async (req, res) => {
+    console.log('🛑 강제 종료 요청됨...');
+    
+    const results = {
+        phase: false,
+        chromium: false,
+        message: []
+    };
+    
+    // 1. 현재 프로세스 종료
+    if (currentProcess) {
+        try {
+            currentProcess.kill('SIGKILL');
+            currentProcess = null;
+            currentPhase = null;
+            results.message.push('✅ 현재 프로세스 종료됨');
+        } catch (e) {
+            results.message.push('⚠️ 현재 프로세스 종료 실패: ' + e.message);
+        }
+    }
+    
+    // 2. Phase 관련 node 프로세스 종료
+    try {
+        execSync('pkill -f "node phase" 2>/dev/null || true', { timeout: 5000 });
+        results.phase = true;
+        results.message.push('✅ Phase 프로세스 종료됨');
+    } catch (e) {
+        results.message.push('⚠️ Phase 프로세스 없거나 종료 실패');
+    }
+    
+    // 3. Chromium/Playwright 종료
+    try {
+        execSync('pkill -f chromium 2>/dev/null || true', { timeout: 5000 });
+        results.chromium = true;
+        results.message.push('✅ Chromium 프로세스 종료됨');
+    } catch (e) {
+        results.message.push('⚠️ Chromium 프로세스 없거나 종료 실패');
+    }
+    
+    // 4. 상태 브로드캐스트
+    broadcast({
+        type: 'system',
+        message: '🛑 강제 종료 완료! 모든 프로세스가 정리되었습니다.',
+        timestamp: new Date().toISOString()
+    });
+    
+    console.log('🛑 강제 종료 완료:', results.message.join(', '));
+    
+    res.json({
+        success: true,
+        results: results,
+        message: results.message.join('\n')
+    });
 });
 
 // NocoDB 통계 조회

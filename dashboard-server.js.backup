@@ -22,9 +22,9 @@ const SHOPIFY_TABLE_ID = process.env.SHOPIFY_TABLE_ID;
 // Phase 파일 경로
 const PHASE_FILES = {
     phase1: './phase1-main-gallery.js',
-    phase2: './phase2-ai-generate-improved.js',
-    phase2_5: './phase2.5-final-multi-3products.js',
-    phase2_6: './phase2.6-select-best-images.js'
+    phase2: './phase2-ai-generate.js',
+    phase3: './phase3-multi-3products.js',
+    phase4: './phase4-final-data.js'
 };
 
 // ==================== Express 앱 ====================
@@ -354,11 +354,11 @@ app.get('/api/nocodb/stats', async (req, res) => {
     res.json(stats);
 });
 
-// ==================== 서버 시작 ====================
-server.listen(PORT, () => {
+// ==================== 서버 시작 (✅ 수정됨!) ====================
+server.listen(PORT, '0.0.0.0', () => {
     console.log('🚀 Copychu Dashboard 실행 중!');
-    console.log(`📊 대시보드: http://localhost:${PORT}`);
-    console.log(`🔌 WebSocket: ws://localhost:${PORT}`);
+    console.log(`📊 대시보드: http://77.42.67.165:${PORT}`);
+    console.log(`🔌 WebSocket: ws://77.42.67.165:${PORT}`);
     console.log('');
     console.log('Phase 파일 확인:');
     Object.entries(PHASE_FILES).forEach(([name, file]) => {

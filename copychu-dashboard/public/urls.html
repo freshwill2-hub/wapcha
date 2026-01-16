@@ -29,6 +29,20 @@
         .btn-danger {
             background: linear-gradient(135deg, #ef4444, #dc2626);
         }
+        /* ✅ 강제 종료 버튼 스타일 */
+        .btn-force-kill {
+            background: linear-gradient(135deg, #7f1d1d, #450a0a);
+            border: 2px solid #dc2626;
+            animation: pulse-danger 2s infinite;
+        }
+        .btn-force-kill:hover {
+            background: linear-gradient(135deg, #991b1b, #7f1d1d);
+            box-shadow: 0 0 15px rgba(220, 38, 38, 0.5);
+        }
+        @keyframes pulse-danger {
+            0%, 100% { box-shadow: 0 0 5px rgba(220, 38, 38, 0.3); }
+            50% { box-shadow: 0 0 15px rgba(220, 38, 38, 0.6); }
+        }
         .status-pending { color: #fbbf24; }
         .status-processing { color: #22d3ee; }
         .status-completed { color: #22c55e; }
@@ -160,6 +174,10 @@
                         </button>
                         <button onclick="stopQueue()" id="btn-stop" class="btn-danger px-4 py-2 rounded-lg text-sm font-medium">
                             ⏹️ 중지
+                        </button>
+                        <!-- ✅ 강제 종료 버튼 추가 -->
+                        <button onclick="forceKill()" id="btn-force-kill" class="btn-force-kill px-4 py-2 rounded-lg text-sm font-bold text-white">
+                            🔴 강제 종료
                         </button>
                         <button onclick="clearCompleted()" class="px-4 py-2 rounded-lg text-sm bg-slate-700 hover:bg-slate-600">
                             🗑️ 완료 항목 삭제
@@ -397,6 +415,50 @@
                 }
             } catch (error) {
                 alert('오류: ' + error.message);
+            }
+        }
+        
+        // ✅ 강제 종료 함수 추가
+        async function forceKill() {
+            const confirmMsg = `⚠️ 경고: 강제 종료!
+
+다음 프로세스를 모두 종료합니다:
+• Phase 스크립트 (node phase*)
+• Chromium 브라우저
+
+정말 강제 종료하시겠습니까?`;
+            
+            if (!confirm(confirmMsg)) return;
+            
+            try {
+                addLogMessage({
+                    type: 'warning',
+                    message: '🔴 강제 종료 요청됨...',
+                    timestamp: new Date().toISOString()
+                });
+                
+                const response = await fetch('/api/force-kill', { method: 'POST' });
+                const data = await response.json();
+                
+                if (data.success) {
+                    addLogMessage({
+                        type: 'success',
+                        message: '✅ 강제 종료 완료!',
+                        timestamp: new Date().toISOString()
+                    });
+                    
+                    alert('✅ 강제 종료 완료!\n\n' + data.message);
+                    loadUrlQueue();
+                } else {
+                    alert('❌ 강제 종료 실패: ' + (data.error || '알 수 없는 오류'));
+                }
+            } catch (error) {
+                addLogMessage({
+                    type: 'error',
+                    message: '❌ 강제 종료 오류: ' + error.message,
+                    timestamp: new Date().toISOString()
+                });
+                alert('❌ 오류: ' + error.message);
             }
         }
         

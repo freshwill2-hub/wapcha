@@ -37,7 +37,7 @@ async function getOliveyoungProducts(limit = 100, offset = 0) {
                 params: {
                     offset: 0,
                     limit: 1000,  // 충분히 많이 가져와서 필터링
-                    sort: '-collected_at'
+                    sort: '-Id'  // ✅ Id 기준 정렬 (최신 먼저)
                 }
             }
         );

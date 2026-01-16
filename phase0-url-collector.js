@@ -275,8 +275,8 @@ async function collectUrls() {
             // ✅ 기본 정보만 저장 (제품 상세는 Phase 1에서 수집)
             const productData = {
                 sku: product.sku,
-                product_url: product.url,
-                collected_at: new Date().toISOString()
+                product_url: product.url
+                // collected_at 필드가 테이블에 없으므로 제거
             };
             
             const saved = await saveProductUrl(productData);
