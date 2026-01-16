@@ -1,42 +1,29 @@
 {
   "requestsFinished": 1,
   "requestsFailed": 0,
-  "requestsRetries": 1,
+  "requestsRetries": 0,
   "requestsFailedPerMinute": 0,
-  "requestsFinishedPerMinute": 0,
-  "requestMinDurationMillis": 26888,
-  "requestMaxDurationMillis": 26888,
+  "requestsFinishedPerMinute": 3,
+  "requestMinDurationMillis": 20838,
+  "requestMaxDurationMillis": 20838,
   "requestTotalFailedDurationMillis": 0,
-  "requestTotalFinishedDurationMillis": 26888,
-  "crawlerStartedAt": "2026-01-16T10:46:52.708Z",
-  "crawlerFinishedAt": "2026-01-16T10:49:28.485Z",
-  "statsPersistedAt": "2026-01-16T10:49:28.485Z",
-  "crawlerRuntimeMillis": 156042,
-  "crawlerLastStartTimestamp": 1768560412443,
+  "requestTotalFinishedDurationMillis": 20838,
+  "crawlerStartedAt": "2026-01-16T10:56:40.627Z",
+  "crawlerFinishedAt": "2026-01-16T10:57:01.695Z",
+  "statsPersistedAt": "2026-01-16T10:57:01.695Z",
+  "crawlerRuntimeMillis": 21085,
+  "crawlerLastStartTimestamp": 1768561000610,
   "requestRetryHistogram": [
-    null,
-    null,
-    null,
     1
   ],
   "statsId": 0,
   "requestAvgFailedDurationMillis": null,
-  "requestAvgFinishedDurationMillis": 26888,
-  "requestTotalDurationMillis": 26888,
+  "requestAvgFinishedDurationMillis": 20838,
+  "requestTotalDurationMillis": 20838,
   "requestsTotal": 1,
   "requestsWithStatusCode": {
-    "200": 4
+    "200": 1
   },
   "errors": {},
-  "retryErrors": {
-    "/root/copychu-scraper/phase0-url-collector.js:138:24": {
-      "missing error code": {
-        "TimeoutError": {
-          "page.waitForLoadState: Timeout 30000ms exceeded.": {
-            "count": 3
-          }
-        }
-      }
-    }
-  }
+  "retryErrors": {}
 }
