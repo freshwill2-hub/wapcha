@@ -380,20 +380,47 @@ REASON: [이유를 한 줄로]`;
     }
 }
 
-// ==================== 3. 타이틀 매칭 점수 (0-30점) - v6 강화! ====================
-async function calculateTitleMatchScore(imagePath, productTitle, productInfo) {
+// ==================== 3. 타이틀 매칭 점수 (0-30점) - v8 원본 이미지 사용! ====================
+async function calculateTitleMatchScore(imagePath, productTitle, productInfo, originalImageUrl = null) {
     try {
         console.log(`      🔍 타이틀 매칭 확인 시작...`);
         
-        const imageBuffer = fs.readFileSync(imagePath);
-        const base64 = imageBuffer.toString('base64');
+        let base64;
+        let imageSource = '크롭 이미지';
+        
+        // ✅ v8: 원본 이미지가 있으면 원본으로 확인 (용량 텍스트 확인 가능)
+        if (originalImageUrl) {
+            try {
+                console.log(`      📥 원본 이미지로 확인 중...`);
+                const response = await axios.get(originalImageUrl, {
+                    responseType: 'arraybuffer',
+                    timeout: 30000,
+                    headers: {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                        'Referer': 'https://www.oliveyoung.co.kr'
+                    }
+                });
+                base64 = Buffer.from(response.data).toString('base64');
+                imageSource = '원본 이미지';
+                console.log(`      ✅ 원본 이미지 로드 완료`);
+            } catch (err) {
+                console.log(`      ⚠️  원본 이미지 로드 실패, 크롭 이미지 사용`);
+                const imageBuffer = fs.readFileSync(imagePath);
+                base64 = imageBuffer.toString('base64');
+            }
+        } else {
+            const imageBuffer = fs.readFileSync(imagePath);
+            base64 = imageBuffer.toString('base64');
+        }
+        
+        console.log(`      🖼️  검사 대상: ${imageSource}`);
         
         const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
         
-        // ✅ v6: 제품 라인 이름까지 매칭하는 강화된 프롬프트
-        const prompt = `이 제품 이미지를 분석하여 다음 정보를 확인해주세요:
+        // ✅ v8: 용량까지 정확히 확인하는 프롬프트
+        const prompt = `이 제품 이미지를 **확대해서** 자세히 분석해주세요.
 
-**타겟 제품 정보:**
+**확인해야 할 타겟 제품:**
 - 전체 제품명: "${productTitle}"
 - 브랜드: "${productInfo.brandName || 'N/A'}"
 - 제품 라인: "${productInfo.productLineName || 'N/A'}"
@@ -402,20 +429,21 @@ async function calculateTitleMatchScore(imagePath, productTitle, productInfo) {
 
 **이미지에서 확인해주세요:**
 
-1. 이미지의 제품이 **정확히 "${productTitle}"** 제품인가요?
-2. 브랜드명이 일치하나요?
-3. **제품 라인/시리즈**가 일치하나요? (예: "Skin Barrier Calming Lotion"인지, 다른 라인인지)
-4. 용량이 일치하나요?
-5. 제품이 몇 개 보이나요?
+1. **브랜드명**: 제품에 적힌 브랜드명을 읽어주세요
+2. **제품 라인명**: 제품에 적힌 제품명/시리즈명을 읽어주세요
+3. **용량**: 제품에 적힌 용량(ml, g 등)을 읽어주세요 (매우 중요!)
+4. **제품 개수**: 실물 제품이 몇 개 보이나요?
 
-⚠️ 매우 중요: 같은 브랜드라도 **다른 제품 라인**이면 일치하지 않는 것입니다!
-예: "Skin Barrier Calming Lotion" ≠ "Heartleaf Soothing Toner" (같은 브랜드, 다른 제품)
+⚠️ 매우 중요:
+- 제품 라벨에 적힌 **실제 용량**을 확인하세요
+- 220ml와 80ml는 **완전히 다른 제품**입니다
+- 용량이 다르면 EXACT_MATCH는 반드시 NO입니다
 
-다음 형식으로만 답변하세요:
-EXACT_MATCH: [YES/NO] (정확히 같은 제품인가?)
-BRAND: [브랜드명 또는 UNKNOWN]
-PRODUCT_LINE: [제품 라인명 또는 UNKNOWN]
-VOLUME: [용량 또는 UNKNOWN]
+다음 형식으로만 답변:
+EXACT_MATCH: [YES/NO] (브랜드, 제품라인, 용량이 모두 일치하면 YES)
+BRAND: [읽은 브랜드명 또는 UNKNOWN]
+PRODUCT_LINE: [읽은 제품라인명 또는 UNKNOWN]
+VOLUME: [읽은 용량 또는 UNKNOWN]
 COUNT: [숫자]
 REASON: [한 줄 설명]`;
         
@@ -432,7 +460,7 @@ REASON: [한 줄 설명]`;
         const response = result.response.text().trim();
         console.log(`      📄 Gemini 응답:\n${response.split('\n').map(l => '         ' + l).join('\n')}`);
         
-        // ✅ v6: EXACT_MATCH 파싱 추가
+        // 응답 파싱
         const exactMatch = response.match(/EXACT_MATCH:\s*(YES|NO)/i);
         const brandMatch = response.match(/BRAND:\s*([^\n]+)/i);
         const productLineMatch = response.match(/PRODUCT_LINE:\s*([^\n]+)/i);
@@ -444,75 +472,96 @@ REASON: [한 줄 설명]`;
         const detectedBrand = brandMatch ? brandMatch[1].trim().toLowerCase() : 'unknown';
         const detectedProductLine = productLineMatch ? productLineMatch[1].trim().toLowerCase() : 'unknown';
         const detectedVolume = volumeMatch ? volumeMatch[1].trim().toLowerCase() : 'unknown';
-        const detectedCount = countMatch ? parseInt(countMatch[1]) : 0;
+        const detectedCount = countMatch ? parseInt(countMatch[1]) : 1;
         const reason = reasonMatch ? reasonMatch[1].trim() : '';
         
-        // ✅ v6: 정확히 같은 제품이 아니면 즉시 탈락!
-        if (!isExactMatch && detectedProductLine !== 'unknown') {
-            console.log(`      ❌ 타이틀 매칭: 0/30점 (다른 제품 라인!)`);
-            console.log(`         → 타겟: ${productInfo.productLineName || productTitle}`);
-            console.log(`         → 감지: ${detectedProductLine}`);
-            console.log(`         → ${reason}`);
-            return {
-                score: 0,
-                isWrongProduct: true
-            };
-        }
-        
-        // 용량 불일치 체크 (기존 로직 유지)
-        if (detectedVolume !== 'unknown' && productInfo.volume) {
-            const detectedNum = parseInt(detectedVolume.match(/\d+/)?.[0] || '0');
-            const expectedNum = productInfo.volumeNumber;
-            
-            if (expectedNum && Math.abs(detectedNum - expectedNum) > 20) {
-                console.log(`      ❌ 타이틀 매칭: 0/30점 (용량 불일치!)`);
-                return {
-                    score: 0,
-                    isWrongProduct: true
-                };
-            }
-        }
-        
         let score = 0;
+        const targetBrand = (productInfo.brandName || '').toLowerCase();
+        const targetLine = (productInfo.productLineName || '').toLowerCase();
         
-        // 정확히 매칭되면 높은 점수
+        // ✅ v8: 정확히 일치하면 높은 점수
         if (isExactMatch) {
-            score += 20;
-            console.log(`      ✅ 정확한 제품 매칭! (+20점)`);
+            score = 30;
+            console.log(`      ✅ 정확한 제품 매칭! (+30점)`);
+            console.log(`         → ${reason}`);
+            return { score, isWrongProduct: false };
         }
         
-        // 브랜드 매칭 (5점)
-        if (detectedBrand !== 'unknown' && productInfo.brandName) {
-            if (detectedBrand.includes(productInfo.brandName) || productInfo.brandName.includes(detectedBrand)) {
-                score += 5;
+        // ✅ v8: 브랜드 확인
+        let brandOK = false;
+        if (detectedBrand !== 'unknown' && targetBrand) {
+            if (detectedBrand.includes(targetBrand) || targetBrand.includes(detectedBrand)) {
+                brandOK = true;
+                score += 10;
+                console.log(`      ✅ 브랜드 일치: ${detectedBrand} (+10점)`);
+            } else {
+                console.log(`      ❌ 브랜드 불일치: ${detectedBrand} ≠ ${targetBrand}`);
+                console.log(`         → ${reason}`);
+                return { score: 0, isWrongProduct: true };
             }
-        } else if (detectedBrand === 'unknown') {
-            score += 2;
+        } else {
+            brandOK = true; // 미확인이면 일단 통과
+            score += 5;
+            console.log(`      ⚠️  브랜드 미확인 (+5점)`);
         }
         
-        // 용량 매칭 (5점)
+        // ✅ v8: 제품 라인 확인
+        let lineOK = false;
+        if (detectedProductLine !== 'unknown' && targetLine) {
+            const targetWords = targetLine.split(' ').slice(0, 2).join(' ');
+            const detectedWords = detectedProductLine.split(' ').slice(0, 2).join(' ');
+            
+            if (detectedProductLine.includes(targetWords) || targetLine.includes(detectedWords) || 
+                detectedWords.includes(targetWords) || targetWords.includes(detectedWords)) {
+                lineOK = true;
+                score += 10;
+                console.log(`      ✅ 제품 라인 일치 (+10점)`);
+            } else {
+                console.log(`      ❌ 제품 라인 불일치: ${detectedProductLine} ≠ ${targetLine}`);
+                console.log(`         → ${reason}`);
+                return { score: 0, isWrongProduct: true };
+            }
+        } else {
+            lineOK = true;
+            score += 5;
+            console.log(`      ⚠️  제품 라인 미확인 (+5점)`);
+        }
+        
+        // ✅ v8: 용량 확인 (핵심!)
         if (detectedVolume !== 'unknown' && productInfo.volume) {
             const detectedNum = parseInt(detectedVolume.match(/\d+/)?.[0] || '0');
             const expectedNum = productInfo.volumeNumber;
             
-            if (expectedNum && detectedNum === expectedNum) {
-                score += 5;
+            if (expectedNum && detectedNum > 0) {
+                if (detectedNum === expectedNum) {
+                    score += 10;
+                    console.log(`      ✅ 용량 일치: ${detectedVolume} (+10점)`);
+                } else if (Math.abs(detectedNum - expectedNum) <= 10) {
+                    // 10ml 이내 차이는 허용 (라벨 표기 차이)
+                    score += 5;
+                    console.log(`      ⚠️  용량 근사: ${detectedVolume} ≈ ${productInfo.volume} (+5점)`);
+                } else {
+                    // 용량이 크게 다르면 탈락
+                    console.log(`      ❌ 용량 불일치: ${detectedVolume} ≠ ${productInfo.volume}`);
+                    console.log(`         → 다른 용량의 제품입니다!`);
+                    return { score: 0, isWrongProduct: true };
+                }
+            }
+        } else {
+            // 용량 미확인 → 브랜드 + 라인이 맞으면 통과
+            if (brandOK && lineOK) {
+                score += 3;
+                console.log(`      ⚠️  용량 미확인, 브랜드+라인 일치로 통과 (+3점)`);
             }
         }
         
         console.log(`      📊 타이틀 매칭: ${score}/30점`);
         
-        return {
-            score: score,
-            isWrongProduct: false
-        };
+        return { score, isWrongProduct: false };
         
     } catch (error) {
         console.error('      ❌ 타이틀 매칭 확인 실패:', error.message);
-        return {
-            score: 15,
-            isWrongProduct: false
-        };
+        return { score: 10, isWrongProduct: false };
     }
 }
 
@@ -773,7 +822,7 @@ async function scoreImage(imageData, imagePath, productTitle, productInfo, index
         };
     }
     
-    const titleMatchResult = await calculateTitleMatchScore(imagePath, productTitle, productInfo);
+    const titleMatchResult = await calculateTitleMatchScore(imagePath, productTitle, productInfo, imageData.originalUrl || null);
     
     if (titleMatchResult.isWrongProduct) {
         console.log(`      ⚠️  다른 제품 감지 → 나머지 평가 생략`);
@@ -871,7 +920,7 @@ async function scoreNaverImageForSet(imageData, imagePath, productTitle, product
         };
     }
     
-    const titleMatchResult = await calculateTitleMatchScore(imagePath, productTitle, productInfo);
+    const titleMatchResult = await calculateTitleMatchScore(imagePath, productTitle, productInfo, imageData.originalUrl || null);
     
     if (titleMatchResult.isWrongProduct) {
         console.log(`      ⚠️  다른 제품 감지 → 나머지 평가 생략`);

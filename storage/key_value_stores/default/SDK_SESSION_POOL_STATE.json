@@ -3,7 +3,7 @@
   "retiredSessionsCount": 0,
   "sessions": [
     {
-      "id": "session_hhkjIZT3Dq",
+      "id": "session_CQ3FkXGX47",
       "cookieJar": {
         "version": "tough-cookie@6.0.0",
         "storeType": "MemoryCookieStore",
@@ -16,14 +16,14 @@
       "userData": {},
       "maxErrorScore": 3,
       "errorScoreDecrement": 0.5,
-      "expiresAt": "2026-01-16T01:42:32.288Z",
-      "createdAt": "2026-01-16T00:52:32.288Z",
+      "expiresAt": "2026-01-16T02:29:14.075Z",
+      "createdAt": "2026-01-16T01:39:14.075Z",
       "usageCount": 0,
       "maxUsageCount": 50,
       "errorScore": 0
     },
     {
-      "id": "session_ievffFOo5d",
+      "id": "session_2CD8PPFeiq",
       "cookieJar": {
         "version": "tough-cookie@6.0.0",
         "storeType": "MemoryCookieStore",
@@ -34,31 +34,31 @@
         "cookies": [
           {
             "key": "page_uid",
-            "value": "jTE71dqo0qMDLt9EzAK-232943",
-            "expires": "2026-01-16T01:42:38.199Z",
+            "value": "jTETxwqo0qMcmt9Ebkh-173138",
+            "expires": "2026-01-16T02:29:19.942Z",
             "domain": "naver.com",
             "path": "/",
             "hostOnly": false,
-            "creation": "2026-01-16T00:52:38.203Z",
-            "lastAccessed": "2026-01-16T00:52:38.203Z"
+            "creation": "2026-01-16T01:39:19.945Z",
+            "lastAccessed": "2026-01-16T01:39:19.945Z"
           },
           {
             "key": "_naver_usersession_",
-            "value": "cBOTHuMjbXyYBn5b56pQNW/b",
-            "expires": "2026-01-16T00:57:37.450Z",
+            "value": "ac90+V+XQk3omRX0W+H22MPH",
+            "expires": "2026-01-16T01:44:19.209Z",
             "domain": "naver.com",
             "path": "/",
             "hostOnly": false,
-            "creation": "2026-01-16T00:52:38.210Z",
-            "lastAccessed": "2026-01-16T00:52:38.210Z"
+            "creation": "2026-01-16T01:39:19.969Z",
+            "lastAccessed": "2026-01-16T01:39:19.969Z"
           }
         ]
       },
       "userData": {},
       "maxErrorScore": 3,
       "errorScoreDecrement": 0.5,
-      "expiresAt": "2026-01-16T01:42:32.291Z",
-      "createdAt": "2026-01-16T00:52:32.291Z",
+      "expiresAt": "2026-01-16T02:29:14.080Z",
+      "createdAt": "2026-01-16T01:39:14.080Z",
       "usageCount": 1,
       "maxUsageCount": 50,
       "errorScore": 0
