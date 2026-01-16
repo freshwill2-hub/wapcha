@@ -128,31 +128,15 @@ async function collectUrls() {
         
         maxRequestsPerCrawl: 100,
         maxConcurrency: 1,
-        requestHandlerTimeoutSecs: 120,  // ✅ 60초 → 120초로 증가
+        requestHandlerTimeoutSecs: 60,
         
         requestHandler: async ({ page, request }) => {
             const pageNum = request.userData?.pageNum || 1;
             
             console.log(`\n📄 카테고리 페이지 ${pageNum}${UNLIMITED_PAGES ? '' : '/' + MAX_PAGES} 로딩 중...`);
             
-            // ✅ 수정: networkidle → load (더 빠르고 안정적)
-            try {
-                await page.waitForLoadState('load', { timeout: 30000 });
-            } catch (e) {
-                console.log('⚠️  load 타임아웃, domcontentloaded로 재시도...');
-                await page.waitForLoadState('domcontentloaded', { timeout: 15000 });
-            }
-            
-            // ✅ 페이지 로딩 후 추가 대기 (동적 콘텐츠 로딩)
-            await page.waitForTimeout(3000);
-            
-            // ✅ 제품 목록이 나타날 때까지 대기
-            try {
-                await page.waitForSelector('a[href*="goodsNo="]', { timeout: 10000 });
-                console.log('✅ 제품 목록 로딩 완료');
-            } catch (e) {
-                console.log('⚠️  제품 목록 선택자 대기 타임아웃');
-            }
+            await page.waitForLoadState('networkidle', { timeout: 30000 });
+            await page.waitForTimeout(2000);
             
             // 스크롤하여 더 많은 제품 로드
             console.log('📜 페이지 스크롤 중...');
@@ -217,13 +201,8 @@ async function collectUrls() {
             // 다음 페이지 확인
             if (collectedProducts.length >= MAX_PRODUCTS) {
                 hasMorePages = false;
-            } else if (newProducts.length === 0 && products.length > 0) {
-                // ✅ 수정: 제품은 있는데 새 제품이 없으면 → 다음 페이지 시도
-                console.log(`⚠️  새 제품 없음 - 다음 페이지 확인...`);
-                // hasMorePages = false;  // ❌ 제거: 바로 중단하지 않음
-            } else if (products.length === 0) {
-                // 제품 자체가 없으면 마지막 페이지
-                console.log(`⚠️  제품 없음 - 마지막 페이지로 판단`);
+            } else if (newProducts.length === 0) {
+                console.log(`\n⚠️  새 제품 없음 - 마지막 페이지로 판단`);
                 hasMorePages = false;
             } else if (!UNLIMITED_PAGES && pageNum >= MAX_PAGES) {
                 hasMorePages = false;
