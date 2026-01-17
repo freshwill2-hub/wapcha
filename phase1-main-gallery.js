@@ -342,10 +342,28 @@ async function processProduct(product, galleryImages, productData) {
             }
         }
         
-        // 2. 가격 처리
-        if (productData.price) {
-            updateData.price_original = productData.price;
-            console.log(`\n💰 가격: ₩${productData.price.toLocaleString()}`);
+        // ✅ 2. 가격 처리 (정가 + 할인가 둘 다 저장)
+        if (productData.priceOriginal) {
+            // price_original = 정가
+            updateData.price_original = productData.priceOriginal;
+            
+            // price_discount = 할인가 (없으면 정가와 동일)
+            if (productData.priceDiscount && productData.priceDiscount < productData.priceOriginal) {
+                updateData.price_discount = productData.priceDiscount;
+            } else {
+                updateData.price_discount = productData.priceOriginal;
+            }
+            
+            console.log(`\n💰 가격:`);
+            console.log(`   정가 (price_original): ₩${updateData.price_original.toLocaleString()}`);
+            console.log(`   할인가 (price_discount): ₩${updateData.price_discount.toLocaleString()}`);
+            
+            if (updateData.price_discount < updateData.price_original) {
+                const discountRate = Math.round((1 - updateData.price_discount / updateData.price_original) * 100);
+                console.log(`   할인율: ${discountRate}%`);
+            } else {
+                console.log(`   할인 없음 (정가 = 할인가)`);
+            }
         }
         
         // 3. 이미지 처리
@@ -459,7 +477,8 @@ async function main() {
                     const productData = await page.evaluate(() => {
                         const result = {
                             rawTitle: null,
-                            price: null
+                            priceOriginal: null,   // ✅ 정가
+                            priceDiscount: null    // ✅ 할인가
                         };
                         
                         // 1. 타이틀 추출
@@ -481,31 +500,87 @@ async function main() {
                             }
                         }
                         
-                        // 2. 가격 추출 (할인가 우선, 없으면 정가)
-                        const priceSelectors = [
-                            '.price-2 span',           // 할인가
-                            '.price_box .price',
-                            '.prd_price .price',
-                            '.sale_price',
-                            '.final-price',
-                            '[class*="salePrice"]',
-                            '[class*="finalPrice"]',
-                            '.price-1 span',           // 정가
+                        // ✅ 2. 가격 추출 (정가와 할인가 각각 추출)
+                        
+                        // 2-1. 정가 추출 (원래 가격) - price-1이 올리브영의 정가
+                        const originalPriceSelectors = [
+                            '.price-1 span',           // 올리브영 정가 (취소선 있는 가격)
                             '.org_price',
-                            '.original_price'
+                            '.original_price',
+                            '.origin-price',
+                            '[class*="orgPrice"]',
+                            '[class*="originalPrice"]'
                         ];
                         
-                        for (const selector of priceSelectors) {
+                        for (const selector of originalPriceSelectors) {
                             const priceEl = document.querySelector(selector);
                             if (priceEl) {
                                 const priceText = priceEl.textContent.trim();
-                                // 숫자만 추출 (원, 콤마 제거)
                                 const priceNum = parseInt(priceText.replace(/[^0-9]/g, ''));
                                 if (priceNum > 0) {
-                                    result.price = priceNum;
+                                    result.priceOriginal = priceNum;
                                     break;
                                 }
                             }
+                        }
+                        
+                        // 2-2. 할인가 추출 (세일 가격) - price-2가 올리브영의 할인가
+                        const discountPriceSelectors = [
+                            '.price-2 span',           // 올리브영 할인가 (실제 판매가)
+                            '.sale_price',
+                            '.final-price',
+                            '.discount-price',
+                            '[class*="salePrice"]',
+                            '[class*="finalPrice"]',
+                            '[class*="discountPrice"]'
+                        ];
+                        
+                        for (const selector of discountPriceSelectors) {
+                            const priceEl = document.querySelector(selector);
+                            if (priceEl) {
+                                const priceText = priceEl.textContent.trim();
+                                const priceNum = parseInt(priceText.replace(/[^0-9]/g, ''));
+                                if (priceNum > 0) {
+                                    result.priceDiscount = priceNum;
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        // 2-3. 정가를 못 찾았는데 할인가는 있는 경우
+                        // → 할인가가 실제로는 정가 (할인 없는 제품)
+                        if (!result.priceOriginal && result.priceDiscount) {
+                            result.priceOriginal = result.priceDiscount;
+                            result.priceDiscount = null;
+                        }
+                        
+                        // 2-4. 정가도 못 찾고 할인가도 못 찾은 경우 → 폴백 셀렉터 시도
+                        if (!result.priceOriginal) {
+                            const fallbackSelectors = [
+                                '.prd_price .tx_num',
+                                '.price_box .price',
+                                '.prd_price .price'
+                            ];
+                            
+                            for (const selector of fallbackSelectors) {
+                                const priceEl = document.querySelector(selector);
+                                if (priceEl) {
+                                    const priceText = priceEl.textContent.trim();
+                                    const priceNum = parseInt(priceText.replace(/[^0-9]/g, ''));
+                                    if (priceNum > 0) {
+                                        result.priceOriginal = priceNum;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // 2-5. 할인가가 정가보다 큰 경우 (데이터 오류) → 스왑
+                        if (result.priceOriginal && result.priceDiscount && 
+                            result.priceDiscount > result.priceOriginal) {
+                            const temp = result.priceOriginal;
+                            result.priceOriginal = result.priceDiscount;
+                            result.priceDiscount = temp;
                         }
                         
                         return result;
@@ -513,7 +588,8 @@ async function main() {
                     
                     console.log(`\n📋 추출된 정보:`);
                     console.log(`   타이틀: ${productData.rawTitle || '없음'}`);
-                    console.log(`   가격: ${productData.price ? '₩' + productData.price.toLocaleString() : '없음'}`);
+                    console.log(`   정가: ${productData.priceOriginal ? '₩' + productData.priceOriginal.toLocaleString() : '없음'}`);
+                    console.log(`   할인가: ${productData.priceDiscount ? '₩' + productData.priceDiscount.toLocaleString() : '없음 (정가와 동일)'}`);
                     
                     // ==================== 이미지 추출 ====================
                     const images = await page.evaluate(() => {
@@ -646,10 +722,12 @@ async function main() {
         console.log(`\n📊 저장된 데이터 (tb_oliveyoung_products):`);
         console.log(`   - title_kr: 한글 타이틀 (클리닝됨)`);
         console.log(`   - title_en: 영어 타이틀 (번역됨)`);
-        console.log(`   - price_original: 원화 가격`);
+        console.log(`   - price_original: 정가 (원화)`);
+        console.log(`   - price_discount: 할인가 (원화, 없으면 정가와 동일)`);
         console.log(`   - product_images: 갤러리 이미지`);
         console.log(`   - scraped_at: 스크래핑 시간`);
         console.log(`\n💡 다음 단계: node phase2-ai-generate.js`);
+        console.log(`   (Phase 2에서 price_original(정가)을 AUD로 변환)`);
         
     } catch (error) {
         console.error('\n❌ 치명적 오류:', error.message);
