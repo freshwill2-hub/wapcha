@@ -6,8 +6,9 @@
       "name": "크림",
       "maxProducts": 30,
       "maxPages": 2,
-      "status": "processing",
-      "createdAt": "2026-01-17T06:58:10.784Z"
+      "status": "completed",
+      "createdAt": "2026-01-17T06:58:10.784Z",
+      "completedAt": "2026-01-17T07:00:25.272Z"
     },
     {
       "id": "c118379a-d684-4509-9e5d-05ded845c5bd",
@@ -15,8 +16,9 @@
       "name": "스킨/토너",
       "maxProducts": 30,
       "maxPages": 2,
-      "status": "pending",
-      "createdAt": "2026-01-17T06:58:50.689Z"
+      "status": "completed",
+      "createdAt": "2026-01-17T06:58:50.689Z",
+      "completedAt": "2026-01-17T07:01:48.751Z"
     }
   ],
   "products": []
