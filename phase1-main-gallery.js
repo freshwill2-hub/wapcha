@@ -62,7 +62,7 @@ const MEMORY_CHECK_INTERVAL = 5;
 
 const openai = OPENAI_API_KEY ? new OpenAI({ apiKey: OPENAI_API_KEY }) : null;
 
-log('🚀 Phase 1: 제품 상세 스크래핑 (v2.1 - 메인 갤러리 이미지 + 타이틀 수정)');
+log('🚀 Phase 1: 제품 상세 스크래핑 (v2.2 - 메인 갤러리 셀렉터 수정)');
 log('='.repeat(70));
 log('🔧 설정 확인:');
 log(`- NocoDB URL: ${NOCODB_API_URL}`);
@@ -71,11 +71,11 @@ log(`- OpenAI API: ${OPENAI_API_KEY ? '✅ 설정됨' : '❌ 없음'}`);
 log(`- 시간대: ${SYDNEY_TIMEZONE} (시드니)`);
 log(`- 로그 파일: ${LOG_PATH}`);
 log('');
-log('🆕 v2.1 수정 사항:');
-log('   ✅ 타이틀에서 "| 올리브영" 자동 제거');
-log('   ✅ 메인 갤러리 이미지만 수집 (상세 설명 이미지 제외)');
-log('   ✅ gdasEditor, display 경로 이미지 제외');
-log('   ✅ 메인 상품 이미지 영역만 타겟팅');
+log('🆕 v2.2 수정 사항:');
+log('   ✅ 메인 갤러리 셀렉터 수정: vis-swiper 컨테이너 타겟팅');
+log('   ✅ data-swiper-slide-index 속성 활용');
+log('   ✅ GoodsDetail_Carousel 클래스 타겟팅');
+log('   ✅ 정확한 메인 이미지만 수집 (배너/프로모션 제외)');
 log('');
 
 // ==================== 전역 변수 ====================
@@ -145,13 +145,13 @@ function checkMissingFields(product) {
     return missing;
 }
 
-// ==================== 타이틀 클리닝 함수 (✅ 수정됨) ====================
+// ==================== 타이틀 클리닝 함수 ====================
 function cleanProductTitle(rawTitle) {
     if (!rawTitle) return '';
     
     let cleaned = rawTitle;
     
-    // ✅ 1단계: "| 올리브영" 또는 "- 올리브영" 제거 (가장 먼저!)
+    // 1단계: "| 올리브영" 또는 "- 올리브영" 제거
     cleaned = cleaned.replace(/\s*\|\s*올리브영.*$/g, '');
     cleaned = cleaned.replace(/\s*-\s*올리브영.*$/g, '');
     cleaned = cleaned.replace(/\s*올리브영$/, '');
@@ -373,7 +373,7 @@ async function getOliveyoungProducts(limit = 100, offset = 0) {
     }
 }
 
-// ==================== 이미지 다운로드 (✅ 404 처리 개선) ====================
+// ==================== 이미지 다운로드 ====================
 async function downloadImage(url, retryCount = 0) {
     const MAX_RETRIES = 2;
     
@@ -581,7 +581,7 @@ async function processProductImages(product, imageUrls) {
 
 // ==================== 메인 ====================
 async function main() {
-    log('🚀 Phase 1: 메인 갤러리 이미지 + 타이틀/가격/설명 추출 (v2.1)');
+    log('🚀 Phase 1: 메인 갤러리 이미지 + 타이틀/가격/설명 추출 (v2.2)');
     log('='.repeat(70));
     log('');
     
@@ -665,14 +665,13 @@ async function main() {
                 }
                 
                 try {
-                    // ✅ 수정: 페이지 로딩 대기 시간 증가
                     log(`📄 페이지 로딩 중...`);
                     await page.waitForLoadState('domcontentloaded', { timeout: 30000 });
                     
-                    // ✅ JavaScript 렌더링 대기 (타이틀이 동적 로딩될 수 있음)
+                    // JavaScript 렌더링 대기
                     await page.waitForTimeout(3000);
                     
-                    // ✅ 제품명 요소가 나타날 때까지 추가 대기
+                    // 제품명 요소가 나타날 때까지 추가 대기
                     try {
                         await page.waitForSelector('p.prd_name, .prd_name, [class*="goods_name"]', { 
                             timeout: 5000 
@@ -712,38 +711,29 @@ async function main() {
                                     usage: '',
                                     ingredients: ''
                                 },
-                                imageUrls: []
+                                imageUrls: [],
+                                expectedImageCount: 0,  // ✅ 예상 이미지 개수
+                                debugInfo: ''           // ✅ 디버그 정보
                             };
                             
-                            // ===== ✅ 수정: 타이틀 추출 (확장된 셀렉터) =====
+                            // ===== 타이틀 추출 =====
                             const titleSelectors = [
-                                // 올리브영 최신 구조 (2024-2025)
                                 'p.prd_name',
                                 '.prd_name',
                                 '.goods-name',
                                 '.prd-info p.prd_name',
-                                
-                                // 상품 상세 영역
                                 '.prd_detail_box .prd_name',
                                 '.goods_detail_box .prd_name',
                                 '[class*="goodsName"]',
                                 '[class*="goods_name"]',
-                                
-                                // 제목 영역 대체
                                 '.pdtInfoWrap .prd_name',
                                 '.prd_info_area .prd_name',
                                 '#Contents .prd_name',
-                                
-                                // 클래스명 패턴 매칭
                                 '[class*="title_name"]',
                                 '[class*="product_name"]',
                                 '[class*="productName"]',
-                                
-                                // 기존 셀렉터
                                 '.goodsDetailInfo_title_name_unity',
                                 '[class*="title_name_unity"]',
-                                
-                                // 최후의 수단
                                 'h1',
                                 'h2.prd_name',
                             ];
@@ -753,18 +743,15 @@ async function main() {
                                     const el = document.querySelector(selector);
                                     if (el) {
                                         const text = el.textContent.trim();
-                                        // 최소 5자 이상, 150자 이하
                                         if (text.length > 5 && text.length < 150) {
                                             result.rawTitle = text;
                                             break;
                                         }
                                     }
-                                } catch (e) {
-                                    // 셀렉터 오류 무시
-                                }
+                                } catch (e) {}
                             }
                             
-                            // ✅ 타이틀을 못 찾았으면 meta 태그에서 시도
+                            // 타이틀 fallback: meta 태그
                             if (!result.rawTitle) {
                                 const ogTitle = document.querySelector('meta[property="og:title"]');
                                 if (ogTitle && ogTitle.content) {
@@ -772,7 +759,7 @@ async function main() {
                                 }
                             }
                             
-                            // ✅ 그래도 없으면 JSON-LD에서 시도
+                            // 타이틀 fallback: JSON-LD
                             if (!result.rawTitle) {
                                 const jsonLd = document.querySelector('script[type="application/ld+json"]');
                                 if (jsonLd) {
@@ -813,95 +800,142 @@ async function main() {
                                 result.priceDiscount = temp;
                             }
                             
-                            // ===== ✅ 수정: 메인 갤러리 이미지만 수집 =====
+                            // ===== ✅ v2.2 수정: 메인 갤러리 이미지 추출 (정확한 셀렉터) =====
                             const seenUrls = new Set();
                             const mainGalleryImages = [];
                             
-                            // 1. 메인 갤러리 영역 타겟팅 (상품 이미지 슬라이더)
-                            const gallerySelectors = [
-                                // 메인 상품 이미지 영역
-                                '.prd-img-bg img',
-                                '.prd_detail_img img',
-                                '.prd-gallery img',
-                                '.prd_img_box img',
-                                
-                                // 슬라이더/스와이퍼 영역
-                                '.swiper-slide img',
-                                '[class*="slide"] img',
-                                '[class*="slider"] img',
-                                
-                                // 상품 이미지 클래스
-                                '[class*="prdImg"] img',
-                                '[class*="goods-img"] img',
-                                '[class*="goodsImg"] img',
-                                
-                                // 썸네일 영역 (원본으로 변환)
-                                '.prd_thumb img',
-                                '.thumb_list img',
-                                '[class*="thumb"] img',
-                            ];
-                            
-                            for (const selector of gallerySelectors) {
-                                try {
-                                    const imgs = document.querySelectorAll(selector);
-                                    imgs.forEach(img => {
-                                        // 여러 속성에서 URL 추출 시도
-                                        let src = img.getAttribute('data-src') ||
-                                                  img.getAttribute('data-origin') ||
-                                                  img.getAttribute('data-lazy') ||
-                                                  img.getAttribute('data-original') ||
-                                                  img.src ||
-                                                  img.getAttribute('src');
-                                        
-                                        if (!src) return;
-                                        
-                                        // oliveyoung.co.kr 이미지만
-                                        if (!src.includes('oliveyoung.co.kr')) return;
-                                        
-                                        // 프로토콜 추가
-                                        if (src.startsWith('//')) {
-                                            src = 'https:' + src;
-                                        }
-                                        
-                                        // 썸네일 → 원본 변환
-                                        src = src.replace('/thumbnails/', '/');
-                                        src = src.replace(/\/\d+x\d+\//, '/');
-                                        
-                                        // 중복 체크
-                                        if (seenUrls.has(src)) return;
-                                        
-                                        // ✅ 제외할 이미지 (상세 설명, 아이콘 등)
-                                        if (src.includes('/gdasEditor/')) return;   // 상세 설명 이미지 제외!
-                                        if (src.includes('/display/')) return;       // 디스플레이 이미지 제외!
-                                        if (src.includes('/icon/')) return;
-                                        if (src.includes('/badge/')) return;
-                                        if (src.includes('/banner/')) return;
-                                        if (src.includes('/event/')) return;
-                                        if (src.includes('/logo/')) return;
-                                        if (src.includes('/btn/')) return;
-                                        if (src.includes('/common/')) return;
-                                        if (src.includes('/review/')) return;        // 리뷰 이미지 제외
-                                        if (src.includes('/point/')) return;         // 포인트 이미지 제외
-                                        if (src.includes('/coupon/')) return;        // 쿠폰 이미지 제외
-                                        
-                                        // 너무 작은 이미지 제외 (URL 패턴으로)
-                                        if (src.includes('120x120')) return;
-                                        if (src.includes('80x80')) return;
-                                        if (src.includes('60x60')) return;
-                                        if (src.includes('40x40')) return;
-                                        if (src.includes('50x50')) return;
-                                        if (src.includes('100x100')) return;
-                                        
-                                        seenUrls.add(src);
-                                        mainGalleryImages.push(src);
-                                    });
-                                } catch (e) {
-                                    // 셀렉터 오류 무시
+                            // ✅ 1. 페이지 인디케이터에서 예상 이미지 개수 확인 (예: "1 / 5")
+                            const paginationEl = document.querySelector('.swiper-pagination, [class*="pagination"]');
+                            if (paginationEl) {
+                                const paginationText = paginationEl.textContent.trim();
+                                const countMatch = paginationText.match(/\d+\s*\/\s*(\d+)/);
+                                if (countMatch) {
+                                    result.expectedImageCount = parseInt(countMatch[1]);
                                 }
                             }
                             
-                            // 2. 갤러리에서 못 찾으면 일반 이미지에서 큰 것만 수집
+                            // ✅ 2. 메인 갤러리 컨테이너 (vis-swiper) 타겟팅 - 최우선!
+                            const mainGallerySelectors = [
+                                // ✅ 올리브영 메인 갤러리 (2024-2025 구조)
+                                '.vis-swiper .swiper-slide img',
+                                '.vis-swiper [data-swiper-slide-index] img',
+                                '[class*="vis-swiper"] .swiper-slide img',
+                                
+                                // ✅ GoodsDetail_Carousel 클래스 (React 컴포넌트)
+                                '[class*="GoodsDetail_Carousel"] img',
+                                '[class*="Carousel_content"] img',
+                                
+                                // ✅ data-swiper-slide-index 속성이 있는 슬라이드만
+                                '.swiper-slide[data-swiper-slide-index] img',
+                                
+                                // ✅ 메인 이미지 영역 (좌측 상단)
+                                '.prd-img .swiper-slide img',
+                                '.goods-img .swiper-slide img',
+                            ];
+                            
+                            let foundMethod = '';
+                            
+                            for (const selector of mainGallerySelectors) {
+                                try {
+                                    const imgs = document.querySelectorAll(selector);
+                                    
+                                    if (imgs.length > 0) {
+                                        foundMethod = selector;
+                                        
+                                        imgs.forEach(img => {
+                                            // ✅ 여러 속성에서 URL 추출
+                                            let src = img.getAttribute('data-src') ||
+                                                      img.getAttribute('data-origin') ||
+                                                      img.getAttribute('data-lazy') ||
+                                                      img.getAttribute('data-original') ||
+                                                      img.src ||
+                                                      img.getAttribute('src');
+                                            
+                                            if (!src) return;
+                                            
+                                            // 프로토콜 추가
+                                            if (src.startsWith('//')) {
+                                                src = 'https:' + src;
+                                            }
+                                            
+                                            // oliveyoung 이미지만
+                                            if (!src.includes('oliveyoung.co.kr')) return;
+                                            
+                                            // ✅ 제외할 이미지 패턴
+                                            if (src.includes('/gdasEditor/')) return;   // 상세 설명 이미지
+                                            if (src.includes('/display/')) return;       // 디스플레이 배너
+                                            if (src.includes('/icon/')) return;
+                                            if (src.includes('/badge/')) return;
+                                            if (src.includes('/banner/')) return;
+                                            if (src.includes('/event/')) return;
+                                            if (src.includes('/logo/')) return;
+                                            if (src.includes('/btn/')) return;
+                                            if (src.includes('/common/')) return;
+                                            if (src.includes('/review/')) return;
+                                            if (src.includes('/point/')) return;
+                                            if (src.includes('/coupon/')) return;
+                                            
+                                            // ✅ 썸네일 → 원본 URL 변환
+                                            // /thumbnails/110/000... → /images/000...
+                                            src = src.replace(/\/thumbnails\/\d+\//, '/images/');
+                                            // 크기 지정 제거: /200x200/ → /
+                                            src = src.replace(/\/\d+x\d+\//, '/');
+                                            
+                                            // 중복 제거
+                                            if (seenUrls.has(src)) return;
+                                            
+                                            seenUrls.add(src);
+                                            mainGalleryImages.push(src);
+                                        });
+                                        
+                                        // ✅ 메인 갤러리에서 이미지를 찾았으면 중단
+                                        if (mainGalleryImages.length > 0) {
+                                            break;
+                                        }
+                                    }
+                                } catch (e) {}
+                            }
+                            
+                            // ✅ 3. 메인 갤러리에서 못 찾은 경우 fallback
                             if (mainGalleryImages.length === 0) {
+                                foundMethod = 'fallback: large images';
+                                
+                                // data-swiper-slide-index 속성이 있는 모든 슬라이드에서 이미지 추출
+                                const allSlides = document.querySelectorAll('[data-swiper-slide-index]');
+                                
+                                allSlides.forEach(slide => {
+                                    const img = slide.querySelector('img');
+                                    if (!img) return;
+                                    
+                                    let src = img.getAttribute('data-src') ||
+                                              img.getAttribute('data-origin') ||
+                                              img.src;
+                                    
+                                    if (!src || !src.includes('oliveyoung.co.kr')) return;
+                                    
+                                    if (src.startsWith('//')) {
+                                        src = 'https:' + src;
+                                    }
+                                    
+                                    // 제외 패턴
+                                    if (src.includes('/gdasEditor/')) return;
+                                    if (src.includes('/display/')) return;
+                                    if (src.includes('/banner/')) return;
+                                    
+                                    // 썸네일 → 원본
+                                    src = src.replace(/\/thumbnails\/\d+\//, '/images/');
+                                    src = src.replace(/\/\d+x\d+\//, '/');
+                                    
+                                    if (seenUrls.has(src)) return;
+                                    seenUrls.add(src);
+                                    mainGalleryImages.push(src);
+                                });
+                            }
+                            
+                            // ✅ 4. 여전히 못 찾으면 큰 이미지 수집
+                            if (mainGalleryImages.length === 0) {
+                                foundMethod = 'fallback: all large oliveyoung images';
+                                
                                 const allImages = document.querySelectorAll('img');
                                 allImages.forEach(img => {
                                     let src = img.getAttribute('data-src') ||
@@ -911,12 +945,11 @@ async function main() {
                                     if (!src || !src.includes('oliveyoung.co.kr')) return;
                                     if (seenUrls.has(src)) return;
                                     
-                                    // 프로토콜 추가
                                     if (src.startsWith('//')) {
                                         src = 'https:' + src;
                                     }
                                     
-                                    // 상세 설명/디스플레이 제외
+                                    // 제외 패턴
                                     if (src.includes('/gdasEditor/')) return;
                                     if (src.includes('/display/')) return;
                                     if (src.includes('/icon/')) return;
@@ -924,20 +957,22 @@ async function main() {
                                     if (src.includes('/banner/')) return;
                                     if (src.includes('/review/')) return;
                                     
-                                    // 이미지 크기 체크 (DOM에서 확인 가능한 경우)
+                                    // 이미지 크기 체크
                                     const width = img.naturalWidth || img.width;
                                     const height = img.naturalHeight || img.height;
                                     
-                                    // 최소 300x300 이상만
-                                    if (width >= 300 && height >= 300) {
+                                    if (width >= 400 && height >= 400) {
+                                        src = src.replace(/\/thumbnails\/\d+\//, '/images/');
+                                        src = src.replace(/\/\d+x\d+\//, '/');
+                                        
                                         seenUrls.add(src);
                                         mainGalleryImages.push(src);
                                     }
                                 });
                             }
                             
-                            // 최대 10개만 저장
-                            result.imageUrls = mainGalleryImages.slice(0, 10);
+                            result.debugInfo = `Method: ${foundMethod}, Found: ${mainGalleryImages.length}`;
+                            result.imageUrls = mainGalleryImages.slice(0, 10);  // 최대 10개
                             
                             // ===== 상품정보 제공고시 추출 =====
                             const EXCLUDE_KEYWORDS = [
@@ -1007,7 +1042,7 @@ async function main() {
                                 }
                             });
                             
-                            // 테이블이 아닌 경우 div 구조에서도 추출 시도
+                            // div 구조에서도 추출 시도
                             if (!result.infoTable.volume || !result.infoTable.usage) {
                                 const allDivs = document.querySelectorAll('div[class*="info"], div[class*="spec"], dl');
                                 
@@ -1041,7 +1076,8 @@ async function main() {
                         log(`   타이틀: ${productData.rawTitle ? productData.rawTitle.substring(0, 60) + '...' : '❌ 없음'}`);
                         log(`   정가: ${productData.priceOriginal ? '₩' + productData.priceOriginal.toLocaleString() : '❌ 없음'}`);
                         log(`   할인가: ${productData.priceDiscount ? '₩' + productData.priceDiscount.toLocaleString() : '❌ 없음'}`);
-                        log(`   메인 갤러리 이미지: ${productData.imageUrls.length}개`);
+                        log(`   🖼️  메인 갤러리 이미지: ${productData.imageUrls.length}개 (예상: ${productData.expectedImageCount || '?'}개)`);
+                        log(`   📍 추출 방법: ${productData.debugInfo}`);
                         log(`   📦 상품정보 제공고시:`);
                         log(`      용량: ${productData.infoTable.volume || '❌ 없음'}`);
                         log(`      피부타입: ${productData.infoTable.skinType || '❌ 없음'}`);
