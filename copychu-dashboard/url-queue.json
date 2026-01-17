@@ -1,24 +1,24 @@
 {
   "categories": [
     {
-      "id": "4ed70a57-7bc1-4e3f-b1a5-0c922a5e8376",
+      "id": "9132c89c-2ff5-4dc9-82b3-f4ff536ab1ef",
       "url": "https://www.oliveyoung.co.kr/store/display/getMCategoryList.do?dispCatNo=100000100010015&isLoginCnt=3&aShowCnt=0&bShowCnt=0&cShowCnt=0&gateCd=Drawer&trackingCd=Cat100000100010015_MID&trackingCd=Cat100000100010015_MID&t_page=%EB%93%9C%EB%A1%9C%EC%9A%B0_%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC&t_click=%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC%ED%83%AD_%EC%A4%91%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC&t_1st_category_type=%EB%8C%80_%EC%8A%A4%ED%82%A8%EC%BC%80%EC%96%B4&t_2nd_category_type=%EC%A4%91_%ED%81%AC%EB%A6%BC",
       "name": "크림",
       "maxProducts": 30,
       "maxPages": 2,
       "status": "completed",
-      "createdAt": "2026-01-17T07:29:45.694Z",
-      "completedAt": "2026-01-17T07:31:46.154Z"
+      "createdAt": "2026-01-17T09:06:06.178Z",
+      "completedAt": "2026-01-17T09:07:46.713Z"
     },
     {
-      "id": "0523828d-9eac-44a0-8bcf-912c74344646",
+      "id": "5757bafc-a12d-479b-a232-0ec8e0ad756b",
       "url": "https://www.oliveyoung.co.kr/store/display/getMCategoryList.do?dispCatNo=100000100010013&isLoginCnt=0&aShowCnt=0&bShowCnt=0&cShowCnt=0&gateCd=Drawer&trackingCd=Cat100000100010013_MID&trackingCd=Cat100000100010013_MID&t_page=%EB%93%9C%EB%A1%9C%EC%9A%B0_%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC&t_click=%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC%ED%83%AD_%EC%A4%91%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC&t_1st_category_type=%EB%8C%80_%EC%8A%A4%ED%82%A8%EC%BC%80%EC%96%B4&t_2nd_category_type=%EC%A4%91_%EC%8A%A4%ED%82%A8%2F%ED%86%A0%EB%84%88",
       "name": "스킨/토너",
       "maxProducts": 30,
       "maxPages": 2,
       "status": "completed",
-      "createdAt": "2026-01-17T07:29:52.974Z",
-      "completedAt": "2026-01-17T07:33:11.361Z"
+      "createdAt": "2026-01-17T09:06:18.022Z",
+      "completedAt": "2026-01-17T09:09:15.783Z"
     }
   ],
   "products": []

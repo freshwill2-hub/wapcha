@@ -240,6 +240,43 @@ function extractVolumeFromTitle(title) {
     return null;
 }
 
+// ==================== 상세설명 포맷 함수 (쇼핑몰용) ====================
+function formatDescriptionForShopify(infoTable, cleanedTitle) {
+    const sections = [];
+    
+    // 타이틀에서 용량 추출 (기획 용량 제거된 순수 용량)
+    const titleVolume = extractVolumeFromTitle(cleanedTitle);
+    
+    // 1. 용량 (타이틀 기준으로 덮어쓰기)
+    if (titleVolume) {
+        sections.push(`**Volume:** ${titleVolume}`);
+    } else if (infoTable.volume) {
+        sections.push(`**Volume:** ${infoTable.volume}`);
+    }
+    
+    // 2. 피부 타입
+    if (infoTable.skinType) {
+        sections.push(`**Skin Type:** ${infoTable.skinType}`);
+    }
+    
+    // 3. 사용기한
+    if (infoTable.expiry) {
+        sections.push(`**Shelf Life:** ${infoTable.expiry}`);
+    }
+    
+    // 4. 사용방법
+    if (infoTable.usage) {
+        sections.push(`**How to Use:**\n${infoTable.usage}`);
+    }
+    
+    // 5. 전체 성분
+    if (infoTable.ingredients) {
+        sections.push(`**Ingredients:**\n${infoTable.ingredients}`);
+    }
+    
+    return sections.join('\n\n');
+}
+
 // ==================== OpenAI 번역 함수 ====================
 async function translateToEnglish(koreanText) {
     if (!openai || !koreanText) {
@@ -281,7 +318,7 @@ Output ONLY the translated text, no explanations.`
     }
 }
 
-// ==================== 설명 번역 함수 ====================
+// ==================== 설명 번역 함수 (쇼핑몰용 포맷 유지) ====================
 async function translateDescriptionToEnglish(koreanDescription) {
     if (!openai || !koreanDescription) {
         return null;
@@ -296,16 +333,18 @@ async function translateDescriptionToEnglish(koreanDescription) {
                 {
                     role: 'system',
                     content: `You are a professional translator for Korean beauty product descriptions.
-Translate the Korean product description to natural English.
-Keep brand names and technical terms accurate.
+Translate the Korean product description to natural English for a Shopify store.
+Keep the markdown format (**bold** headers like **Volume:**, **Skin Type:**, etc.).
+For ingredients, translate to their common English cosmetic names (e.g., 정제수 → Purified Water, 글리세린 → Glycerin).
+Keep brand names accurate.
 Output ONLY the translated text, no explanations.`
                 },
                 {
                     role: 'user',
-                    content: koreanDescription.substring(0, 1000) // 최대 1000자
+                    content: koreanDescription.substring(0, 1500) // 최대 1500자
                 }
             ],
-            max_tokens: 500,
+            max_tokens: 800,
             temperature: 0.3
         });
         
@@ -618,7 +657,13 @@ async function main() {
                                 rawTitle: '',
                                 priceOriginal: 0,
                                 priceDiscount: 0,
-                                description: '',
+                                infoTable: {
+                                    volume: '',
+                                    skinType: '',
+                                    expiry: '',
+                                    usage: '',
+                                    ingredients: ''
+                                },
                                 imageUrls: []
                             };
                             
@@ -675,44 +720,85 @@ async function main() {
                             // 최대 40개로 제한
                             result.imageUrls = result.imageUrls.slice(0, 40);
                             
-                            // ===== 상세설명 추출 =====
-                            const descEl = document.querySelector('[class*="detail"]') ||
-                                          document.querySelector('[class*="description"]') ||
-                                          document.querySelector('.prd_detail');
+                            // ===== 상세설명 추출 (✅ 상품정보 제공고시 테이블 파싱) =====
                             
-                            if (descEl) {
-                                result.description = descEl.textContent.trim().substring(0, 500);
-                            }
+                            // 차단 키워드 (제거할 내용)
+                            const blockKeywords = [
+                                '제조업자', '수입업자', '판매업자', '품질보증',
+                                '소비자상담', '전화', '고객센터', '080', '1588',
+                                '협력사', '본 상품 정보', '공정거래', '기능성',
+                                '맞춤형화장품판매업자', '㈜', '주식회사', '제조국',
+                                '책임판매업자', '원산지', 'A/S', '교환', '반품'
+                            ];
                             
-                            // ===== 타이틀 기반 용량 추출 (설명에 추가) =====
-                            if (result.rawTitle) {
-                                const volumes = [];
-                                const volumePattern = /(\d+)\s*(ml|mL|ML|g|G)/gi;
-                                let volMatch;
-                                while ((volMatch = volumePattern.exec(result.rawTitle)) !== null) {
-                                    volumes.push(volMatch[1] + volMatch[2].toLowerCase());
+                            // 모든 테이블 row 찾기
+                            const allRows = document.querySelectorAll('tr, dl, div[class*="row"], div[class*="item"]');
+                            
+                            allRows.forEach(row => {
+                                const text = row.textContent || row.innerText || '';
+                                
+                                // 차단 키워드가 있으면 스킵
+                                if (blockKeywords.some(keyword => text.includes(keyword))) {
+                                    return;
                                 }
                                 
-                                const countMatch = result.rawTitle.match(/(\d+)\s*(개|입|매)/);
-                                
-                                let volumeStr = '';
-                                if (countMatch && volumes.length > 0) {
-                                    const count = parseInt(countMatch[1]);
-                                    if (count > 1) {
-                                        volumeStr = `${volumes[0]} × ${count}`;
+                                // 용량 추출
+                                if ((text.includes('내용물') || text.includes('용량') || text.includes('중량')) && !result.infoTable.volume) {
+                                    const match = text.match(/(\d+\s*[mMlLgG]+(?:\s*[×x+]\s*\d+)?(?:\s*\+\s*\d+\s*[mMlLgG]+)*)/);
+                                    if (match) {
+                                        result.infoTable.volume = match[1].trim();
                                     }
                                 }
                                 
-                                if (!volumeStr && volumes.length > 1) {
-                                    volumeStr = volumes.join(' + ');
-                                } else if (!volumeStr && volumes.length === 1) {
-                                    volumeStr = volumes[0];
+                                // 피부 타입 추출
+                                if (text.includes('주요 사양') && !result.infoTable.skinType) {
+                                    const match = text.match(/주요\s*사양\s*[:\s]*(.+?)(?=사용|개봉|화장품|$)/);
+                                    if (match) {
+                                        result.infoTable.skinType = match[1].trim();
+                                    }
                                 }
                                 
-                                if (volumeStr) {
-                                    result.description = `용량: ${volumeStr}\n${result.description}`;
+                                // 사용기한 추출
+                                if ((text.includes('사용기한') || text.includes('개봉')) && !result.infoTable.expiry) {
+                                    const match = text.match(/(개봉\s*전\s*\d+\s*개월.*?개봉\s*후\s*\d+\s*개월)/);
+                                    if (match) {
+                                        result.infoTable.expiry = match[1].trim();
+                                    } else {
+                                        // 다른 패턴 시도
+                                        const match2 = text.match(/(\d+\s*개월.*?\/.*?\d+\s*개월)/);
+                                        if (match2) {
+                                            result.infoTable.expiry = match2[1].trim();
+                                        }
+                                    }
                                 }
-                            }
+                                
+                                // 사용방법 추출
+                                if (text.includes('사용방법') && !result.infoTable.usage) {
+                                    let usage = text.replace(/사용방법\s*[:\s]*/g, '');
+                                    // 불필요한 부분 제거
+                                    usage = usage.split(/화장품제조업자|화장품책임판매업자|맞춤형화장품|제조업자|판매업자|㈜|주식회사/)[0];
+                                    usage = usage.trim();
+                                    if (usage.length > 10 && usage.length < 500) {
+                                        result.infoTable.usage = usage;
+                                    }
+                                }
+                                
+                                // 전체 성분 추출
+                                if ((text.includes('모든 성분') || text.includes('화장품법에 따라')) && !result.infoTable.ingredients) {
+                                    const match = text.match(/(?:모든\s*성분|화장품법에\s*따라[^:]*:\s*)(.+?)(?=화장품제조업자|기능성|품질|제조|$)/s);
+                                    if (match) {
+                                        let ingredients = match[1]
+                                            .replace(/화장품제조업자.*$/g, '')
+                                            .replace(/제조업자.*$/g, '')
+                                            .replace(/\s+/g, ' ')
+                                            .trim();
+                                        
+                                        if (ingredients.length > 20) {
+                                            result.infoTable.ingredients = ingredients;
+                                        }
+                                    }
+                                }
+                            });
                             
                             return result;
                         });
@@ -721,12 +807,18 @@ async function main() {
                         log(`   타이틀: ${productData.rawTitle ? productData.rawTitle.substring(0, 60) + '...' : '❌ 없음'}`);
                         log(`   정가: ${productData.priceOriginal ? '₩' + productData.priceOriginal.toLocaleString() : '❌ 없음'}`);
                         log(`   할인가: ${productData.priceDiscount ? '₩' + productData.priceDiscount.toLocaleString() : '❌ 없음'}`);
-                        log(`   설명: ${productData.description ? productData.description.substring(0, 50) + '...' : '❌ 없음'}`);
                         log(`   이미지: ${productData.imageUrls.length}개`);
+                        log(`   📦 상품정보 제공고시:`);
+                        log(`      용량: ${productData.infoTable.volume || '❌ 없음'}`);
+                        log(`      피부타입: ${productData.infoTable.skinType || '❌ 없음'}`);
+                        log(`      사용기한: ${productData.infoTable.expiry || '❌ 없음'}`);
+                        log(`      사용방법: ${productData.infoTable.usage ? productData.infoTable.usage.substring(0, 40) + '...' : '❌ 없음'}`);
+                        log(`      성분: ${productData.infoTable.ingredients ? productData.infoTable.ingredients.substring(0, 40) + '...' : '❌ 없음'}`);
                         
                         // ✅ 1. 타이틀 처리 (title_kr이 없을 때만)
+                        let cleanedTitle = '';
                         if (missingFields.needsTitleKr && productData.rawTitle) {
-                            const cleanedTitle = cleanProductTitle(productData.rawTitle);
+                            cleanedTitle = cleanProductTitle(productData.rawTitle);
                             updateData.title_kr = cleanedTitle;
                             hasUpdates = true;
                             stats.titleKrFilled++;
@@ -746,6 +838,7 @@ async function main() {
                         } else if (!missingFields.needsTitleKr) {
                             log(`📝 타이틀: 이미 있음 → 스킵`);
                             stats.titleKrSkipped++;
+                            cleanedTitle = product.title_kr || ''; // 기존 타이틀 사용
                             
                             // title_kr은 있는데 title_en만 없는 경우
                             if (missingFields.needsTitleEn && product.title_kr) {
@@ -784,20 +877,34 @@ async function main() {
                             log(`⚠️  가격 추출 실패`);
                         }
                         
-                        // ✅ 3. 설명 처리 (description이 없을 때만)
-                        if (missingFields.needsDescription && productData.description) {
-                            updateData.description = productData.description;
-                            hasUpdates = true;
-                            stats.descriptionFilled++;
+                        // ✅ 3. 설명 처리 (description이 없을 때만) - 쇼핑몰용 포맷!
+                        if (missingFields.needsDescription) {
+                            // 타이틀 기준으로 쇼핑몰용 설명 생성
+                            const titleToUse = cleanedTitle || product.title_kr || '';
+                            const formattedDesc = formatDescriptionForShopify(productData.infoTable, titleToUse);
                             
-                            log(`📄 설명: ${productData.description.substring(0, 60)}...`);
-                            
-                            // description_en도 없으면 번역
-                            if (missingFields.needsDescriptionEn) {
-                                const englishDesc = await translateDescriptionToEnglish(productData.description);
-                                if (englishDesc) {
-                                    updateData.description_en = englishDesc;
+                            if (formattedDesc && formattedDesc.length > 10) {
+                                updateData.description = formattedDesc;
+                                hasUpdates = true;
+                                stats.descriptionFilled++;
+                                
+                                log(`📄 설명 (쇼핑몰 포맷):`);
+                                formattedDesc.split('\n').slice(0, 5).forEach(line => {
+                                    if (line.trim()) log(`   ${line}`);
+                                });
+                                if (formattedDesc.split('\n').length > 5) {
+                                    log(`   ...`);
                                 }
+                                
+                                // description_en도 없으면 번역
+                                if (missingFields.needsDescriptionEn) {
+                                    const englishDesc = await translateDescriptionToEnglish(formattedDesc);
+                                    if (englishDesc) {
+                                        updateData.description_en = englishDesc;
+                                    }
+                                }
+                            } else {
+                                log(`⚠️  상세설명 추출 실패 (상품정보 제공고시 테이블 없음)`);
                             }
                         } else if (!missingFields.needsDescription) {
                             log(`📄 설명: 이미 있음 → 스킵`);
