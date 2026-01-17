@@ -1,15 +1,4 @@
 {
-  "categories": [
-    {
-      "id": "5c85b836-6039-49df-b551-1075f5354a52",
-      "url": "https://www.oliveyoung.co.kr/store/display/getMCategoryList.do?dispCatNo=100000100010010",
-      "name": "미스트/오일",
-      "maxProducts": 30,
-      "maxPages": 2,
-      "status": "completed",
-      "createdAt": "2026-01-17T00:06:58.514Z",
-      "completedAt": "2026-01-17T00:08:33.513Z"
-    }
-  ],
+  "categories": [],
   "products": []
 }

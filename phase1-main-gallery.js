@@ -3,6 +3,80 @@ import axios from 'axios';
 import { PlaywrightCrawler } from 'crawlee';
 import FormData from 'form-data';
 import OpenAI from 'openai';
+import fs from 'fs';
+import path from 'path';
+
+// ==================== 시드니 시간 설정 ====================
+const TIMEZONE = 'Australia/Sydney';
+
+function getSydneyTime() {
+    return new Date().toLocaleString('en-AU', { 
+        timeZone: TIMEZONE,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+    });
+}
+
+function getSydneyISO() {
+    // ISO 형식 시드니 시간 (DB 저장용)
+    const now = new Date();
+    const sydneyTime = new Date(now.toLocaleString('en-US', { timeZone: TIMEZONE }));
+    return sydneyTime.toISOString();
+}
+
+function getSydneyDateString() {
+    // 파일명용 날짜 문자열 (YYYY-MM-DD_HH-MM-SS)
+    const now = new Date();
+    const options = { timeZone: TIMEZONE };
+    const year = now.toLocaleString('en-AU', { ...options, year: 'numeric' });
+    const month = now.toLocaleString('en-AU', { ...options, month: '2-digit' });
+    const day = now.toLocaleString('en-AU', { ...options, day: '2-digit' });
+    const hour = now.toLocaleString('en-AU', { ...options, hour: '2-digit', hour12: false });
+    const minute = now.toLocaleString('en-AU', { ...options, minute: '2-digit' });
+    const second = now.toLocaleString('en-AU', { ...options, second: '2-digit' });
+    return `${year}-${month}-${day}_${hour}-${minute}-${second}`;
+}
+
+// ==================== 로그 시스템 ====================
+const LOG_DIR = process.env.LOG_DIR || '/root/copychu-scraper/logs';
+const LOG_FILE = path.join(LOG_DIR, `phase1_${getSydneyDateString()}.log`);
+
+// 로그 디렉토리 생성
+if (!fs.existsSync(LOG_DIR)) {
+    fs.mkdirSync(LOG_DIR, { recursive: true });
+}
+
+// 로그 스트림
+const logStream = fs.createWriteStream(LOG_FILE, { flags: 'a' });
+
+// console.log 오버라이드 (터미널 + 파일 동시 출력)
+const originalConsoleLog = console.log;
+const originalConsoleError = console.error;
+
+console.log = (...args) => {
+    const timestamp = `[${getSydneyTime()}]`;
+    const message = args.map(arg => 
+        typeof arg === 'object' ? JSON.stringify(arg, null, 2) : arg
+    ).join(' ');
+    
+    originalConsoleLog(timestamp, ...args);
+    logStream.write(`${timestamp} ${message}\n`);
+};
+
+console.error = (...args) => {
+    const timestamp = `[${getSydneyTime()}]`;
+    const message = args.map(arg => 
+        typeof arg === 'object' ? JSON.stringify(arg, null, 2) : arg
+    ).join(' ');
+    
+    originalConsoleError(timestamp, ...args);
+    logStream.write(`${timestamp} [ERROR] ${message}\n`);
+};
 
 // ==================== 설정 ====================
 const NOCODB_API_URL = process.env.NOCODB_API_URL || 'http://77.42.67.165:8080';
@@ -19,6 +93,8 @@ console.log('🔧 설정 확인:');
 console.log(`- NocoDB URL: ${NOCODB_API_URL}`);
 console.log(`- Table ID: ${OLIVEYOUNG_TABLE_ID}`);
 console.log(`- OpenAI API: ${OPENAI_API_KEY ? '✅ 설정됨' : '❌ 없음'}`);
+console.log(`- 시간대: ${TIMEZONE} (시드니)`);
+console.log(`- 로그 파일: ${LOG_FILE}`);
 console.log('\n📋 스마트 필드 체크 모드:');
 console.log('   - 각 필드별로 개별 체크');
 console.log('   - 빈 필드만 채우고, 있는 필드는 스킵');
@@ -29,6 +105,49 @@ let processedCount = 0;
 let successCount = 0;
 let skippedCount = 0;
 let failedCount = 0;
+let crawler = null;  // 크롤러 참조 (종료용)
+let isShuttingDown = false;
+
+// ==================== Graceful Shutdown ====================
+async function gracefulShutdown(signal) {
+    if (isShuttingDown) return;
+    isShuttingDown = true;
+    
+    console.log(`\n\n🛑 ${signal} 수신 - 프로세스 종료 중...`);
+    
+    try {
+        if (crawler) {
+            console.log('🔧 Crawler 정리 중...');
+            await crawler.teardown();
+            console.log('✅ Crawler 정리 완료');
+        }
+    } catch (error) {
+        console.error('⚠️  Crawler 정리 실패:', error.message);
+    }
+    
+    // 로그 스트림 종료
+    console.log('📝 로그 파일 저장 완료');
+    logStream.end();
+    
+    console.log('👋 프로세스 종료');
+    process.exit(0);
+}
+
+// 종료 시그널 핸들러
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));   // Ctrl+C
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM')); // kill 명령
+process.on('SIGHUP', () => gracefulShutdown('SIGHUP'));   // 터미널 종료
+
+// 예외 처리
+process.on('uncaughtException', async (error) => {
+    console.error('\n❌ 처리되지 않은 예외:', error.message);
+    await gracefulShutdown('uncaughtException');
+});
+
+process.on('unhandledRejection', async (reason, promise) => {
+    console.error('\n❌ 처리되지 않은 Promise 거부:', reason);
+    await gracefulShutdown('unhandledRejection');
+});
 
 // 통계
 const stats = {
@@ -399,7 +518,7 @@ async function updateProduct(recordId, updateData) {
 async function processProduct(product, galleryImages, productData, missingFields) {
     try {
         const updateData = {
-            scraped_at: new Date().toISOString()
+            scraped_at: getSydneyISO()
         };
         
         let hasUpdates = false;
@@ -594,7 +713,7 @@ async function main() {
                 if (englishTitle) {
                     await updateProduct(product.Id, {
                         title_en: englishTitle,
-                        scraped_at: new Date().toISOString()
+                        scraped_at: getSydneyISO()
                     });
                     stats.titleEnFilled++;
                     successCount++;
@@ -615,7 +734,7 @@ async function main() {
             const totalProducts = needsPageVisit.length;
             
             // Crawlee 설정
-            const crawler = new PlaywrightCrawler({
+            crawler = new PlaywrightCrawler({
                 launchContext: {
                     launchOptions: {
                         headless: true,
