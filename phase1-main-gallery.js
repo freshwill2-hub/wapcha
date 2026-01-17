@@ -62,7 +62,7 @@ const MEMORY_CHECK_INTERVAL = 5;
 
 const openai = OPENAI_API_KEY ? new OpenAI({ apiKey: OPENAI_API_KEY }) : null;
 
-log('🚀 Phase 1: 제품 상세 스크래핑 (v2.0 - 타이틀 & 이미지 수정)');
+log('🚀 Phase 1: 제품 상세 스크래핑 (v2.1 - 메인 갤러리 이미지 + 타이틀 수정)');
 log('='.repeat(70));
 log('🔧 설정 확인:');
 log(`- NocoDB URL: ${NOCODB_API_URL}`);
@@ -71,11 +71,11 @@ log(`- OpenAI API: ${OPENAI_API_KEY ? '✅ 설정됨' : '❌ 없음'}`);
 log(`- 시간대: ${SYDNEY_TIMEZONE} (시드니)`);
 log(`- 로그 파일: ${LOG_PATH}`);
 log('');
-log('🆕 v2.0 수정 사항:');
-log('   ✅ 타이틀 셀렉터 확장 (meta, JSON-LD 포함)');
-log('   ✅ 이미지 404 문제 해결 (우선순위 정렬)');
-log('   ✅ data-src, data-origin 속성 지원');
-log('   ✅ 페이지 로딩 대기 시간 증가');
+log('🆕 v2.1 수정 사항:');
+log('   ✅ 타이틀에서 "| 올리브영" 자동 제거');
+log('   ✅ 메인 갤러리 이미지만 수집 (상세 설명 이미지 제외)');
+log('   ✅ gdasEditor, display 경로 이미지 제외');
+log('   ✅ 메인 상품 이미지 영역만 타겟팅');
 log('');
 
 // ==================== 전역 변수 ====================
@@ -145,20 +145,25 @@ function checkMissingFields(product) {
     return missing;
 }
 
-// ==================== 타이틀 클리닝 함수 ====================
+// ==================== 타이틀 클리닝 함수 (✅ 수정됨) ====================
 function cleanProductTitle(rawTitle) {
     if (!rawTitle) return '';
     
     let cleaned = rawTitle;
     
-    // 괄호 제거
+    // ✅ 1단계: "| 올리브영" 또는 "- 올리브영" 제거 (가장 먼저!)
+    cleaned = cleaned.replace(/\s*\|\s*올리브영.*$/g, '');
+    cleaned = cleaned.replace(/\s*-\s*올리브영.*$/g, '');
+    cleaned = cleaned.replace(/\s*올리브영$/, '');
+    
+    // 2단계: 괄호 제거
     cleaned = cleaned.replace(/\[[^\]]*\]/g, '');
     cleaned = cleaned.replace(/\([^)]*\)/g, '');
     cleaned = cleaned.replace(/【[^】]*】/g, '');
     cleaned = cleaned.replace(/〔[^〕]*〕/g, '');
     cleaned = cleaned.replace(/\{[^}]*\}/g, '');
     
-    // 제거할 키워드
+    // 3단계: 제거할 키워드
     const removeKeywords = [
         '기획증정', '기획 증정', '증정기획', '증정 기획', '기획세트', '기획 세트',
         '기획', '증정', '한정기획', '한정 기획', '한정판', '한정',
@@ -174,6 +179,7 @@ function cleanProductTitle(rawTitle) {
         cleaned = cleaned.replace(regex, '');
     }
     
+    // 4단계: 공백 정리
     cleaned = cleaned.replace(/\s+/g, ' ').trim();
     
     return cleaned;
@@ -519,7 +525,7 @@ async function processProductImages(product, imageUrls) {
             return [];
         }
         
-        log(`📊 추출된 이미지: ${imageUrls.length}개`);
+        log(`📊 추출된 메인 갤러리 이미지: ${imageUrls.length}개`);
         imageUrls.slice(0, 5).forEach((url, i) => {
             log(`   ${i + 1}. ${url.substring(0, 70)}...`);
         });
@@ -575,7 +581,7 @@ async function processProductImages(product, imageUrls) {
 
 // ==================== 메인 ====================
 async function main() {
-    log('🚀 Phase 1: 메인 갤러리 이미지 + 타이틀/가격/설명 추출 (v2.0)');
+    log('🚀 Phase 1: 메인 갤러리 이미지 + 타이틀/가격/설명 추출 (v2.1)');
     log('='.repeat(70));
     log('');
     
@@ -679,7 +685,7 @@ async function main() {
                     const updateData = {};
                     let hasUpdates = false;
                     
-                    if (missingFields.needsTitleKr || missingFields.needsPriceOriginal || missingFields.needsDescription) {
+                    if (missingFields.needsTitleKr || missingFields.needsPriceOriginal || missingFields.needsDescription || missingFields.needsImages) {
                         log(`📊 웹페이지에서 정보 추출 중...`);
                         
                         // 상품정보 제공고시 클릭해서 펼치기
@@ -807,70 +813,131 @@ async function main() {
                                 result.priceDiscount = temp;
                             }
                             
-                            // ===== ✅ 수정: 이미지 수집 (우선순위 정렬) =====
+                            // ===== ✅ 수정: 메인 갤러리 이미지만 수집 =====
                             const seenUrls = new Set();
-                            const priorityImages = [];  // 높은 우선순위 (gdasEditor, display)
-                            const fallbackImages = [];  // 낮은 우선순위 (cfimages - 404 위험)
+                            const mainGalleryImages = [];
                             
-                            // 모든 이미지 태그 검색
-                            const images = document.querySelectorAll('img');
+                            // 1. 메인 갤러리 영역 타겟팅 (상품 이미지 슬라이더)
+                            const gallerySelectors = [
+                                // 메인 상품 이미지 영역
+                                '.prd-img-bg img',
+                                '.prd_detail_img img',
+                                '.prd-gallery img',
+                                '.prd_img_box img',
+                                
+                                // 슬라이더/스와이퍼 영역
+                                '.swiper-slide img',
+                                '[class*="slide"] img',
+                                '[class*="slider"] img',
+                                
+                                // 상품 이미지 클래스
+                                '[class*="prdImg"] img',
+                                '[class*="goods-img"] img',
+                                '[class*="goodsImg"] img',
+                                
+                                // 썸네일 영역 (원본으로 변환)
+                                '.prd_thumb img',
+                                '.thumb_list img',
+                                '[class*="thumb"] img',
+                            ];
                             
-                            images.forEach(img => {
-                                // ✅ 여러 속성에서 URL 추출 시도
-                                let src = img.getAttribute('data-src') ||
-                                          img.getAttribute('data-origin') ||
-                                          img.getAttribute('data-lazy') ||
-                                          img.getAttribute('data-original') ||
-                                          img.src ||
-                                          img.getAttribute('src');
-                                
-                                if (!src) return;
-                                
-                                // oliveyoung.co.kr 이미지만
-                                if (!src.includes('oliveyoung.co.kr')) return;
-                                
-                                // 프로토콜 추가
-                                if (src.startsWith('//')) {
-                                    src = 'https:' + src;
+                            for (const selector of gallerySelectors) {
+                                try {
+                                    const imgs = document.querySelectorAll(selector);
+                                    imgs.forEach(img => {
+                                        // 여러 속성에서 URL 추출 시도
+                                        let src = img.getAttribute('data-src') ||
+                                                  img.getAttribute('data-origin') ||
+                                                  img.getAttribute('data-lazy') ||
+                                                  img.getAttribute('data-original') ||
+                                                  img.src ||
+                                                  img.getAttribute('src');
+                                        
+                                        if (!src) return;
+                                        
+                                        // oliveyoung.co.kr 이미지만
+                                        if (!src.includes('oliveyoung.co.kr')) return;
+                                        
+                                        // 프로토콜 추가
+                                        if (src.startsWith('//')) {
+                                            src = 'https:' + src;
+                                        }
+                                        
+                                        // 썸네일 → 원본 변환
+                                        src = src.replace('/thumbnails/', '/');
+                                        src = src.replace(/\/\d+x\d+\//, '/');
+                                        
+                                        // 중복 체크
+                                        if (seenUrls.has(src)) return;
+                                        
+                                        // ✅ 제외할 이미지 (상세 설명, 아이콘 등)
+                                        if (src.includes('/gdasEditor/')) return;   // 상세 설명 이미지 제외!
+                                        if (src.includes('/display/')) return;       // 디스플레이 이미지 제외!
+                                        if (src.includes('/icon/')) return;
+                                        if (src.includes('/badge/')) return;
+                                        if (src.includes('/banner/')) return;
+                                        if (src.includes('/event/')) return;
+                                        if (src.includes('/logo/')) return;
+                                        if (src.includes('/btn/')) return;
+                                        if (src.includes('/common/')) return;
+                                        if (src.includes('/review/')) return;        // 리뷰 이미지 제외
+                                        if (src.includes('/point/')) return;         // 포인트 이미지 제외
+                                        if (src.includes('/coupon/')) return;        // 쿠폰 이미지 제외
+                                        
+                                        // 너무 작은 이미지 제외 (URL 패턴으로)
+                                        if (src.includes('120x120')) return;
+                                        if (src.includes('80x80')) return;
+                                        if (src.includes('60x60')) return;
+                                        if (src.includes('40x40')) return;
+                                        if (src.includes('50x50')) return;
+                                        if (src.includes('100x100')) return;
+                                        
+                                        seenUrls.add(src);
+                                        mainGalleryImages.push(src);
+                                    });
+                                } catch (e) {
+                                    // 셀렉터 오류 무시
                                 }
-                                
-                                // 썸네일 → 원본 변환
-                                src = src.replace('/thumbnails/', '/');
-                                
-                                // 제외할 패턴
-                                if (seenUrls.has(src)) return;
-                                if (src.includes('/icon/')) return;
-                                if (src.includes('/badge/')) return;
-                                if (src.includes('/banner/')) return;
-                                if (src.includes('/event/')) return;
-                                if (src.includes('/logo/')) return;
-                                if (src.includes('/btn/')) return;
-                                if (src.includes('/common/')) return;
-                                if (src.includes('120x120')) return;
-                                if (src.includes('80x80')) return;
-                                if (src.includes('60x60')) return;
-                                if (src.includes('40x40')) return;
-                                
-                                seenUrls.add(src);
-                                
-                                // ✅ 우선순위 분류 (404가 안 나는 경로 우선!)
-                                if (src.includes('/gdasEditor/') || src.includes('/display/')) {
-                                    // 상세 설명 이미지, 디스플레이 이미지 → 높은 우선순위
-                                    priorityImages.push(src);
-                                } else if (src.includes('/cfimages/cf-goods/uploads/images/')) {
-                                    // 메인 갤러리 썸네일 → 낮은 우선순위 (404 위험)
-                                    fallbackImages.push(src);
-                                } else if (src.includes('/item/')) {
-                                    // 아이템 이미지 → 중간 우선순위
-                                    priorityImages.push(src);
-                                } else {
-                                    // 기타
-                                    fallbackImages.push(src);
-                                }
-                            });
+                            }
                             
-                            // ✅ 우선순위 이미지 먼저, 그 다음 fallback
-                            result.imageUrls = [...priorityImages, ...fallbackImages].slice(0, 40);
+                            // 2. 갤러리에서 못 찾으면 일반 이미지에서 큰 것만 수집
+                            if (mainGalleryImages.length === 0) {
+                                const allImages = document.querySelectorAll('img');
+                                allImages.forEach(img => {
+                                    let src = img.getAttribute('data-src') ||
+                                              img.getAttribute('data-origin') ||
+                                              img.src;
+                                    
+                                    if (!src || !src.includes('oliveyoung.co.kr')) return;
+                                    if (seenUrls.has(src)) return;
+                                    
+                                    // 프로토콜 추가
+                                    if (src.startsWith('//')) {
+                                        src = 'https:' + src;
+                                    }
+                                    
+                                    // 상세 설명/디스플레이 제외
+                                    if (src.includes('/gdasEditor/')) return;
+                                    if (src.includes('/display/')) return;
+                                    if (src.includes('/icon/')) return;
+                                    if (src.includes('/badge/')) return;
+                                    if (src.includes('/banner/')) return;
+                                    if (src.includes('/review/')) return;
+                                    
+                                    // 이미지 크기 체크 (DOM에서 확인 가능한 경우)
+                                    const width = img.naturalWidth || img.width;
+                                    const height = img.naturalHeight || img.height;
+                                    
+                                    // 최소 300x300 이상만
+                                    if (width >= 300 && height >= 300) {
+                                        seenUrls.add(src);
+                                        mainGalleryImages.push(src);
+                                    }
+                                });
+                            }
+                            
+                            // 최대 10개만 저장
+                            result.imageUrls = mainGalleryImages.slice(0, 10);
                             
                             // ===== 상품정보 제공고시 추출 =====
                             const EXCLUDE_KEYWORDS = [
@@ -974,7 +1041,7 @@ async function main() {
                         log(`   타이틀: ${productData.rawTitle ? productData.rawTitle.substring(0, 60) + '...' : '❌ 없음'}`);
                         log(`   정가: ${productData.priceOriginal ? '₩' + productData.priceOriginal.toLocaleString() : '❌ 없음'}`);
                         log(`   할인가: ${productData.priceDiscount ? '₩' + productData.priceDiscount.toLocaleString() : '❌ 없음'}`);
-                        log(`   이미지: ${productData.imageUrls.length}개`);
+                        log(`   메인 갤러리 이미지: ${productData.imageUrls.length}개`);
                         log(`   📦 상품정보 제공고시:`);
                         log(`      용량: ${productData.infoTable.volume || '❌ 없음'}`);
                         log(`      피부타입: ${productData.infoTable.skinType || '❌ 없음'}`);
@@ -1067,7 +1134,7 @@ async function main() {
                         
                         // 4. 이미지 처리
                         if (missingFields.needsImages && productData.imageUrls.length > 0) {
-                            log(`🖼️  이미지 처리 중...`);
+                            log(`🖼️  메인 갤러리 이미지 처리 중...`);
                             
                             const attachments = await processProductImages(product, productData.imageUrls);
                             
@@ -1075,7 +1142,7 @@ async function main() {
                                 updateData.product_images = attachments;
                                 hasUpdates = true;
                                 stats.imagesFilled++;
-                                log(`✅ ${attachments.length}개 이미지 처리 완료`);
+                                log(`✅ ${attachments.length}개 메인 갤러리 이미지 처리 완료`);
                             }
                         } else if (!missingFields.needsImages) {
                             log(`🖼️  이미지: 이미 있음 → 스킵`);
