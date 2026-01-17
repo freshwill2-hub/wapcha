@@ -768,7 +768,8 @@ async function main() {
                         await page.waitForTimeout(3000);
                         
                         // ==================== 제품 정보 추출 ====================
-                        const productData = await page.evaluate((needsTitle, needsPrice) => {
+                        // ✅ 수정: 객체로 감싸서 인자 전달 (Playwright 요구사항)
+                        const productData = await page.evaluate(({ needsTitle, needsPrice }) => {
                             const result = {
                                 rawTitle: null,
                                 priceOriginal: null,
@@ -880,7 +881,7 @@ async function main() {
                             }
                             
                             return result;
-                        }, missing.needsTitleKr, missing.needsPriceOriginal);
+                        }, { needsTitle: missing.needsTitleKr, needsPrice: missing.needsPriceOriginal });
                         
                         console.log(`\n📋 추출된 정보:`);
                         if (missing.needsTitleKr) {
