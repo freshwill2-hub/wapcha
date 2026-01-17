@@ -563,8 +563,14 @@ async function main() {
                                 description: ''
                             };
                             
-                            // ===== 타이틀 추출 =====
+                            // ===== 타이틀 추출 (올리브영 실제 구조) =====
                             const titleSelectors = [
+                                // 올리브영 실제 셀렉터 (우선순위)
+                                '.goodsDetailInfo_title_name_unity',
+                                '[class*="title_name_unity"]',
+                                '[class*="goodsDetailInfo_title"]',
+                                '[data-ref="prod-product-title"]',
+                                // 폴백 셀렉터
                                 '.prd_name',
                                 '.goods_name', 
                                 'h1[class*="name"]',
@@ -573,15 +579,23 @@ async function main() {
                             ];
                             
                             for (const selector of titleSelectors) {
-                                const el = document.querySelector(selector);
-                                if (el && el.textContent.trim().length > 5) {
-                                    result.rawTitle = el.textContent.trim();
-                                    break;
+                                try {
+                                    const el = document.querySelector(selector);
+                                    if (el && el.textContent.trim().length > 5) {
+                                        result.rawTitle = el.textContent.trim();
+                                        break;
+                                    }
+                                } catch (e) {
+                                    // 셀렉터 오류 무시
                                 }
                             }
                             
-                            // ===== 가격 추출 (할인가 = 현재가) =====
+                            // ===== 가격 추출 (할인가 = 현재가) - 올리브영 실제 구조 =====
                             const discountPriceSelectors = [
+                                // 올리브영 실제 셀렉터 (우선순위)
+                                '[class*="price-text"]',
+                                '[class*="GoodsDetailInfo_price-text"]',
+                                // 폴백 셀렉터
                                 '.price-2 strong',
                                 '.tx_cur',
                                 '.final-price',
@@ -595,20 +609,29 @@ async function main() {
                             ];
                             
                             for (const selector of discountPriceSelectors) {
-                                const el = document.querySelector(selector);
-                                if (el) {
-                                    const text = el.textContent.replace(/[^0-9]/g, '');
-                                    const num = parseInt(text);
-                                    if (num > 0) {
-                                        result.priceDiscount = num;
-                                        break;
+                                try {
+                                    const el = document.querySelector(selector);
+                                    if (el) {
+                                        const text = el.textContent.replace(/[^0-9]/g, '');
+                                        const num = parseInt(text);
+                                        if (num > 0) {
+                                            result.priceDiscount = num;
+                                            break;
+                                        }
                                     }
+                                } catch (e) {
+                                    // 셀렉터 오류 무시
                                 }
                             }
                             
-                            // ===== 가격 추출 (정가 = 원래가) =====
+                            // ===== 가격 추출 (정가 = 원래가) - 올리브영 실제 구조 =====
                             const originalPriceSelectors = [
+                                // 올리브영 실제 셀렉터 (우선순위)
+                                '[class*="price-before"]',
+                                '[class*="GoodsDetailInfo_price-before"]',
+                                // 폴백 셀렉터
                                 '.price-1 strike',
+                                '.price-1 span',
                                 '.tx_org',
                                 '.original-price',
                                 'del',
@@ -618,14 +641,18 @@ async function main() {
                             ];
                             
                             for (const selector of originalPriceSelectors) {
-                                const el = document.querySelector(selector);
-                                if (el) {
-                                    const text = el.textContent.replace(/[^0-9]/g, '');
-                                    const num = parseInt(text);
-                                    if (num > 0) {
-                                        result.priceOriginal = num;
-                                        break;
+                                try {
+                                    const el = document.querySelector(selector);
+                                    if (el) {
+                                        const text = el.textContent.replace(/[^0-9]/g, '');
+                                        const num = parseInt(text);
+                                        if (num > 0) {
+                                            result.priceOriginal = num;
+                                            break;
+                                        }
                                     }
+                                } catch (e) {
+                                    // 셀렉터 오류 무시
                                 }
                             }
                             
@@ -642,7 +669,7 @@ async function main() {
                                 result.priceDiscount = temp;
                             }
                             
-                            // ===== 상세설명 추출 (상품정보 제공고시 테이블) =====
+                            // ===== 상세설명 추출 (상품정보 제공고시 테이블) - 올리브영 실제 구조 =====
                             const infoTable = {
                                 volume: '',
                                 skinType: '',
@@ -651,15 +678,29 @@ async function main() {
                                 ingredients: ''
                             };
                             
-                            // 상품정보 제공고시 테이블 찾기
-                            const infoSection = document.querySelector('[class*="prd_detail_box"]') ||
-                                               document.querySelector('[class*="product_info"]') ||
-                                               document.querySelector('[class*="GoodsDetailInfo"]') ||
-                                               document.querySelector('.info_table') ||
-                                               document.querySelector('table');
+                            // 상품정보 제공고시 테이블 찾기 (올리브영 실제 구조)
+                            const infoSelectors = [
+                                '[class*="GoodsDetailInfo"]',
+                                '[class*="goodsDetailInfo"]',
+                                '[class*="prd_detail_box"]',
+                                '[class*="product_info"]',
+                                '[class*="specification"]',
+                                '.info_table',
+                                'table'
+                            ];
+                            
+                            let infoSection = null;
+                            for (const selector of infoSelectors) {
+                                try {
+                                    infoSection = document.querySelector(selector);
+                                    if (infoSection) break;
+                                } catch (e) {
+                                    // 셀렉터 오류 무시
+                                }
+                            }
                             
                             if (infoSection) {
-                                const allRows = document.querySelectorAll('tr, dl, div[class*="row"], div[class*="item"]');
+                                const allRows = document.querySelectorAll('tr, dl, div[class*="row"], div[class*="item"], div[class*="Row"], div[class*="Item"]');
                                 
                                 const allowedKeywords = [
                                     '내용물', '용량', '중량', '주요 사양', 
