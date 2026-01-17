@@ -3,80 +3,6 @@ import axios from 'axios';
 import { PlaywrightCrawler } from 'crawlee';
 import FormData from 'form-data';
 import OpenAI from 'openai';
-import fs from 'fs';
-import path from 'path';
-
-// ==================== 시드니 시간 설정 ====================
-const TIMEZONE = 'Australia/Sydney';
-
-function getSydneyTime() {
-    return new Date().toLocaleString('en-AU', { 
-        timeZone: TIMEZONE,
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false
-    });
-}
-
-function getSydneyISO() {
-    // ISO 형식 시드니 시간 (DB 저장용)
-    const now = new Date();
-    const sydneyTime = new Date(now.toLocaleString('en-US', { timeZone: TIMEZONE }));
-    return sydneyTime.toISOString();
-}
-
-function getSydneyDateString() {
-    // 파일명용 날짜 문자열 (YYYY-MM-DD_HH-MM-SS)
-    const now = new Date();
-    const options = { timeZone: TIMEZONE };
-    const year = now.toLocaleString('en-AU', { ...options, year: 'numeric' });
-    const month = now.toLocaleString('en-AU', { ...options, month: '2-digit' });
-    const day = now.toLocaleString('en-AU', { ...options, day: '2-digit' });
-    const hour = now.toLocaleString('en-AU', { ...options, hour: '2-digit', hour12: false });
-    const minute = now.toLocaleString('en-AU', { ...options, minute: '2-digit' });
-    const second = now.toLocaleString('en-AU', { ...options, second: '2-digit' });
-    return `${year}-${month}-${day}_${hour}-${minute}-${second}`;
-}
-
-// ==================== 로그 시스템 ====================
-const LOG_DIR = process.env.LOG_DIR || '/root/copychu-scraper/logs';
-const LOG_FILE = path.join(LOG_DIR, `phase1_${getSydneyDateString()}.log`);
-
-// 로그 디렉토리 생성
-if (!fs.existsSync(LOG_DIR)) {
-    fs.mkdirSync(LOG_DIR, { recursive: true });
-}
-
-// 로그 스트림
-const logStream = fs.createWriteStream(LOG_FILE, { flags: 'a' });
-
-// console.log 오버라이드 (터미널 + 파일 동시 출력)
-const originalConsoleLog = console.log;
-const originalConsoleError = console.error;
-
-console.log = (...args) => {
-    const timestamp = `[${getSydneyTime()}]`;
-    const message = args.map(arg => 
-        typeof arg === 'object' ? JSON.stringify(arg, null, 2) : arg
-    ).join(' ');
-    
-    originalConsoleLog(timestamp, ...args);
-    logStream.write(`${timestamp} ${message}\n`);
-};
-
-console.error = (...args) => {
-    const timestamp = `[${getSydneyTime()}]`;
-    const message = args.map(arg => 
-        typeof arg === 'object' ? JSON.stringify(arg, null, 2) : arg
-    ).join(' ');
-    
-    originalConsoleError(timestamp, ...args);
-    logStream.write(`${timestamp} [ERROR] ${message}\n`);
-};
 
 // ==================== 설정 ====================
 const NOCODB_API_URL = process.env.NOCODB_API_URL || 'http://77.42.67.165:8080';
@@ -85,7 +11,7 @@ const OLIVEYOUNG_TABLE_ID = process.env.OLIVEYOUNG_TABLE_ID || 'mufuxqsjgqcvh80'
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 // OpenAI 클라이언트
-const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
+const openai = OPENAI_API_KEY ? new OpenAI({ apiKey: OPENAI_API_KEY }) : null;
 
 console.log('🚀 Phase 1: 제품 상세 스크래핑 (스마트 필드별 체크)');
 console.log('='.repeat(70));
@@ -93,8 +19,6 @@ console.log('🔧 설정 확인:');
 console.log(`- NocoDB URL: ${NOCODB_API_URL}`);
 console.log(`- Table ID: ${OLIVEYOUNG_TABLE_ID}`);
 console.log(`- OpenAI API: ${OPENAI_API_KEY ? '✅ 설정됨' : '❌ 없음'}`);
-console.log(`- 시간대: ${TIMEZONE} (시드니)`);
-console.log(`- 로그 파일: ${LOG_FILE}`);
 console.log('\n📋 스마트 필드 체크 모드:');
 console.log('   - 각 필드별로 개별 체크');
 console.log('   - 빈 필드만 채우고, 있는 필드는 스킵');
@@ -105,59 +29,18 @@ let processedCount = 0;
 let successCount = 0;
 let skippedCount = 0;
 let failedCount = 0;
-let crawler = null;  // 크롤러 참조 (종료용)
-let isShuttingDown = false;
-
-// ==================== Graceful Shutdown ====================
-async function gracefulShutdown(signal) {
-    if (isShuttingDown) return;
-    isShuttingDown = true;
-    
-    console.log(`\n\n🛑 ${signal} 수신 - 프로세스 종료 중...`);
-    
-    try {
-        if (crawler) {
-            console.log('🔧 Crawler 정리 중...');
-            await crawler.teardown();
-            console.log('✅ Crawler 정리 완료');
-        }
-    } catch (error) {
-        console.error('⚠️  Crawler 정리 실패:', error.message);
-    }
-    
-    // 로그 스트림 종료
-    console.log('📝 로그 파일 저장 완료');
-    logStream.end();
-    
-    console.log('👋 프로세스 종료');
-    process.exit(0);
-}
-
-// 종료 시그널 핸들러
-process.on('SIGINT', () => gracefulShutdown('SIGINT'));   // Ctrl+C
-process.on('SIGTERM', () => gracefulShutdown('SIGTERM')); // kill 명령
-process.on('SIGHUP', () => gracefulShutdown('SIGHUP'));   // 터미널 종료
-
-// 예외 처리
-process.on('uncaughtException', async (error) => {
-    console.error('\n❌ 처리되지 않은 예외:', error.message);
-    await gracefulShutdown('uncaughtException');
-});
-
-process.on('unhandledRejection', async (reason, promise) => {
-    console.error('\n❌ 처리되지 않은 Promise 거부:', reason);
-    await gracefulShutdown('unhandledRejection');
-});
 
 // 통계
 const stats = {
     titleKrFilled: 0,
     titleEnFilled: 0,
     priceFilled: 0,
+    descriptionFilled: 0,
     imagesFilled: 0,
     titleKrSkipped: 0,
     titleEnSkipped: 0,
     priceSkipped: 0,
+    descriptionSkipped: 0,
     imagesSkipped: 0
 };
 
@@ -168,15 +51,19 @@ function checkMissingFields(product) {
         needsTitleEn: !product.title_en || product.title_en.trim() === '',
         needsPriceOriginal: !product.price_original || product.price_original === 0,
         needsPriceDiscount: !product.price_discount || product.price_discount === 0,
+        needsDescription: !product.description || product.description.trim() === '',
+        needsDescriptionEn: !product.description_en || product.description_en.trim() === '',
         needsImages: !product.product_images || product.product_images.length === 0
     };
     
-    // 페이지 방문이 필요한지 (타이틀이나 가격이 없으면 방문 필요)
-    missing.needsPageVisit = missing.needsTitleKr || missing.needsPriceOriginal;
+    // 페이지 방문이 필요한지 (타이틀, 가격, 설명, 이미지 중 하나라도 없으면 방문 필요)
+    missing.needsPageVisit = missing.needsTitleKr || missing.needsPriceOriginal || 
+                              missing.needsDescription || missing.needsImages;
     
     // 아무것도 필요 없으면 완전 스킵
     missing.isComplete = !missing.needsTitleKr && !missing.needsTitleEn && 
-                         !missing.needsPriceOriginal && !missing.needsImages;
+                         !missing.needsPriceOriginal && !missing.needsDescription &&
+                         !missing.needsDescriptionEn && !missing.needsImages;
     
     return missing;
 }
@@ -245,169 +132,180 @@ function cleanProductTitle(rawTitle) {
         '신상',
         '신제품',
         '런칭',
-        '출시'
     ];
     
-    // 키워드 제거 (대소문자 무시, 단어 끝에 있는 것 우선)
+    // 키워드 제거 (대소문자 구분 없이)
     for (const keyword of removeKeywords) {
-        const endRegex = new RegExp(`\\s*${keyword}\\s*$`, 'gi');
-        cleaned = cleaned.replace(endRegex, '');
-        
-        const midRegex = new RegExp(`\\s*${keyword}\\s*`, 'gi');
-        cleaned = cleaned.replace(midRegex, ' ');
+        const regex = new RegExp(keyword, 'gi');
+        cleaned = cleaned.replace(regex, '');
     }
     
-    // 3단계: 증정 관련 패턴 제거
-    cleaned = cleaned.replace(/\+\s*\d+\s*(개|매|입|팩|장|ml|g|ea)?\s*(증정|기획|추가)?/gi, '');
-    cleaned = cleaned.replace(/\d+\s*\+\s*\d+\s*(증정|기획)?/gi, '');
-    
-    // 4단계: 정리
-    cleaned = cleaned.replace(/\s+/g, ' ');
-    cleaned = cleaned.trim();
-    cleaned = cleaned.replace(/[\s,\-_\/\\·]+$/g, '');
-    cleaned = cleaned.replace(/^[\s,\-_\/\\·]+/g, '');
+    // 3단계: 연속 공백 제거 및 앞뒤 공백 정리
+    cleaned = cleaned.replace(/\s+/g, ' ').trim();
     
     return cleaned;
 }
 
-// ==================== 영어 번역 함수 (OpenAI GPT-4o-mini) ====================
-async function translateToEnglish(koreanTitle) {
-    if (!koreanTitle || !OPENAI_API_KEY) {
-        console.log('   ⚠️  번역 건너뜀 (타이틀 없음 또는 API 키 없음)');
+// ==================== 타이틀에서 용량 추출 ====================
+function extractVolumeFromTitle(title) {
+    if (!title) return null;
+    
+    const volumes = [];
+    
+    // 패턴 1: 100ml, 50g, 220mL 등
+    const volumePattern = /(\d+)\s*(ml|mL|ML|g|G)/gi;
+    let match;
+    
+    while ((match = volumePattern.exec(title)) !== null) {
+        volumes.push(match[1] + match[2].toLowerCase());
+    }
+    
+    // 패턴 2: "2개", "2입", "2매" 등 - 같은 제품 여러 개
+    const countMatch = title.match(/(\d+)\s*(개|입|매)/);
+    
+    if (countMatch && volumes.length > 0) {
+        const count = parseInt(countMatch[1]);
+        const baseVolume = volumes[0]; // 첫 번째 용량
+        
+        if (count > 1) {
+            // 용량 × 개수로 표시 (예: "220ml × 2")
+            return `${baseVolume} × ${count}`;
+        }
+    }
+    
+    // 용량이 여러 개면 + 로 연결 (예: "100ml + 100ml")
+    if (volumes.length > 1) {
+        return volumes.join(' + ');
+    }
+    
+    // 용량이 하나면 그대로
+    if (volumes.length === 1) {
+        return volumes[0];
+    }
+    
+    return null;
+}
+
+// ==================== OpenAI 번역 함수 ====================
+async function translateToEnglish(koreanText) {
+    if (!openai || !koreanText) {
+        console.log('   ⚠️  번역 스킵: OpenAI API 키 없음 또는 텍스트 없음');
         return null;
     }
     
     try {
-        console.log(`   🌐 영어 번역 중...`);
+        console.log(`   🌐 번역 중: "${koreanText.substring(0, 50)}..."`);
         
         const response = await openai.chat.completions.create({
             model: 'gpt-4o-mini',
             messages: [
                 {
                     role: 'system',
-                    content: `You are a Korean to English translator specializing in Korean cosmetics/beauty products.
-
-Rules:
-1. Translate product names accurately
-2. Keep Korean brand names in romanized form:
-   - 아벤느 → Avene
-   - 라운드랩 → Round Lab  
-   - 토리든 → Torriden
-   - 달바 → d'Alba
-   - 메디힐 → Mediheal
-   - 닥터지 → Dr.G
-   - 이니스프리 → Innisfree
-   - 에뛰드 → Etude
-   - 미샤 → Missha
-   - 스킨푸드 → Skinfood
-   - 코스알엑스 → COSRX
-   - 넘버즈인 → Numbuzin
-   - 아누아 → Anua
-   - VT → VT (keep as is)
-3. Translate product types:
-   - 미스트 → Mist
-   - 토너 → Toner
-   - 세럼 → Serum
-   - 크림 → Cream
-   - 에센스 → Essence
-   - 마스크 → Mask
-   - 클렌저 → Cleanser
-   - 선크림/선블록 → Sunscreen
-   - 로션 → Lotion
-   - 앰플 → Ampoule
-4. Keep measurements as-is: 300ml, 50g, etc.
-5. Keep numbers for sets: 2입 → Set of 2, 4매 → 4 Sheets
-6. Output ONLY the translated title, nothing else`
+                    content: `You are a professional translator specializing in Korean beauty products.
+Translate the Korean product name to English.
+Keep brand names in their original form (e.g., 아벤느 → Avène, VT → VT).
+Keep volume/quantity units (ml, g, 매, 입, 개) in their common English forms.
+Output ONLY the translated text, no explanations.`
                 },
                 {
                     role: 'user',
-                    content: koreanTitle
+                    content: koreanText
                 }
             ],
             max_tokens: 200,
             temperature: 0.3
         });
         
-        const translated = response.choices[0].message.content.trim();
-        console.log(`   ✅ 번역 완료: "${translated}"`);
+        const translatedText = response.choices[0].message.content.trim();
+        console.log(`   ✅ 번역 완료: "${translatedText}"`);
         
-        return translated;
+        return translatedText;
         
     } catch (error) {
-        console.error(`   ❌ 번역 실패:`, error.message);
+        console.error(`   ❌ 번역 실패: ${error.message}`);
         return null;
     }
 }
 
-// ==================== NocoDB: 제품 가져오기 (수정됨) ====================
+// ==================== 설명 번역 함수 ====================
+async function translateDescriptionToEnglish(koreanDescription) {
+    if (!openai || !koreanDescription) {
+        return null;
+    }
+    
+    try {
+        console.log(`   🌐 설명 번역 중...`);
+        
+        const response = await openai.chat.completions.create({
+            model: 'gpt-4o-mini',
+            messages: [
+                {
+                    role: 'system',
+                    content: `You are a professional translator for Korean beauty product descriptions.
+Translate the Korean product description to natural English.
+Keep brand names and technical terms accurate.
+Output ONLY the translated text, no explanations.`
+                },
+                {
+                    role: 'user',
+                    content: koreanDescription.substring(0, 1000) // 최대 1000자
+                }
+            ],
+            max_tokens: 500,
+            temperature: 0.3
+        });
+        
+        const translatedText = response.choices[0].message.content.trim();
+        console.log(`   ✅ 설명 번역 완료 (${translatedText.length}자)`);
+        
+        return translatedText;
+        
+    } catch (error) {
+        console.error(`   ❌ 설명 번역 실패: ${error.message}`);
+        return null;
+    }
+}
+
+// ==================== NocoDB: 제품 가져오기 ====================
 async function getOliveyoungProducts(limit = 100, offset = 0) {
     try {
         console.log(`📥 NocoDB에서 제품 가져오는 중 (offset: ${offset}, limit: ${limit})...`);
         
-        // ✅ 하나라도 빈 필드가 있는 제품 가져오기
-        // NocoDB에서 OR 조건 사용: title_kr이 없거나 price_original이 없거나 product_images가 없는 제품
         const response = await axios.get(
             `${NOCODB_API_URL}/api/v2/tables/${OLIVEYOUNG_TABLE_ID}/records`,
             {
                 headers: { 'xc-token': NOCODB_TOKEN },
                 params: {
                     offset: offset,
-                    limit: limit,
-                    where: '~or((title_kr,isnull)~or(title_kr,eq,),(price_original,isnull)~or(price_original,eq,0),(product_images,isnull))'
+                    limit: limit
                 }
             }
         );
 
         const products = response.data.list;
-        console.log(`✅ ${products.length}개 제품 가져옴 (빈 필드 있는 제품)\n`);
+        console.log(`✅ ${products.length}개 제품 가져옴`);
         
-        // 각 제품의 빈 필드 현황 출력
-        let needsTitle = 0, needsPrice = 0, needsImages = 0;
+        // 빈 필드 통계
+        let needsTitle = 0, needsPrice = 0, needsDescription = 0, needsImages = 0;
         for (const p of products) {
             const missing = checkMissingFields(p);
             if (missing.needsTitleKr) needsTitle++;
             if (missing.needsPriceOriginal) needsPrice++;
+            if (missing.needsDescription) needsDescription++;
             if (missing.needsImages) needsImages++;
         }
         
         console.log(`📊 빈 필드 현황:`);
         console.log(`   - title_kr 필요: ${needsTitle}개`);
         console.log(`   - price_original 필요: ${needsPrice}개`);
+        console.log(`   - description 필요: ${needsDescription}개`);
         console.log(`   - product_images 필요: ${needsImages}개\n`);
         
         return products;
 
     } catch (error) {
         console.error('❌ 제품 가져오기 실패:', error.response?.data || error.message);
-        
-        // ✅ 폴백: where 조건 실패 시 모든 제품 가져온 후 필터링
-        console.log('⚠️  폴백 모드: 모든 제품 가져온 후 필터링...');
-        
-        try {
-            const response = await axios.get(
-                `${NOCODB_API_URL}/api/v2/tables/${OLIVEYOUNG_TABLE_ID}/records`,
-                {
-                    headers: { 'xc-token': NOCODB_TOKEN },
-                    params: {
-                        offset: offset,
-                        limit: limit
-                    }
-                }
-            );
-            
-            // 빈 필드가 있는 제품만 필터링
-            const products = response.data.list.filter(p => {
-                const missing = checkMissingFields(p);
-                return !missing.isComplete;
-            });
-            
-            console.log(`✅ ${products.length}개 제품 필터링됨 (빈 필드 있는 제품)\n`);
-            return products;
-            
-        } catch (fallbackError) {
-            console.error('❌ 폴백도 실패:', fallbackError.message);
-            return [];
-        }
+        return [];
     }
 }
 
@@ -466,20 +364,22 @@ async function uploadToNocoDB(fileBuffer, filename) {
     }
 }
 
-// ==================== NocoDB: 제품 업데이트 ====================
+// ==================== NocoDB: 제품 업데이트 (통합) ====================
 async function updateProduct(recordId, updateData) {
     try {
         console.log(`\n📝 제품 레코드 업데이트 중 (ID: ${recordId})...`);
         
-        // 이미지가 있는 경우 2단계 업데이트 (기존 삭제 → 새로 저장)
+        // 업데이트할 필드들 로그
+        const fields = Object.keys(updateData).filter(k => k !== 'Id');
+        console.log(`📋 업데이트 필드: ${fields.join(', ')}`);
+        
+        // product_images가 있으면 2단계 처리 (기존 삭제 후 저장)
         if (updateData.product_images) {
+            // 1단계: 기존 이미지 삭제
             console.log(`🗑️  기존 product_images 삭제 중...`);
             await axios.patch(
                 `${NOCODB_API_URL}/api/v2/tables/${OLIVEYOUNG_TABLE_ID}/records`,
-                [{ 
-                    Id: recordId, 
-                    product_images: null
-                }],
+                [{ Id: recordId, product_images: null }],
                 { 
                     headers: { 
                         'xc-token': NOCODB_TOKEN,
@@ -489,13 +389,14 @@ async function updateProduct(recordId, updateData) {
             );
         }
         
-        // 새 데이터 저장
-        console.log(`💾 새 데이터 저장 중...`);
+        // 2단계: 새 데이터 저장
+        const scrapedAt = new Date().toISOString();
         await axios.patch(
             `${NOCODB_API_URL}/api/v2/tables/${OLIVEYOUNG_TABLE_ID}/records`,
             [{ 
                 Id: recordId, 
-                ...updateData
+                ...updateData,
+                scraped_at: scrapedAt
             }],
             { 
                 headers: { 
@@ -505,7 +406,7 @@ async function updateProduct(recordId, updateData) {
             }
         );
         
-        console.log(`✅ 제품 레코드 업데이트 완료!\n`);
+        console.log(`✅ 제품 레코드 업데이트 완료! (시간: ${scrapedAt})\n`);
         return true;
 
     } catch (error) {
@@ -514,422 +415,499 @@ async function updateProduct(recordId, updateData) {
     }
 }
 
-// ==================== 단일 제품 처리 (수정됨: 필드별 체크) ====================
-async function processProduct(product, galleryImages, productData, missingFields) {
+// ==================== 이미지 처리 (다운로드 & 업로드) ====================
+async function processProductImages(product, galleryImages) {
     try {
-        const updateData = {
-            scraped_at: getSydneyISO()
-        };
-        
-        let hasUpdates = false;
-        
-        // ✅ 1. 타이틀 처리 (title_kr이 없을 때만)
-        if (missingFields.needsTitleKr && productData.rawTitle) {
-            const cleanedTitle = cleanProductTitle(productData.rawTitle);
-            updateData.title_kr = cleanedTitle;
-            hasUpdates = true;
-            stats.titleKrFilled++;
-            
-            console.log(`\n📝 타이틀 클리닝:`);
-            console.log(`   원본: "${productData.rawTitle}"`);
-            console.log(`   정제: "${cleanedTitle}"`);
-            
-            // title_en도 없으면 번역 (새로 추출한 title_kr로)
-            if (missingFields.needsTitleEn) {
-                const englishTitle = await translateToEnglish(cleanedTitle);
-                if (englishTitle) {
-                    updateData.title_en = englishTitle;
-                    stats.titleEnFilled++;
-                }
-            } else {
-                console.log(`   ℹ️  title_en 이미 있음 → 번역 스킵`);
-                stats.titleEnSkipped++;
-            }
-        } else if (!missingFields.needsTitleKr) {
-            console.log(`\n📝 타이틀: 이미 있음 → 스킵`);
-            stats.titleKrSkipped++;
-            
-            // title_kr은 있는데 title_en만 없는 경우
-            if (missingFields.needsTitleEn && product.title_kr) {
-                console.log(`   ℹ️  title_en 없음 → 기존 title_kr로 번역`);
-                const englishTitle = await translateToEnglish(product.title_kr);
-                if (englishTitle) {
-                    updateData.title_en = englishTitle;
-                    hasUpdates = true;
-                    stats.titleEnFilled++;
-                }
-            } else {
-                stats.titleEnSkipped++;
-            }
+        if (galleryImages.length === 0) {
+            console.log('❌ 메인 갤러리 이미지를 찾을 수 없습니다.\n');
+            return [];
         }
         
-        // ✅ 2. 가격 처리 (price_original이 없을 때만)
-        if (missingFields.needsPriceOriginal && productData.priceOriginal) {
-            updateData.price_original = productData.priceOriginal;
-            hasUpdates = true;
-            stats.priceFilled++;
+        console.log(`📊 추출된 이미지: ${galleryImages.length}개`);
+        galleryImages.slice(0, 5).forEach((img, i) => {
+            console.log(`   ${i + 1}. ${img.src.substring(0, 70)}... (${img.width}×${img.height})`);
+        });
+        
+        const maxImages = Math.min(galleryImages.length, 7);
+        console.log(`\n📥 ${maxImages}개 이미지 다운로드 & 업로드 중...\n`);
+        
+        const uploadedFiles = [];
+        
+        for (let i = 0; i < maxImages; i++) {
+            const img = galleryImages[i];
+            console.log(`\n${i + 1}/${maxImages}: ${img.src.substring(0, 60)}...`);
             
-            // price_discount도 설정
-            if (productData.priceDiscount && productData.priceDiscount < productData.priceOriginal) {
-                updateData.price_discount = productData.priceDiscount;
-            } else {
-                updateData.price_discount = productData.priceOriginal;
+            const buffer = await downloadImage(img.src);
+            if (!buffer) continue;
+            
+            const filename = `gallery-${product.Id}-${i + 1}-${Date.now()}.jpg`;
+            const uploadResult = await uploadToNocoDB(buffer, filename);
+            
+            if (uploadResult) {
+                uploadedFiles.push(uploadResult);
             }
             
-            console.log(`\n💰 가격:`);
-            console.log(`   정가 (price_original): ₩${updateData.price_original.toLocaleString()}`);
-            console.log(`   할인가 (price_discount): ₩${updateData.price_discount.toLocaleString()}`);
-            
-            if (updateData.price_discount < updateData.price_original) {
-                const discountRate = Math.round((1 - updateData.price_discount / updateData.price_original) * 100);
-                console.log(`   할인율: ${discountRate}%`);
-            }
-        } else if (!missingFields.needsPriceOriginal) {
-            console.log(`\n💰 가격: 이미 있음 → 스킵`);
-            stats.priceSkipped++;
+            await new Promise(resolve => setTimeout(resolve, 500));
         }
         
-        // ✅ 3. 이미지 처리 (product_images가 없을 때만)
-        if (missingFields.needsImages) {
-            if (galleryImages.length === 0) {
-                console.log('\n⚠️  메인 갤러리 이미지를 찾을 수 없습니다.');
-            } else {
-                console.log(`\n📊 이미지: ${galleryImages.length}개 발견`);
-                
-                const maxImages = Math.min(galleryImages.length, 7);
-                console.log(`📥 ${maxImages}개 이미지 다운로드 & 업로드 중...`);
-                
-                const uploadedFiles = [];
-                
-                for (let i = 0; i < maxImages; i++) {
-                    const img = galleryImages[i];
-                    console.log(`\n[${i + 1}/${maxImages}] ${img.src.substring(0, 60)}...`);
-                    
-                    const buffer = await downloadImage(img.src);
-                    if (!buffer) continue;
-                    
-                    const filename = `gallery-${product.Id}-${i + 1}-${Date.now()}.jpg`;
-                    const uploadResult = await uploadToNocoDB(buffer, filename);
-                    
-                    if (uploadResult) {
-                        uploadedFiles.push(uploadResult);
-                    }
-                    
-                    await new Promise(resolve => setTimeout(resolve, 500));
-                }
-                
-                if (uploadedFiles.length > 0) {
-                    updateData.product_images = uploadedFiles.map((file, index) => {
-                        let fullUrl = file.url;
-                        if (!fullUrl && file.path) {
-                            fullUrl = `${NOCODB_API_URL}/${file.path}`;
-                        }
-                        if (!fullUrl && file.signedPath) {
-                            fullUrl = `${NOCODB_API_URL}/${file.signedPath}`;
-                        }
-                        
-                        return {
-                            url: fullUrl || '',
-                            title: file.title || file.name || `gallery-image-${index + 1}.jpg`,
-                            mimetype: file.mimetype || file.type || 'image/jpeg',
-                            size: file.size || 0
-                        };
-                    });
-                    
-                    hasUpdates = true;
-                    stats.imagesFilled++;
-                    console.log(`\n✅ ${uploadedFiles.length}개 이미지 업로드 완료`);
-                }
+        // attachment 형식으로 변환
+        const attachments = uploadedFiles.map((file, index) => {
+            let fullUrl = file.url;
+            if (!fullUrl && file.path) {
+                fullUrl = `${NOCODB_API_URL}/${file.path}`;
             }
-        } else {
-            console.log(`\n🖼️  이미지: 이미 있음 → 스킵 (시간 절약!)`);
-            stats.imagesSkipped++;
-        }
+            if (!fullUrl && file.signedPath) {
+                fullUrl = `${NOCODB_API_URL}/${file.signedPath}`;
+            }
+            
+            return {
+                url: fullUrl || '',
+                title: file.title || file.name || `gallery-image-${index + 1}.jpg`,
+                mimetype: file.mimetype || file.type || 'image/jpeg',
+                size: file.size || 0
+            };
+        });
         
-        // ✅ 4. DB 업데이트 (변경사항이 있을 때만)
-        if (hasUpdates) {
-            const updateSuccess = await updateProduct(product.Id, updateData);
-            return updateSuccess;
-        } else {
-            console.log(`\nℹ️  업데이트할 내용 없음`);
-            return true;
-        }
+        return attachments;
         
     } catch (error) {
-        console.error(`\n❌ 처리 중 오류:`, error.message);
-        return false;
+        console.error(`\n❌ 이미지 처리 중 오류:`, error.message);
+        return [];
     }
 }
 
 // ==================== 메인 ====================
 async function main() {
-    console.log('='.repeat(70) + '\n');
+    console.log('🚀 Phase 1: 메인 갤러리 이미지 + 타이틀/가격/설명 추출\n');
+    console.log('=' .repeat(70) + '\n');
+    
+    let crawler = null;
     
     try {
-        // 1. NocoDB에서 제품 가져오기 (빈 필드 있는 제품만)
-        const limit = parseInt(process.env.PRODUCT_LIMIT) || 100;
-        const products = await getOliveyoungProducts(limit, 0);
+        // 1. NocoDB에서 제품 가져오기
+        const products = await getOliveyoungProducts(
+            parseInt(process.env.PRODUCT_LIMIT) || 3, 
+            0
+        );
         
         if (products.length === 0) {
             console.log('⚠️  처리할 제품이 없습니다.');
-            console.log('   (모든 필드가 채워진 상태)');
             return;
         }
         
-        // ✅ 페이지 방문이 필요한 제품과 아닌 제품 분리
-        const needsPageVisit = [];
-        const onlyNeedsTranslation = [];
+        // 페이지 방문이 필요한 제품만 필터링
+        const productsToProcess = products.filter(p => {
+            const missing = checkMissingFields(p);
+            return missing.needsPageVisit;
+        });
         
-        for (const product of products) {
-            const missing = checkMissingFields(product);
-            
-            if (missing.needsPageVisit || missing.needsImages) {
-                // 타이틀, 가격, 이미지 중 하나라도 없으면 페이지 방문 필요
-                needsPageVisit.push({ product, missing });
-            } else if (missing.needsTitleEn && product.title_kr) {
-                // title_kr은 있는데 title_en만 없는 경우 → 페이지 방문 없이 번역만
-                onlyNeedsTranslation.push({ product, missing });
-            }
+        console.log(`📋 페이지 방문 필요: ${productsToProcess.length}/${products.length}개\n`);
+        
+        if (productsToProcess.length === 0) {
+            console.log('✅ 모든 제품이 이미 완전합니다. 처리할 것이 없습니다.');
+            return;
         }
         
-        console.log(`📋 처리 계획:`);
-        console.log(`   - 페이지 방문 필요: ${needsPageVisit.length}개`);
-        console.log(`   - 번역만 필요: ${onlyNeedsTranslation.length}개\n`);
+        const totalProducts = productsToProcess.length;
         
-        // ✅ 번역만 필요한 제품 먼저 처리 (페이지 방문 없이)
-        if (onlyNeedsTranslation.length > 0) {
-            console.log('='.repeat(70));
-            console.log('📚 번역만 필요한 제품 처리 중...');
-            console.log('='.repeat(70) + '\n');
-            
-            for (let i = 0; i < onlyNeedsTranslation.length; i++) {
-                const { product, missing } = onlyNeedsTranslation[i];
-                
-                console.log(`\n[${i + 1}/${onlyNeedsTranslation.length}] 제품 ID: ${product.Id}`);
-                console.log(`   title_kr: "${product.title_kr}"`);
-                
-                const englishTitle = await translateToEnglish(product.title_kr);
-                
-                if (englishTitle) {
-                    await updateProduct(product.Id, {
-                        title_en: englishTitle,
-                        scraped_at: getSydneyISO()
-                    });
-                    stats.titleEnFilled++;
-                    successCount++;
-                } else {
-                    failedCount++;
+        // 2. Crawlee 설정
+        crawler = new PlaywrightCrawler({
+            launchContext: {
+                launchOptions: {
+                    headless: true,
+                    args: [
+                        '--no-sandbox',
+                        '--disable-setuid-sandbox',
+                        '--disable-dev-shm-usage',
+                        '--disable-gpu',
+                        '--single-process'
+                    ]
                 }
-                
-                processedCount++;
-            }
-        }
-        
-        // ✅ 페이지 방문이 필요한 제품 처리
-        if (needsPageVisit.length > 0) {
-            console.log('\n' + '='.repeat(70));
-            console.log('🌐 페이지 방문이 필요한 제품 처리 중...');
-            console.log('='.repeat(70) + '\n');
+            },
             
-            const totalProducts = needsPageVisit.length;
-            
-            // Crawlee 설정
-            crawler = new PlaywrightCrawler({
-                launchContext: {
-                    launchOptions: {
-                        headless: true,
-                        args: [
-                            '--no-sandbox',
-                            '--disable-setuid-sandbox',
-                            '--disable-dev-shm-usage',
-                            '--disable-gpu',
-                            '--single-process'
-                        ]
-                    }
-                },
+            // 각 URL 처리 시 실행되는 함수
+            requestHandler: async ({ page, request }) => {
+                const product = request.userData.product;
+                const index = request.userData.index;
+                const missingFields = request.userData.missingFields;
                 
-                requestHandler: async ({ page, request }) => {
-                    const { product, missing } = request.userData;
-                    const index = request.userData.index;
+                console.log(`\n${'='.repeat(70)}`);
+                console.log(`📦 [${index + 1}/${totalProducts}] 제품 ID: ${product.Id}`);
+                console.log(`🔗 URL: ${request.url.substring(0, 80)}...`);
+                console.log(`📋 필요한 필드: ${[
+                    missingFields.needsTitleKr ? 'title_kr' : null,
+                    missingFields.needsPriceOriginal ? 'price' : null,
+                    missingFields.needsDescription ? 'description' : null,
+                    missingFields.needsImages ? 'images' : null
+                ].filter(Boolean).join(', ')}`);
+                console.log('='.repeat(70) + '\n');
+                
+                try {
+                    // 페이지 로딩 (domcontentloaded 사용 - networkidle보다 안정적)
+                    console.log(`📄 페이지 로딩 중...`);
+                    await page.waitForLoadState('domcontentloaded', { timeout: 30000 });
+                    await page.waitForTimeout(3000);
                     
-                    console.log(`\n${'='.repeat(70)}`);
-                    console.log(`📦 [${index + 1}/${totalProducts}] 제품 ID: ${product.Id}`);
-                    console.log(`🔗 URL: ${request.url.substring(0, 80)}...`);
-                    console.log('─'.repeat(70));
-                    console.log(`📋 필요한 필드:`);
-                    console.log(`   - title_kr: ${missing.needsTitleKr ? '❌ 필요' : '✅ 있음'}`);
-                    console.log(`   - title_en: ${missing.needsTitleEn ? '❌ 필요' : '✅ 있음'}`);
-                    console.log(`   - price: ${missing.needsPriceOriginal ? '❌ 필요' : '✅ 있음'}`);
-                    console.log(`   - images: ${missing.needsImages ? '❌ 필요' : '✅ 있음'}`);
-                    console.log('='.repeat(70));
+                    const updateData = {};
+                    let hasUpdates = false;
                     
-                    try {
-                        await page.waitForLoadState('networkidle', { timeout: 30000 });
-                        await page.waitForTimeout(3000);
+                    // ==================== 타이틀/가격/설명 추출 ====================
+                    if (missingFields.needsTitleKr || missingFields.needsPriceOriginal || missingFields.needsDescription) {
+                        console.log(`\n📊 웹페이지에서 정보 추출 중...`);
                         
-                        // ==================== 제품 정보 추출 ====================
-                        // ✅ 수정: 객체로 감싸서 인자 전달 (Playwright 요구사항)
-                        const productData = await page.evaluate(({ needsTitle, needsPrice }) => {
+                        const productData = await page.evaluate(() => {
                             const result = {
-                                rawTitle: null,
-                                priceOriginal: null,
-                                priceDiscount: null
+                                rawTitle: '',
+                                priceOriginal: 0,
+                                priceDiscount: 0,
+                                description: ''
                             };
                             
-                            // 타이틀이 필요할 때만 추출
-                            if (needsTitle) {
-                                const titleSelectors = [
-                                    '.prd_name',
-                                    '.goods_name',
-                                    '.product-name',
-                                    'h1.name',
-                                    '[class*="prdName"]',
-                                    '[class*="goodsName"]',
-                                    '.pdp_prd_name'
-                                ];
-                                
-                                for (const selector of titleSelectors) {
-                                    const titleEl = document.querySelector(selector);
-                                    if (titleEl && titleEl.textContent.trim()) {
-                                        result.rawTitle = titleEl.textContent.trim();
+                            // ===== 타이틀 추출 =====
+                            const titleSelectors = [
+                                '.prd_name',
+                                '.goods_name', 
+                                'h1[class*="name"]',
+                                '.product-name',
+                                'h1'
+                            ];
+                            
+                            for (const selector of titleSelectors) {
+                                const el = document.querySelector(selector);
+                                if (el && el.textContent.trim().length > 5) {
+                                    result.rawTitle = el.textContent.trim();
+                                    break;
+                                }
+                            }
+                            
+                            // ===== 가격 추출 (할인가 = 현재가) =====
+                            const discountPriceSelectors = [
+                                '.price-2 strong',
+                                '.tx_cur',
+                                '.final-price',
+                                '.sale_price',
+                                '.prd-price strong',
+                                '#finalPrc',
+                                '.price_box .selling_price',
+                                '.real-price strong',
+                                '.discount-price strong',
+                                '[class*="price"] strong'
+                            ];
+                            
+                            for (const selector of discountPriceSelectors) {
+                                const el = document.querySelector(selector);
+                                if (el) {
+                                    const text = el.textContent.replace(/[^0-9]/g, '');
+                                    const num = parseInt(text);
+                                    if (num > 0) {
+                                        result.priceDiscount = num;
                                         break;
                                     }
                                 }
                             }
                             
-                            // 가격이 필요할 때만 추출
-                            if (needsPrice) {
-                                // 정가 추출
-                                const originalPriceSelectors = [
-                                    '.price-1 span',
-                                    '.org_price',
-                                    '.original_price',
-                                    '.origin-price',
-                                    '[class*="orgPrice"]',
-                                    '[class*="originalPrice"]'
-                                ];
-                                
-                                for (const selector of originalPriceSelectors) {
-                                    const priceEl = document.querySelector(selector);
-                                    if (priceEl) {
-                                        const priceText = priceEl.textContent.trim();
-                                        const priceNum = parseInt(priceText.replace(/[^0-9]/g, ''));
-                                        if (priceNum > 0) {
-                                            result.priceOriginal = priceNum;
-                                            break;
-                                        }
+                            // ===== 가격 추출 (정가 = 원래가) =====
+                            const originalPriceSelectors = [
+                                '.price-1 strike',
+                                '.tx_org',
+                                '.original-price',
+                                'del',
+                                '[class*="org"]',
+                                '.origin-price',
+                                '.before-price'
+                            ];
+                            
+                            for (const selector of originalPriceSelectors) {
+                                const el = document.querySelector(selector);
+                                if (el) {
+                                    const text = el.textContent.replace(/[^0-9]/g, '');
+                                    const num = parseInt(text);
+                                    if (num > 0) {
+                                        result.priceOriginal = num;
+                                        break;
                                     }
-                                }
-                                
-                                // 할인가 추출
-                                const discountPriceSelectors = [
-                                    '.price-2 span',
-                                    '.sale_price',
-                                    '.final-price',
-                                    '.discount-price',
-                                    '[class*="salePrice"]',
-                                    '[class*="finalPrice"]',
-                                    '[class*="discountPrice"]'
-                                ];
-                                
-                                for (const selector of discountPriceSelectors) {
-                                    const priceEl = document.querySelector(selector);
-                                    if (priceEl) {
-                                        const priceText = priceEl.textContent.trim();
-                                        const priceNum = parseInt(priceText.replace(/[^0-9]/g, ''));
-                                        if (priceNum > 0) {
-                                            result.priceDiscount = priceNum;
-                                            break;
-                                        }
-                                    }
-                                }
-                                
-                                // 정가를 못 찾았는데 할인가는 있는 경우
-                                if (!result.priceOriginal && result.priceDiscount) {
-                                    result.priceOriginal = result.priceDiscount;
-                                    result.priceDiscount = null;
-                                }
-                                
-                                // 폴백
-                                if (!result.priceOriginal) {
-                                    const fallbackSelectors = [
-                                        '.prd_price .tx_num',
-                                        '.price_box .price',
-                                        '.prd_price .price'
-                                    ];
-                                    
-                                    for (const selector of fallbackSelectors) {
-                                        const priceEl = document.querySelector(selector);
-                                        if (priceEl) {
-                                            const priceText = priceEl.textContent.trim();
-                                            const priceNum = parseInt(priceText.replace(/[^0-9]/g, ''));
-                                            if (priceNum > 0) {
-                                                result.priceOriginal = priceNum;
-                                                break;
-                                            }
-                                        }
-                                    }
-                                }
-                                
-                                // 할인가가 정가보다 큰 경우 스왑
-                                if (result.priceOriginal && result.priceDiscount && 
-                                    result.priceDiscount > result.priceOriginal) {
-                                    const temp = result.priceOriginal;
-                                    result.priceOriginal = result.priceDiscount;
-                                    result.priceDiscount = temp;
                                 }
                             }
                             
-                            return result;
-                        }, { needsTitle: missing.needsTitleKr, needsPrice: missing.needsPriceOriginal });
-                        
-                        console.log(`\n📋 추출된 정보:`);
-                        if (missing.needsTitleKr) {
-                            console.log(`   타이틀: ${productData.rawTitle || '없음'}`);
-                        }
-                        if (missing.needsPriceOriginal) {
-                            console.log(`   정가: ${productData.priceOriginal ? '₩' + productData.priceOriginal.toLocaleString() : '없음'}`);
-                            console.log(`   할인가: ${productData.priceDiscount ? '₩' + productData.priceDiscount.toLocaleString() : '없음'}`);
-                        }
-                        
-                        // ==================== 이미지 추출 (필요할 때만) ====================
-                        let galleryImages = [];
-                        
-                        if (missing.needsImages) {
-                            const images = await page.evaluate(() => {
-                                const results = [];
+                            // 정가가 없으면 할인가를 정가로 사용
+                            if (!result.priceOriginal && result.priceDiscount) {
+                                result.priceOriginal = result.priceDiscount;
+                            }
+                            
+                            // 할인가가 정가보다 크면 스왑
+                            if (result.priceOriginal && result.priceDiscount && 
+                                result.priceDiscount > result.priceOriginal) {
+                                const temp = result.priceOriginal;
+                                result.priceOriginal = result.priceDiscount;
+                                result.priceDiscount = temp;
+                            }
+                            
+                            // ===== 상세설명 추출 (상품정보 제공고시 테이블) =====
+                            const infoTable = {
+                                volume: '',
+                                skinType: '',
+                                expiry: '',
+                                usage: '',
+                                ingredients: ''
+                            };
+                            
+                            // 상품정보 제공고시 테이블 찾기
+                            const infoSection = document.querySelector('[class*="prd_detail_box"]') ||
+                                               document.querySelector('[class*="product_info"]') ||
+                                               document.querySelector('[class*="GoodsDetailInfo"]') ||
+                                               document.querySelector('.info_table') ||
+                                               document.querySelector('table');
+                            
+                            if (infoSection) {
+                                const allRows = document.querySelectorAll('tr, dl, div[class*="row"], div[class*="item"]');
                                 
-                                const gallerySelectors = [
-                                    '.prd-detail-img img',
-                                    '.goods-img img',
-                                    '.detail-img img',
-                                    '.prd-img img',
-                                    '.swiper-slide img',
-                                    '.slider img',
-                                    '.gallery img',
-                                    '[class*="prdImg"] img',
-                                    '[class*="goodsImg"] img',
-                                    '[class*="detailImg"] img'
+                                const allowedKeywords = [
+                                    '내용물', '용량', '중량', '주요 사양', 
+                                    '사용기한', '개봉', '사용방법', '성분'
                                 ];
                                 
-                                for (const selector of gallerySelectors) {
-                                    const imgs = Array.from(document.querySelectorAll(selector));
-                                    if (imgs.length > 0) {
-                                        const filteredImages = imgs
-                                            .map(img => ({
-                                                src: img.src,
-                                                width: img.naturalWidth || img.width,
-                                                height: img.naturalHeight || img.height,
-                                                alt: img.alt
-                                            }))
-                                            .filter(img => {
-                                                if (img.width < 500 || img.height < 500) return false;
-                                                const aspectRatio = img.width / img.height;
-                                                if (aspectRatio > 2 || aspectRatio < 0.5) return false;
-                                                if (img.src.includes('/display/')) return false;
-                                                return true;
-                                            });
-                                        
+                                const blockKeywords = [
+                                    '제조업자', '수입업자', '판매업자', '품질보증', 
+                                    '소비자상담', '전화', '고객센터', '080', '1588', 
+                                    '협력사', '본 상품 정보', '공정거래', '기능성',
+                                    '맞춤형화장품판매업자', '㈜', '주식회사'
+                                ];
+                                
+                                allRows.forEach(row => {
+                                    const text = row.textContent || row.innerText || '';
+                                    
+                                    // 차단 키워드가 있으면 스킵
+                                    if (blockKeywords.some(keyword => text.includes(keyword))) {
+                                        return;
+                                    }
+                                    
+                                    // 용량
+                                    if ((text.includes('내용물') || text.includes('용량')) && !infoTable.volume) {
+                                        const match = text.match(/([0-9]+\s*[mMlLgG]+.*?)(?=제품|사용|피부|$)/);
+                                        if (match) {
+                                            infoTable.volume = match[1].trim();
+                                        }
+                                    }
+                                    
+                                    // 피부 타입
+                                    if (text.includes('주요 사양') && !infoTable.skinType) {
+                                        const match = text.match(/주요\s*사양\s*(.+?)(?=사용|개봉|$)/);
+                                        if (match) {
+                                            infoTable.skinType = match[1].trim();
+                                        }
+                                    }
+                                    
+                                    // 사용기한
+                                    if ((text.includes('사용기한') || text.includes('개봉')) && !infoTable.expiry) {
+                                        const match = text.match(/(개봉\s*전.*?개월.*?개봉\s*후.*?개월)/);
+                                        if (match) {
+                                            infoTable.expiry = match[1].trim();
+                                        }
+                                    }
+                                    
+                                    // 사용방법
+                                    if (text.includes('사용방법') && !infoTable.usage) {
+                                        let usage = text.replace(/사용방법\s*/, '');
+                                        // 불필요한 부분 제거
+                                        usage = usage.split(/화장품제조업자|화장품책임판매업자|맞춤형화장품|제조업자|판매업자|㈜|주식회사/)[0];
+                                        usage = usage.trim();
+                                        if (usage.length > 10 && usage.length < 500) {
+                                            infoTable.usage = usage;
+                                        }
+                                    }
+                                    
+                                    // 전체 성분
+                                    if ((text.includes('모든 성분') || text.includes('전성분')) && !infoTable.ingredients) {
+                                        const match = text.match(/(?:모든\s*성분|전성분)\s*(.+?)(?=화장품제조업자|기능성|품질|$)/s);
+                                        if (match) {
+                                            let ingredients = match[1]
+                                                .replace(/화장품제조업자.*$/g, '')
+                                                .replace(/제조업자.*$/g, '')
+                                                .trim();
+                                            
+                                            if (ingredients.length > 20) {
+                                                infoTable.ingredients = ingredients.substring(0, 500);
+                                            }
+                                        }
+                                    }
+                                });
+                            }
+                            
+                            // 상세설명 조합 (타이틀 기반 용량 우선!)
+                            const descParts = [];
+                            
+                            // ✅ 타이틀에서 용량 추출 (우선 적용)
+                            let volumeFromTitle = null;
+                            if (result.rawTitle) {
+                                const volumes = [];
+                                const volumePattern = /(\d+)\s*(ml|mL|ML|g|G)/gi;
+                                let volMatch;
+                                while ((volMatch = volumePattern.exec(result.rawTitle)) !== null) {
+                                    volumes.push(volMatch[1] + volMatch[2].toLowerCase());
+                                }
+                                
+                                // "2개", "2입", "2매" 등 개수 확인
+                                const countMatch = result.rawTitle.match(/(\d+)\s*(개|입|매)/);
+                                
+                                if (countMatch && volumes.length > 0) {
+                                    const count = parseInt(countMatch[1]);
+                                    if (count > 1) {
+                                        volumeFromTitle = `${volumes[0]} × ${count}`;
+                                    }
+                                }
+                                
+                                // 개수 없이 용량만 있는 경우
+                                if (!volumeFromTitle && volumes.length > 1) {
+                                    volumeFromTitle = volumes.join(' + ');
+                                } else if (!volumeFromTitle && volumes.length === 1) {
+                                    volumeFromTitle = volumes[0];
+                                }
+                            }
+                            
+                            // 용량: 타이틀 기반 > 테이블 기반
+                            if (volumeFromTitle) {
+                                descParts.push(`용량: ${volumeFromTitle}`);
+                            } else if (infoTable.volume) {
+                                descParts.push(`용량: ${infoTable.volume}`);
+                            }
+                            
+                            if (infoTable.skinType) descParts.push(`피부 타입: ${infoTable.skinType}`);
+                            if (infoTable.expiry) descParts.push(`사용기한: ${infoTable.expiry}`);
+                            if (infoTable.usage) descParts.push(`사용방법: ${infoTable.usage}`);
+                            if (infoTable.ingredients) {
+                                // 주요 성분 (처음 5개)
+                                const ingredientList = infoTable.ingredients.split(',').map(i => i.trim());
+                                const mainIngredients = ingredientList.slice(0, 5).join(', ');
+                                descParts.push(`주요 성분: ${mainIngredients}`);
+                            }
+                            
+                            result.description = descParts.join('\n');
+                            
+                            return result;
+                        });
+                        
+                        console.log(`\n📋 추출된 정보:`);
+                        console.log(`   타이틀: ${productData.rawTitle ? productData.rawTitle.substring(0, 50) + '...' : '없음'}`);
+                        console.log(`   정가: ${productData.priceOriginal ? '₩' + productData.priceOriginal.toLocaleString() : '없음'}`);
+                        console.log(`   할인가: ${productData.priceDiscount ? '₩' + productData.priceDiscount.toLocaleString() : '없음'}`);
+                        console.log(`   설명: ${productData.description ? productData.description.substring(0, 50) + '...' : '없음'}`);
+                        
+                        // ✅ 1. 타이틀 처리 (title_kr이 없을 때만)
+                        if (missingFields.needsTitleKr && productData.rawTitle) {
+                            const cleanedTitle = cleanProductTitle(productData.rawTitle);
+                            updateData.title_kr = cleanedTitle;
+                            hasUpdates = true;
+                            stats.titleKrFilled++;
+                            
+                            console.log(`\n📝 타이틀 클리닝:`);
+                            console.log(`   원본: "${productData.rawTitle}"`);
+                            console.log(`   정제: "${cleanedTitle}"`);
+                            
+                            // title_en도 없으면 번역
+                            if (missingFields.needsTitleEn) {
+                                const englishTitle = await translateToEnglish(cleanedTitle);
+                                if (englishTitle) {
+                                    updateData.title_en = englishTitle;
+                                    stats.titleEnFilled++;
+                                }
+                            }
+                        } else if (!missingFields.needsTitleKr) {
+                            console.log(`\n📝 타이틀: 이미 있음 → 스킵`);
+                            stats.titleKrSkipped++;
+                            
+                            // title_kr은 있는데 title_en만 없는 경우
+                            if (missingFields.needsTitleEn && product.title_kr) {
+                                console.log(`   ℹ️  title_en 없음 → 기존 title_kr로 번역`);
+                                const englishTitle = await translateToEnglish(product.title_kr);
+                                if (englishTitle) {
+                                    updateData.title_en = englishTitle;
+                                    hasUpdates = true;
+                                    stats.titleEnFilled++;
+                                }
+                            }
+                        }
+                        
+                        // ✅ 2. 가격 처리 (price_original이 없을 때만)
+                        if (missingFields.needsPriceOriginal && productData.priceOriginal) {
+                            updateData.price_original = productData.priceOriginal;
+                            hasUpdates = true;
+                            stats.priceFilled++;
+                            
+                            // price_discount도 설정
+                            if (productData.priceDiscount && productData.priceDiscount < productData.priceOriginal) {
+                                updateData.price_discount = productData.priceDiscount;
+                            } else {
+                                updateData.price_discount = productData.priceOriginal;
+                            }
+                            
+                            console.log(`\n💰 가격:`);
+                            console.log(`   정가 (price_original): ₩${updateData.price_original.toLocaleString()}`);
+                            console.log(`   할인가 (price_discount): ₩${updateData.price_discount.toLocaleString()}`);
+                        } else if (!missingFields.needsPriceOriginal) {
+                            console.log(`\n💰 가격: 이미 있음 → 스킵`);
+                            stats.priceSkipped++;
+                        }
+                        
+                        // ✅ 3. 설명 처리 (description이 없을 때만)
+                        if (missingFields.needsDescription && productData.description) {
+                            updateData.description = productData.description;
+                            hasUpdates = true;
+                            stats.descriptionFilled++;
+                            
+                            console.log(`\n📄 설명: ${productData.description.substring(0, 50)}...`);
+                            
+                            // description_en도 없으면 번역
+                            if (missingFields.needsDescriptionEn) {
+                                const englishDesc = await translateDescriptionToEnglish(productData.description);
+                                if (englishDesc) {
+                                    updateData.description_en = englishDesc;
+                                }
+                            }
+                        } else if (!missingFields.needsDescription) {
+                            console.log(`\n📄 설명: 이미 있음 → 스킵`);
+                            stats.descriptionSkipped++;
+                        }
+                    }
+                    
+                    // ==================== 이미지 추출 (필요할 때만) ====================
+                    if (missingFields.needsImages) {
+                        console.log(`\n🖼️  이미지 추출 중...`);
+                        
+                        const images = await page.evaluate(() => {
+                            const results = [];
+                            
+                            const gallerySelectors = [
+                                '.prd-detail-img img',
+                                '.goods-img img',
+                                '.detail-img img',
+                                '.prd-img img',
+                                '.swiper-slide img',
+                                '.slider img',
+                                '.gallery img',
+                                '[class*="prdImg"] img',
+                                '[class*="goodsImg"] img',
+                                '[class*="detailImg"] img'
+                            ];
+                            
+                            for (const selector of gallerySelectors) {
+                                const imgs = Array.from(document.querySelectorAll(selector));
+                                if (imgs.length > 0) {
+                                    const filteredImages = imgs
+                                        .map(img => ({
+                                            src: img.src,
+                                            width: img.naturalWidth || img.width,
+                                            height: img.naturalHeight || img.height,
+                                            alt: img.alt
+                                        }))
+                                        .filter(img => {
+                                            if (img.width < 500 || img.height < 500) return false;
+                                            const aspectRatio = img.width / img.height;
+                                            if (aspectRatio > 2 || aspectRatio < 0.5) return false;
+                                            if (img.src.includes('/display/')) return false;
+                                            return true;
+                                        });
+                                    
+                                    if (filteredImages.length > 0) {
                                         results.push({
                                             method: `CSS: ${selector}`,
                                             images: filteredImages
@@ -937,107 +915,140 @@ async function main() {
                                         break;
                                     }
                                 }
-                                
-                                // 폴백: 큰 이미지 찾기
-                                if (results.length === 0) {
-                                    const allImages = Array.from(document.querySelectorAll('img'));
-                                    const largeImages = allImages.filter(img => {
-                                        const width = img.naturalWidth || img.width;
-                                        const height = img.naturalHeight || img.height;
-                                        const rect = img.getBoundingClientRect();
-                                        return width >= 500 && height >= 500 && rect.top < 1000;
-                                    });
-                                    
-                                    if (largeImages.length > 0) {
-                                        results.push({
-                                            method: 'Large images (top area)',
-                                            images: largeImages.map(img => ({
-                                                src: img.src,
-                                                width: img.naturalWidth || img.width,
-                                                height: img.naturalHeight || img.height,
-                                                alt: img.alt
-                                            }))
-                                        });
-                                    }
-                                }
-                                
-                                return results;
-                            });
-                            
-                            if (images.length > 0) {
-                                const result = images[0];
-                                console.log(`\n✅ 이미지 추출: ${result.method}`);
-                                
-                                galleryImages = result.images.filter(img => 
-                                    img.src.includes('oliveyoung.co.kr') ||
-                                    img.src.includes('image.oliveyoung')
-                                );
-                                
-                                console.log(`   올리브영 이미지: ${galleryImages.length}개`);
                             }
+                            
+                            // 폴백: 큰 이미지 찾기
+                            if (results.length === 0) {
+                                const allImages = Array.from(document.querySelectorAll('img'));
+                                const largeImages = allImages.filter(img => {
+                                    const width = img.naturalWidth || img.width;
+                                    const height = img.naturalHeight || img.height;
+                                    const rect = img.getBoundingClientRect();
+                                    return width >= 500 && height >= 500 && rect.top < 1000;
+                                });
+                                
+                                if (largeImages.length > 0) {
+                                    results.push({
+                                        method: 'Large images (top area)',
+                                        images: largeImages.map(img => ({
+                                            src: img.src,
+                                            width: img.naturalWidth || img.width,
+                                            height: img.naturalHeight || img.height,
+                                            alt: img.alt
+                                        }))
+                                    });
+                                }
+                            }
+                            
+                            return results;
+                        });
+                        
+                        let galleryImages = [];
+                        
+                        if (images.length > 0) {
+                            const result = images[0];
+                            console.log(`✅ 메인 갤러리 추출 성공: ${result.method}`);
+                            console.log(`📸 ${result.images.length}개 이미지 발견`);
+                            
+                            galleryImages = result.images.filter(img => 
+                                img.src.includes('oliveyoung.co.kr') ||
+                                img.src.includes('image.oliveyoung')
+                            );
+                            
+                            console.log(`✅ 올리브영 이미지만 필터링: ${galleryImages.length}개`);
+                        } else {
+                            console.log('⚠️  메인 갤러리를 찾을 수 없습니다.');
                         }
                         
-                        // ==================== 제품 처리 ====================
-                        const success = await processProduct(product, galleryImages, productData, missing);
+                        // 이미지 다운로드 & 업로드
+                        const attachments = await processProductImages(product, galleryImages);
                         
+                        if (attachments.length > 0) {
+                            updateData.product_images = attachments;
+                            hasUpdates = true;
+                            stats.imagesFilled++;
+                            console.log(`✅ ${attachments.length}개 이미지 처리 완료`);
+                        }
+                    } else {
+                        console.log(`\n🖼️  이미지: 이미 있음 → 스킵`);
+                        stats.imagesSkipped++;
+                    }
+                    
+                    // ==================== NocoDB 업데이트 ====================
+                    if (hasUpdates) {
+                        const success = await updateProduct(product.Id, updateData);
                         if (success) {
                             successCount++;
                         } else {
                             failedCount++;
                         }
-                        
-                        processedCount++;
-                        
-                    } catch (pageError) {
-                        console.error('⚠️  페이지 처리 오류:', pageError.message);
-                        failedCount++;
-                        processedCount++;
+                    } else {
+                        console.log(`\nℹ️  업데이트할 내용 없음`);
+                        skippedCount++;
                     }
-                },
-                
-                maxRequestsPerCrawl: 1000,
-                maxConcurrency: 1,
-                requestHandlerTimeoutSecs: 180
-            });
-            
-            // URL 요청 생성
-            const requests = needsPageVisit.map(({ product, missing }, index) => ({
-                url: product.product_url,
-                userData: {
-                    product: product,
-                    missing: missing,
-                    index: index
+                    
+                    processedCount++;
+                    
+                } catch (pageError) {
+                    console.error('⚠️  페이지 처리 오류:', pageError.message);
+                    failedCount++;
+                    processedCount++;
                 }
-            }));
+            },
             
-            console.log(`🌐 Crawler 시작 - ${needsPageVisit.length}개 제품 처리\n`);
-            
-            await crawler.run(requests);
-            
-            // ✅ 크롤러 정리 (좀비 프로세스 방지)
-            await crawler.teardown();
-        }
+            // 설정
+            maxRequestsPerCrawl: 1000,
+            maxConcurrency: 1,
+            requestHandlerTimeoutSecs: 180
+        });
         
-        // 최종 결과
+        // 3. 모든 URL을 한 번에 전달
+        const requests = productsToProcess.map((product, index) => ({
+            url: product.product_url,
+            userData: {
+                product: product,
+                index: index,
+                missingFields: checkMissingFields(product)
+            }
+        }));
+        
+        console.log(`🌐 Crawler 시작 - ${productsToProcess.length}개 제품 처리\n`);
+        
+        await crawler.run(requests);
+        
+        // ✅ Crawler 정리 (메모리 누수 방지)
+        await crawler.teardown();
+        
+        // 4. 최종 결과
         console.log('\n' + '='.repeat(70));
         console.log('🎉 Phase 1 완료!');
         console.log('='.repeat(70));
-        console.log(`\n📊 처리 결과:`);
-        console.log(`   ✅ 성공: ${successCount}개`);
-        console.log(`   ❌ 실패: ${failedCount}개`);
-        console.log(`   ⏭️  스킵: ${skippedCount}개`);
+        console.log(`✅ 성공: ${successCount}/${totalProducts}개 제품`);
+        console.log(`⏭️  스킵: ${skippedCount}/${totalProducts}개 제품`);
+        console.log(`❌ 실패: ${failedCount}/${totalProducts}개 제품`);
         
-        console.log(`\n📈 필드별 통계:`);
-        console.log(`   title_kr: ${stats.titleKrFilled}개 채움, ${stats.titleKrSkipped}개 스킵`);
-        console.log(`   title_en: ${stats.titleEnFilled}개 채움, ${stats.titleEnSkipped}개 스킵`);
-        console.log(`   price: ${stats.priceFilled}개 채움, ${stats.priceSkipped}개 스킵`);
-        console.log(`   images: ${stats.imagesFilled}개 채움, ${stats.imagesSkipped}개 스킵`);
+        console.log(`\n📊 필드별 통계:`);
+        console.log(`   - title_kr: ${stats.titleKrFilled}개 채움, ${stats.titleKrSkipped}개 스킵`);
+        console.log(`   - title_en: ${stats.titleEnFilled}개 채움, ${stats.titleEnSkipped}개 스킵`);
+        console.log(`   - price: ${stats.priceFilled}개 채움, ${stats.priceSkipped}개 스킵`);
+        console.log(`   - description: ${stats.descriptionFilled}개 채움, ${stats.descriptionSkipped}개 스킵`);
+        console.log(`   - images: ${stats.imagesFilled}개 채움, ${stats.imagesSkipped}개 스킵`);
         
-        console.log(`\n💡 다음 단계: node phase2-ai-generate.js`);
+        console.log(`\n💡 다음 단계: Phase 2 실행`);
+        console.log(`   node phase2-ai-generate.js`);
         
     } catch (error) {
         console.error('\n❌ 치명적 오류:', error.message);
         console.error(error.stack);
+    } finally {
+        // ✅ 크롤러 정리 확인
+        if (crawler) {
+            try {
+                await crawler.teardown();
+            } catch (e) {
+                // 이미 종료됨
+            }
+        }
     }
 }
 
