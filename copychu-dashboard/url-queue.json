@@ -1,14 +1,14 @@
 {
   "categories": [
     {
-      "id": "932f406f-6672-473e-81a5-4c7b11a41c36",
-      "url": "https://www.oliveyoung.co.kr/store/display/getMCategoryList.do?dispCatNo=100000100010015&isLoginCnt=3&aShowCnt=0&bShowCnt=0&cShowCnt=0&gateCd=Drawer&trackingCd=Cat100000100010015_MID&trackingCd=Cat100000100010015_MID&t_page=%EB%93%9C%EB%A1%9C%EC%9A%B0_%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC&t_click=%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC%ED%83%AD_%EC%A4%91%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC&t_1st_category_type=%EB%8C%80_%EC%8A%A4%ED%82%A8%EC%BC%80%EC%96%B4&t_2nd_category_type=%EC%A4%91_%ED%81%AC%EB%A6%BC",
-      "name": "크림",
+      "id": "5c85b836-6039-49df-b551-1075f5354a52",
+      "url": "https://www.oliveyoung.co.kr/store/display/getMCategoryList.do?dispCatNo=100000100010010",
+      "name": "미스트/오일",
       "maxProducts": 30,
       "maxPages": 2,
       "status": "completed",
-      "createdAt": "2026-01-16T11:55:59.895Z",
-      "completedAt": "2026-01-16T12:00:18.531Z"
+      "createdAt": "2026-01-17T00:06:58.514Z",
+      "completedAt": "2026-01-17T00:08:33.513Z"
     }
   ],
   "products": []

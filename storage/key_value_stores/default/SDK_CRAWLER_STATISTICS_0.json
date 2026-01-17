@@ -1,29 +1,48 @@
 {
-  "requestsFinished": 1,
+  "requestsFinished": 14,
   "requestsFailed": 0,
   "requestsRetries": 0,
   "requestsFailedPerMinute": 0,
-  "requestsFinishedPerMinute": 4,
-  "requestMinDurationMillis": 14920,
-  "requestMaxDurationMillis": 14920,
+  "requestsFinishedPerMinute": 3,
+  "requestMinDurationMillis": 10380,
+  "requestMaxDurationMillis": 25715,
   "requestTotalFailedDurationMillis": 0,
-  "requestTotalFinishedDurationMillis": 14920,
-  "crawlerStartedAt": "2026-01-16T13:35:12.222Z",
-  "crawlerFinishedAt": "2026-01-16T13:35:27.303Z",
-  "statsPersistedAt": "2026-01-16T13:35:27.303Z",
-  "crawlerRuntimeMillis": 15297,
-  "crawlerLastStartTimestamp": 1768570512006,
+  "requestTotalFinishedDurationMillis": 227600,
+  "crawlerStartedAt": "2026-01-17T00:08:40.830Z",
+  "crawlerFinishedAt": null,
+  "statsPersistedAt": "2026-01-17T00:12:40.850Z",
+  "crawlerRuntimeMillis": 240299,
+  "crawlerLastStartTimestamp": 1768608520551,
   "requestRetryHistogram": [
-    1
+    14
   ],
   "statsId": 0,
   "requestAvgFailedDurationMillis": null,
-  "requestAvgFinishedDurationMillis": 14920,
-  "requestTotalDurationMillis": 14920,
-  "requestsTotal": 1,
+  "requestAvgFinishedDurationMillis": 16257,
+  "requestTotalDurationMillis": 227600,
+  "requestsTotal": 14,
   "requestsWithStatusCode": {
-    "200": 1
+    "200": 15
   },
   "errors": {},
-  "retryErrors": {}
+  "retryErrors": {
+    "/root/copychu-scraper/node_modules/@crawlee/playwright/internals/utils/playwright-utils.js:166:17": {
+      "missing error code": {
+        "Error": {
+          "page.goto: Target page, context or browser has been closed": {
+            "count": 1
+          }
+        }
+      }
+    },
+    "/root/copychu-scraper/node_modules/@crawlee/browser-pool/browser-pool.js:405:19": {
+      "missing error code": {
+        "Error": {
+          "browserController.newPage() failed: _": {
+            "count": 2
+          }
+        }
+      }
+    }
+  }
 }
