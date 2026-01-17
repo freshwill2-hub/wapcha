@@ -1,4 +1,25 @@
 {
-  "categories": [],
+  "categories": [
+    {
+      "id": "c6212683-e3b2-4eb6-b0f3-af44ab18e8c5",
+      "url": "https://www.oliveyoung.co.kr/store/display/getMCategoryList.do?dispCatNo=100000100010013&isLoginCnt=2&aShowCnt=null&bShowCnt=null&cShowCnt=null&gateCd=Drawer&trackingCd=Cat100000100010013_MID&trackingCd=Cat100000100010013_MID&t_page=%EB%93%9C%EB%A1%9C%EC%9A%B0_%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC&t_click=%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC%ED%83%AD_%EC%A4%91%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC&t_1st_category_type=%EB%8C%80_%EC%8A%A4%ED%82%A8%EC%BC%80%EC%96%B4&t_2nd_category_type=%EC%A4%91_%EC%8A%A4%ED%82%A8%2F%ED%86%A0%EB%84%88",
+      "name": "이름 없음",
+      "maxProducts": 30,
+      "maxPages": 2,
+      "status": "completed",
+      "createdAt": "2026-01-17T02:48:25.288Z",
+      "completedAt": "2026-01-17T02:50:27.598Z"
+    },
+    {
+      "id": "c2ea2c20-807d-4c2f-85b4-949bbd30d97c",
+      "url": "https://www.oliveyoung.co.kr/store/display/getMCategoryList.do?dispCatNo=100000100010014&isLoginCnt=3&aShowCnt=null&bShowCnt=null&cShowCnt=null&gateCd=Drawer&trackingCd=Cat100000100010014_MID&trackingCd=Cat100000100010014_MID&t_page=%EB%93%9C%EB%A1%9C%EC%9A%B0_%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC&t_click=%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC%ED%83%AD_%EC%A4%91%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC&t_1st_category_type=%EB%8C%80_%EC%8A%A4%ED%82%A8%EC%BC%80%EC%96%B4&t_2nd_category_type=%EC%A4%91_%EC%97%90%EC%84%BC%EC%8A%A4%2F%EC%84%B8%EB%9F%BC%2F%EC%95%B0%ED%94%8C",
+      "name": "에센스/세럼/앰플",
+      "maxProducts": 30,
+      "maxPages": 2,
+      "status": "completed",
+      "createdAt": "2026-01-17T02:48:43.770Z",
+      "completedAt": "2026-01-17T02:51:51.997Z"
+    }
+  ],
   "products": []
 }

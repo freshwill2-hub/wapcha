@@ -1,40 +1,29 @@
 {
-  "requestsFinished": 27,
+  "requestsFinished": 44,
   "requestsFailed": 0,
-  "requestsRetries": 2,
+  "requestsRetries": 0,
   "requestsFailedPerMinute": 0,
   "requestsFinishedPerMinute": 5,
-  "requestMinDurationMillis": 6671,
-  "requestMaxDurationMillis": 33806,
+  "requestMinDurationMillis": 6470,
+  "requestMaxDurationMillis": 33761,
   "requestTotalFailedDurationMillis": 0,
-  "requestTotalFinishedDurationMillis": 298273,
-  "crawlerStartedAt": "2026-01-17T02:15:25.422Z",
+  "requestTotalFinishedDurationMillis": 465028,
+  "crawlerStartedAt": "2026-01-17T02:51:59.989Z",
   "crawlerFinishedAt": null,
-  "statsPersistedAt": "2026-01-17T02:20:25.444Z",
-  "crawlerRuntimeMillis": 300335,
-  "crawlerLastStartTimestamp": 1768616125109,
+  "statsPersistedAt": "2026-01-17T03:00:00.019Z",
+  "crawlerRuntimeMillis": 480274,
+  "crawlerLastStartTimestamp": 1768618319745,
   "requestRetryHistogram": [
-    25,
-    2
+    44
   ],
   "statsId": 0,
   "requestAvgFailedDurationMillis": null,
-  "requestAvgFinishedDurationMillis": 11047,
-  "requestTotalDurationMillis": 298273,
-  "requestsTotal": 27,
+  "requestAvgFinishedDurationMillis": 10569,
+  "requestTotalDurationMillis": 465028,
+  "requestsTotal": 44,
   "requestsWithStatusCode": {
-    "200": 27
+    "200": 45
   },
   "errors": {},
-  "retryErrors": {
-    "/root/copychu-scraper/node_modules/@crawlee/browser-pool/browser-pool.js:405:19": {
-      "missing error code": {
-        "Error": {
-          "browserController.newPage() failed: _": {
-            "count": 2
-          }
-        }
-      }
-    }
-  }
+  "retryErrors": {}
 }
