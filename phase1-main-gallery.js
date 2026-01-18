@@ -62,7 +62,7 @@ const MEMORY_CHECK_INTERVAL = 5;
 
 const openai = OPENAI_API_KEY ? new OpenAI({ apiKey: OPENAI_API_KEY }) : null;
 
-log('🚀 Phase 1: 제품 상세 스크래핑 (v2.3 - URL 변환 수정)');
+log('🚀 Phase 1: 제품 상세 스크래핑 (v2.4 - URL 변환 제거)');
 log('='.repeat(70));
 log('🔧 설정 확인:');
 log(`- NocoDB URL: ${NOCODB_API_URL}`);
@@ -71,11 +71,10 @@ log(`- OpenAI API: ${OPENAI_API_KEY ? '✅ 설정됨' : '❌ 없음'}`);
 log(`- 시간대: ${SYDNEY_TIMEZONE} (시드니)`);
 log(`- 로그 파일: ${LOG_PATH}`);
 log('');
-log('🆕 v2.3 수정 사항:');
-log('   ✅ 썸네일 URL 변환 수정: /thumbnails/ 폴더만 제거');
-log('   ✅ URL 전체 출력 (디버깅용)');
-log('   ✅ 기존: /images/thumbnails/10/ → /images/images/ (잘못됨)');
-log('   ✅ 수정: /images/thumbnails/10/ → /images/10/ (올바름)');
+log('🆕 v2.4 수정 사항:');
+log('   ✅ URL 변환 완전 제거! 원본 썸네일 URL 그대로 사용');
+log('   ✅ 올리브영은 /thumbnails/ 경로가 실제 이미지 URL');
+log('   ✅ v2.3에서 변환 시 404 에러 발생 → 변환 제거로 해결');
 log('');
 
 // ==================== 전역 변수 ====================
@@ -875,12 +874,9 @@ async function main() {
                                             if (src.includes('/point/')) return;
                                             if (src.includes('/coupon/')) return;
                                             
-                                            // ✅ 썸네일 → 원본 URL 변환
-                                            // /images/thumbnails/10/000... → /images/10/000...
-                                            // thumbnails 폴더만 제거
-                                            src = src.replace('/thumbnails/', '/');
-                                            // 크기 지정 제거: /200x200/ → /
-                                            src = src.replace(/\/\d+x\d+\//, '/');
+                                            // ✅ v2.4: URL 변환 제거! 썸네일 URL 그대로 사용
+                                            // 올리브영은 /thumbnails/ 경로가 실제 이미지 URL
+                                            // (변환하면 404 에러 발생)
                                             
                                             // 중복 제거
                                             if (seenUrls.has(src)) return;
@@ -923,9 +919,7 @@ async function main() {
                                     if (src.includes('/display/')) return;
                                     if (src.includes('/banner/')) return;
                                     
-                                    // 썸네일 → 원본 (thumbnails 폴더만 제거)
-                                    src = src.replace('/thumbnails/', '/');
-                                    src = src.replace(/\/\d+x\d+\//, '/');
+                                    // ✅ v2.4: URL 변환 제거 (원본 그대로 사용)
                                     
                                     if (seenUrls.has(src)) return;
                                     seenUrls.add(src);
@@ -963,9 +957,7 @@ async function main() {
                                     const height = img.naturalHeight || img.height;
                                     
                                     if (width >= 400 && height >= 400) {
-                                        src = src.replace('/thumbnails/', '/');
-                                        src = src.replace(/\/\d+x\d+\//, '/');
-                                        
+                                        // ✅ v2.4: URL 변환 제거 (원본 그대로 사용)
                                         seenUrls.add(src);
                                         mainGalleryImages.push(src);
                                     }
