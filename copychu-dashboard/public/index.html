@@ -429,7 +429,7 @@
         
         .phases-progress {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(6, 1fr);
             gap: 16px;
             margin-top: 20px;
         }
@@ -703,6 +703,10 @@
             .quick-actions {
                 grid-template-columns: 1fr;
             }
+            
+            .phases-progress {
+                grid-template-columns: repeat(3, 1fr);
+            }
         }
         
         @media (max-width: 768px) {
@@ -878,6 +882,14 @@
                         <label class="input-label">실행할 Phase 선택</label>
                         <div class="checkbox-group">
                             <label class="checkbox-item">
+                                <div class="checkbox checked" data-phase="phase0">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                        <polyline points="20 6 9 17 4 12"/>
+                                    </svg>
+                                </div>
+                                <span>Phase 0: URL 수집</span>
+                            </label>
+                            <label class="checkbox-item">
                                 <div class="checkbox checked" data-phase="phase1">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
                                         <polyline points="20 6 9 17 4 12"/>
@@ -894,20 +906,28 @@
                                 <span>Phase 2: 배경 제거</span>
                             </label>
                             <label class="checkbox-item">
-                                <div class="checkbox checked" data-phase="phase2_5">
+                                <div class="checkbox checked" data-phase="phase3">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
                                         <polyline points="20 6 9 17 4 12"/>
                                     </svg>
                                 </div>
-                                <span>Phase 2.5: AI 크롭</span>
+                                <span>Phase 3: AI 크롭</span>
                             </label>
                             <label class="checkbox-item">
-                                <div class="checkbox checked" data-phase="phase2_6">
+                                <div class="checkbox checked" data-phase="phase4">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
                                         <polyline points="20 6 9 17 4 12"/>
                                     </svg>
                                 </div>
-                                <span>Phase 2.6: 이미지 선별</span>
+                                <span>Phase 4: 최종 이미지</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <div class="checkbox checked" data-phase="phase5">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                        <polyline points="20 6 9 17 4 12"/>
+                                    </svg>
+                                </div>
+                                <span>Phase 5: Shopify 업로드</span>
                             </label>
                         </div>
                     </div>
@@ -939,6 +959,10 @@
                         </div>
                     </div>
                     <div class="phases-progress">
+                        <div class="phase-item" id="phase-phase0">
+                            <div class="phase-icon">0</div>
+                            <div class="phase-name">URL 수집</div>
+                        </div>
                         <div class="phase-item" id="phase-phase1">
                             <div class="phase-icon">1</div>
                             <div class="phase-name">스크래핑</div>
@@ -947,13 +971,17 @@
                             <div class="phase-icon">2</div>
                             <div class="phase-name">배경 제거</div>
                         </div>
-                        <div class="phase-item" id="phase-phase2_5">
+                        <div class="phase-item" id="phase-phase3">
                             <div class="phase-icon">3</div>
                             <div class="phase-name">AI 크롭</div>
                         </div>
-                        <div class="phase-item" id="phase-phase2_6">
+                        <div class="phase-item" id="phase-phase4">
                             <div class="phase-icon">4</div>
-                            <div class="phase-name">이미지 선별</div>
+                            <div class="phase-name">최종 이미지</div>
+                        </div>
+                        <div class="phase-item" id="phase-phase5">
+                            <div class="phase-icon">5</div>
+                            <div class="phase-name">Shopify 업로드</div>
                         </div>
                     </div>
                 </div>
@@ -963,10 +991,12 @@
                         <h3 class="card-title">🔧 단일 Phase 실행</h3>
                     </div>
                     <div class="btn-group">
-                        <button class="btn btn-secondary" onclick="runSinglePhase('phase1')">Phase 1만</button>
-                        <button class="btn btn-secondary" onclick="runSinglePhase('phase2')">Phase 2만</button>
-                        <button class="btn btn-secondary" onclick="runSinglePhase('phase2_5')">Phase 2.5만</button>
-                        <button class="btn btn-secondary" onclick="runSinglePhase('phase2_6')">Phase 2.6만</button>
+                        <button class="btn btn-secondary" onclick="runSinglePhase('phase0')">Phase 0만 실행하기</button>
+                        <button class="btn btn-secondary" onclick="runSinglePhase('phase1')">Phase 1만 실행하기</button>
+                        <button class="btn btn-secondary" onclick="runSinglePhase('phase2')">Phase 2만 실행하기</button>
+                        <button class="btn btn-secondary" onclick="runSinglePhase('phase3')">Phase 3만 실행하기</button>
+                        <button class="btn btn-secondary" onclick="runSinglePhase('phase4')">Phase 4만 실행하기</button>
+                        <button class="btn btn-secondary" onclick="runSinglePhase('phase5')">Phase 5만 실행하기</button>
                     </div>
                 </div>
             </div>
@@ -1239,7 +1269,7 @@
             document.getElementById('monitorApiCalls').textContent = currentState.stats?.apiCalls || 0;
             document.getElementById('monitorCost').textContent = `$${(currentState.stats?.estimatedCost || 0).toFixed(4)}`;
             
-            const phases = ['phase1', 'phase2', 'phase2_5', 'phase2_6'];
+            const phases = ['phase0', 'phase1', 'phase2', 'phase3', 'phase4', 'phase5'];
             phases.forEach(phase => {
                 const el = document.getElementById(`phase-${phase}`);
                 if (el) {
