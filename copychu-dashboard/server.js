@@ -1255,3 +1255,43 @@ httpServer.listen(PORT, '0.0.0.0', () => {
     console.log('   - POST /api/force-kill  ← 🆕 강제 종료');
     console.log('='.repeat(60));
 });
+// ==================== Graceful Shutdown ====================
+function gracefulShutdown(signal) {
+    console.log(`\n⚠️ ${signal} 수신 - 서버 종료 중...`);
+    
+    // 1. 실행 중인 프로세스 종료
+    if (currentProcess) {
+        try {
+            currentProcess.kill('SIGTERM');
+            currentProcess = null;
+            console.log('✅ 현재 프로세스 종료됨');
+        } catch (e) {
+            console.log('⚠️ 프로세스 종료 실패:', e.message);
+        }
+    }
+    
+    // 2. 모든 소켓 연결 종료
+    io.close(() => {
+        console.log('✅ Socket.io 연결 종료됨');
+    });
+    
+    // 3. HTTP 서버 종료
+    httpServer.close(() => {
+        console.log('✅ HTTP 서버 종료됨');
+        console.log('👋 서버 완전히 종료됨');
+        process.exit(0);
+    });
+    
+    // 4. 5초 후 강제 종료 (안전장치)
+    setTimeout(() => {
+        console.log('⚠️ 강제 종료 (타임아웃)');
+        process.exit(1);
+    }, 5000);
+}
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+process.on('uncaughtException', (err) => {
+    console.error('❌ Uncaught Exception:', err);
+    gracefulShutdown('uncaughtException');
+});
