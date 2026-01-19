@@ -1,15 +1,4 @@
 {
-  "categories": [
-    {
-      "id": "2c6a38d8-a7ba-4c69-97ce-ddc518d08120",
-      "url": "https://www.oliveyoung.co.kr/store/display/getMCategoryList.do?dispCatNo=100000100080013&isLoginCnt=0&aShowCnt=0&bShowCnt=0&cShowCnt=0&gateCd=Drawer&trackingCd=Cat100000100080013_MID&trackingCd=Cat100000100080013_MID&t_page=%EB%93%9C%EB%A1%9C%EC%9A%B0_%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC&t_click=%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC%ED%83%AD_%EC%A4%91%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC&t_1st_category_type=%EB%8C%80_%EB%8D%94%EB%AA%A8%20%EC%BD%94%EC%8A%A4%EB%A9%94%ED%8B%B1&t_2nd_category_type=%EC%A4%91_%EC%8A%A4%ED%82%A8%EC%BC%80%EC%96%B4",
-      "name": "스킨케어",
-      "maxProducts": 3,
-      "maxPages": 1,
-      "status": "completed",
-      "createdAt": "2026-01-19T08:51:30.587Z",
-      "completedAt": "2026-01-19T08:52:18.681Z"
-    }
-  ],
+  "categories": [],
   "products": []
 }
