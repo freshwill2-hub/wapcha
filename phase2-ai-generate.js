@@ -26,8 +26,11 @@ console.log(`- Oliveyoung Table: ${OLIVEYOUNG_TABLE_ID}`);
 console.log(`- Shopify Table: ${SHOPIFY_TABLE_ID}`);
 console.log(`- rembg 경로: ${REMBG_PATH}`);
 
-console.log('\n🚀 Phase 2: 배경 제거 + 흰색 배경 (rembg - 오픈소스)');
+console.log('\n🚀 Phase 2: 배경 제거 + 흰색 배경 (rembg - 오픈소스) v2.1');
 console.log('='.repeat(70));
+console.log('✨ v2.1 수정사항:');
+console.log('   ✅ NocoDB PATCH 요청을 배열로 감싸서 올바르게 업데이트');
+console.log('');
 
 // ==================== 가격 변환 함수 (KRW → AUD) ====================
 function convertKRWtoAUD(priceOriginal) {
@@ -152,9 +155,10 @@ async function getOrCreateShopifyProduct(oliveyoungProduct) {
             console.log(`   - description_en: ${updateData.description_en ? '✓ (있음)' : '✗ (없음)'}`);
             console.log(`   - price_aud: $${updateData.price_aud}`);
             
+            // ✅ v2.1 수정: 배열로 감싸서 전송
             await axios.patch(
                 `${NOCODB_API_URL}/api/v2/tables/${SHOPIFY_TABLE_ID}/records`,
-                updateData,
+                [updateData],  // ✅ 배열로 감싸기!
                 {
                     headers: { 'xc-token': NOCODB_API_TOKEN }
                 }
@@ -317,10 +321,10 @@ async function saveAIImages(shopifyProductId, imageDataArray) {
         console.log(`🗑️  기존 ai_product_images 삭제 중...`);
         await axios.patch(
             `${NOCODB_API_URL}/api/v2/tables/${SHOPIFY_TABLE_ID}/records`,
-            {
+            [{  // ✅ v2.1 수정: 배열로 감싸기!
                 Id: shopifyProductId,
                 ai_product_images: null
-            },
+            }],
             {
                 headers: { 'xc-token': NOCODB_API_TOKEN }
             }
@@ -330,10 +334,10 @@ async function saveAIImages(shopifyProductId, imageDataArray) {
         console.log(`💾 새 ai_product_images 저장 중...`);
         const response = await axios.patch(
             `${NOCODB_API_URL}/api/v2/tables/${SHOPIFY_TABLE_ID}/records`,
-            {
+            [{  // ✅ v2.1 수정: 배열로 감싸기!
                 Id: shopifyProductId,
                 ai_product_images: imageDataArray
-            },
+            }],
             {
                 headers: { 'xc-token': NOCODB_API_TOKEN }
             }

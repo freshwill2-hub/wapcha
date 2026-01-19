@@ -10,7 +10,7 @@ const SHOPIFY_TABLE_ID = process.env.SHOPIFY_TABLE_ID;
 
 // Shopify 설정
 const SHOPIFY_STORE_URL = process.env.SHOPIFY_STORE_URL || 'wap-au.myshopify.com';
-const SHOPIFY_ACCESS_TOKEN = process.env.SHOPIFY_ACCESS_TOKEN || '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';
+const SHOPIFY_ACCESS_TOKEN = process.env.SHOPIFY_ACCESS_TOKEN;
 const SHOPIFY_API_VERSION = '2024-01';
 
 // ==================== 로그 시스템 ====================
@@ -58,7 +58,7 @@ function log(...args) {
 }
 
 // ==================== 초기화 ====================
-console.log('🚀 Phase 5: Shopify 제품 업로드 (v1.0)');
+console.log('🚀 Phase 5: Shopify 제품 업로드 (v2.1 - NocoDB 수정)');
 console.log('='.repeat(70));
 console.log('🔧 설정 확인:');
 console.log(`   - NocoDB URL: ${NOCODB_API_URL}`);
@@ -67,6 +67,11 @@ console.log(`   - Shopify API Version: ${SHOPIFY_API_VERSION}`);
 console.log(`   - Shopify Table ID: ${SHOPIFY_TABLE_ID}`);
 console.log(`   - 시간대: ${SYDNEY_TIMEZONE}`);
 console.log(`   - 로그 파일: ${LOG_PATH}`);
+console.log('');
+console.log('✨ v2.1 변경사항:');
+console.log('   ✅ 이미지를 Base64로 인코딩하여 Shopify에 직접 업로드');
+console.log('   ✅ NocoDB 업데이트 시 shopify_status 제외 (SingleSelect 타입 문제)');
+console.log('   ✅ NocoDB PATCH 요청을 배열로 감싸서 올바르게 업데이트');
 console.log('');
 
 // ==================== 통계 ====================
@@ -84,18 +89,16 @@ const shopifyApi = axios.create({
         'X-Shopify-Access-Token': SHOPIFY_ACCESS_TOKEN,
         'Content-Type': 'application/json'
     },
-    timeout: 60000
+    timeout: 120000  // 이미지 업로드 때문에 타임아웃 증가
 });
 
 // ==================== 브랜드명 추출 ====================
 function extractBrandFromTitle(title) {
     if (!title) return 'K-Beauty';
     
-    // 첫 번째 단어를 브랜드로 추출
     const words = title.trim().split(/\s+/);
     if (words.length > 0) {
         const brand = words[0];
-        // 브랜드명이 너무 짧거나 숫자로 시작하면 K-Beauty 반환
         if (brand.length < 2 || /^\d/.test(brand)) {
             return 'K-Beauty';
         }
@@ -109,7 +112,6 @@ async function getProductsToUpload(limit = 10) {
     try {
         log(`📥 NocoDB에서 업로드 대기 제품 가져오는 중 (limit: ${limit})...`);
         
-        // main_image가 있고 shopify_product_id가 없는 제품 조회
         const response = await axios.get(
             `${NOCODB_API_URL}/api/v2/tables/${SHOPIFY_TABLE_ID}/records`,
             {
@@ -139,22 +141,18 @@ async function getProductsToUpload(limit = 10) {
 function getImageUrl(imageData) {
     if (!imageData) return null;
     
-    // 배열인 경우 첫 번째 요소
     const img = Array.isArray(imageData) ? imageData[0] : imageData;
     
     if (!img) return null;
     
-    // url 필드가 있으면 사용
     if (img.url) {
         return img.url;
     }
     
-    // path 필드가 있으면 NocoDB URL과 결합
     if (img.path) {
         return `${NOCODB_API_URL}/${img.path}`;
     }
     
-    // signedPath 필드가 있으면 사용
     if (img.signedPath) {
         return `${NOCODB_API_URL}/${img.signedPath}`;
     }
@@ -162,7 +160,33 @@ function getImageUrl(imageData) {
     return null;
 }
 
-// ==================== Shopify 제품 생성 ====================
+// ==================== ✅ 이미지 다운로드 및 Base64 변환 ====================
+async function downloadImageAsBase64(imageUrl) {
+    try {
+        log(`      📥 이미지 다운로드 중: ${imageUrl.substring(0, 60)}...`);
+        
+        const response = await axios.get(imageUrl, {
+            responseType: 'arraybuffer',
+            timeout: 30000,
+            headers: {
+                'User-Agent': 'Mozilla/5.0'
+            }
+        });
+        
+        const base64 = Buffer.from(response.data).toString('base64');
+        const contentType = response.headers['content-type'] || 'image/png';
+        
+        log(`      ✅ Base64 변환 완료 (${(base64.length / 1024).toFixed(1)}KB)`);
+        
+        return base64;
+        
+    } catch (error) {
+        log(`      ❌ 이미지 다운로드 실패: ${error.message}`);
+        return null;
+    }
+}
+
+// ==================== Shopify 제품 생성 (Base64 이미지) ====================
 async function createShopifyProduct(product) {
     const { Id, title_en, description_en, price_aud, main_image, gallery_images, oliveyoung_product_id } = product;
     
@@ -173,27 +197,36 @@ async function createShopifyProduct(product) {
     log(`   SKU: ${oliveyoung_product_id || 'N/A'}`);
     
     try {
-        // 1. 이미지 URL 수집
+        // 1. 이미지 수집 및 Base64 변환
         const images = [];
         
-        // 메인 이미지 (첫 번째)
+        // 메인 이미지
         const mainImageUrl = getImageUrl(main_image);
         if (mainImageUrl) {
-            images.push({ src: mainImageUrl, position: 1 });
-            log(`   🖼️  메인 이미지: ${mainImageUrl.substring(0, 60)}...`);
+            log(`   🖼️  메인 이미지 처리 중...`);
+            const base64 = await downloadImageAsBase64(mainImageUrl);
+            if (base64) {
+                images.push({ attachment: base64, position: 1 });
+            }
         } else {
             log(`   ⚠️  메인 이미지 없음`);
         }
         
         // 갤러리 이미지
         if (gallery_images && Array.isArray(gallery_images)) {
-            gallery_images.forEach((img, index) => {
-                const url = getImageUrl(img);
+            for (let i = 0; i < gallery_images.length; i++) {
+                const url = getImageUrl(gallery_images[i]);
                 if (url) {
-                    images.push({ src: url, position: index + 2 });
-                    log(`   🖼️  갤러리 이미지 ${index + 1}: ${url.substring(0, 60)}...`);
+                    log(`   🖼️  갤러리 이미지 ${i + 1} 처리 중...`);
+                    const base64 = await downloadImageAsBase64(url);
+                    if (base64) {
+                        images.push({ attachment: base64, position: i + 2 });
+                    }
                 }
-            });
+                
+                // 이미지 다운로드 사이 딜레이
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
         }
         
         if (images.length === 0) {
@@ -201,6 +234,8 @@ async function createShopifyProduct(product) {
             stats.skipped++;
             return null;
         }
+        
+        log(`   ✅ 총 ${images.length}개 이미지 준비 완료`);
         
         // 2. 브랜드명 추출
         const vendor = extractBrandFromTitle(title_en);
@@ -218,14 +253,14 @@ async function createShopifyProduct(product) {
                     {
                         price: String(price_aud || 0),
                         sku: oliveyoung_product_id || `OY-${Id}`,
-                        inventory_management: null,  // 재고 추적 안함
-                        inventory_policy: 'continue',  // 재고 없어도 판매 가능
+                        inventory_management: null,
+                        inventory_policy: 'continue',
                         requires_shipping: true,
                         weight: 0.5,
                         weight_unit: 'kg'
                     }
                 ],
-                images: images
+                images: images  // ✅ Base64 인코딩된 이미지
             }
         };
         
@@ -239,6 +274,7 @@ async function createShopifyProduct(product) {
         
         log(`   ✅ Shopify 제품 생성 완료!`);
         log(`   🆔 Shopify Product ID: ${shopifyProductId}`);
+        log(`   🖼️  업로드된 이미지: ${shopifyProduct.images?.length || 0}개`);
         log(`   🔗 URL: https://${SHOPIFY_STORE_URL}/admin/products/${shopifyProductId}`);
         
         // 5. NocoDB 업데이트
@@ -254,7 +290,6 @@ async function createShopifyProduct(product) {
             log(`   📝 응답 상태: ${error.response.status}`);
             log(`   📝 응답 내용:`, JSON.stringify(error.response.data, null, 2));
             
-            // 특정 에러 처리
             if (error.response.status === 401) {
                 log(`   ⚠️  인증 실패 - Access Token을 확인해주세요`);
             } else if (error.response.status === 422) {
@@ -269,21 +304,23 @@ async function createShopifyProduct(product) {
     }
 }
 
-// ==================== NocoDB 업데이트 ====================
+// ==================== ✅ NocoDB 업데이트 (v2.1 수정됨) ====================
 async function updateNocoDBProduct(recordId, shopifyProductId) {
     try {
         log(`   💾 NocoDB 업데이트 중 (ID: ${recordId})...`);
         
         const uploadedAt = new Date().toISOString();
         
+        // ✅ v2.1 수정: 배열로 감싸서 전송
+        // shopify_status 제외 (SingleSelect 타입 문제)
+        // shopify_product_id와 uploaded_at만 업데이트
         await axios.patch(
             `${NOCODB_API_URL}/api/v2/tables/${SHOPIFY_TABLE_ID}/records`,
-            {
+            [{  // ✅ 배열로 감싸기!
                 Id: recordId,
                 shopify_product_id: String(shopifyProductId),
-                shopify_status: 'uploaded',
                 uploaded_at: uploadedAt
-            },
+            }],
             {
                 headers: { 
                     'xc-token': NOCODB_API_TOKEN,
@@ -297,6 +334,9 @@ async function updateNocoDBProduct(recordId, shopifyProductId) {
         
     } catch (error) {
         log(`   ⚠️  NocoDB 업데이트 실패:`, error.message);
+        if (error.response) {
+            log(`   📝 응답:`, JSON.stringify(error.response.data));
+        }
         return false;
     }
 }
@@ -326,7 +366,7 @@ async function testShopifyConnection() {
             
             if (error.response.status === 401) {
                 log(`   ⚠️  인증 실패! Access Token을 확인해주세요.`);
-                log(`   현재 토큰: ${SHOPIFY_ACCESS_TOKEN.substring(0, 10)}...`);
+                log(`   현재 토큰: ${SHOPIFY_ACCESS_TOKEN?.substring(0, 10)}...`);
             }
         }
         
@@ -378,10 +418,10 @@ async function main() {
         
         await createShopifyProduct(product);
         
-        // Rate limiting (Shopify API: 2 requests/second)
+        // Rate limiting (이미지 업로드 때문에 5초로 증가)
         if (i < products.length - 1) {
-            log(`\n⏳ 2초 대기 (Shopify Rate Limit)...`);
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            log(`\n⏳ 5초 대기 (Shopify Rate Limit + 이미지 처리)...`);
+            await new Promise(resolve => setTimeout(resolve, 5000));
         }
     }
     
