@@ -77,7 +77,8 @@ let config = {
         phase1: true,
         phase2: true,
         phase3: true,
-        phase4: true
+        phase4: true,
+        phase5: true  // ✅ Phase 5 추가!
     }
 };
 
@@ -211,7 +212,8 @@ const PHASES = [
     { id: 'phase1', name: 'Phase 1: 스크래핑', script: 'phase1-main-gallery.js' },
     { id: 'phase2', name: 'Phase 2: 배경 제거', script: 'phase2-ai-generate.js' },
     { id: 'phase3', name: 'Phase 3: AI 크롭', script: 'phase3-multi-3products.js' },
-    { id: 'phase4', name: 'Phase 4: 이미지 선별', script: 'phase4-final-data.js' }
+    { id: 'phase4', name: 'Phase 4: 이미지 선별', script: 'phase4-final-data.js' },
+    { id: 'phase5', name: 'Phase 5: Shopify 업로드', script: 'phase5-shopify-upload.js' }  // ✅ Phase 5 추가!
 ];
 
 // ==================== Phase 0: URL 수집 (✅ maxPages 0 = 무제한) ====================
@@ -460,7 +462,7 @@ async function runPipeline(options = {}) {
     io.emit('state', systemState);
     addLog('info', `🎬 파이프라인 시작 (${productLimit}개 제품)`);
     
-    // Phase 1~4만 필터링 (Phase 0 제외)
+    // Phase 1~5만 필터링 (Phase 0 제외)  // ✅ Phase 5 포함!
     const pipelinePhases = PHASES.filter(p => p.id !== 'phase0');
     const enabledPhases = pipelinePhases.filter(p => phases[p.id]);
     
