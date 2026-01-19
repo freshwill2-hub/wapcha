@@ -7,7 +7,6 @@ import { promisify } from 'util';
 import path from 'path';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { PlaywrightCrawler } from 'crawlee';
-import { trackGeminiCall, geminiCounter } from './gemini-api-counter.js';
 
 dotenv.config();
 
@@ -92,23 +91,23 @@ const REMBG_PATH = '/root/copychu-scraper/rembg-env/bin/rembg';
 
 const genAI = new GoogleGenerativeAI(GOOGLE_GEMINI_API_KEY);
 
-// ==================== 설정 ====================
+// ==================== ì„¤ì • ====================
 const TARGET_SIZE = 1200;
 const PRODUCT_RATIO = 0.75;
-const MIN_SCORE_FOR_GALLERY = 50;  // ✅ v9: 70 → 50으로 완화
+const MIN_SCORE_FOR_GALLERY = 50;  // âœ… v9: 70 â†’ 50ìœ¼ë¡œ ì™„í™”
 
-log('🚀 Phase 4: 최고 이미지 선별 + 네이버 보충 (v11 개선 버전)');
+log('ðŸš€ Phase 4: ìµœê³  ì´ë¯¸ì§€ ì„ ë³„ + ë„¤ì´ë²„ ë³´ì¶© (v11 ê°œì„  ë²„ì „)');
 log('='.repeat(70));
-log(`⚙️  설정:`);
+log(`âš™ï¸  ì„¤ì •:`);
 log(`   - Shopify Table: ${SHOPIFY_TABLE_ID}`);
-log(`   - 최종 크기: ${TARGET_SIZE}x${TARGET_SIZE}px`);
-log(`   - 제품 비율: ${PRODUCT_RATIO * 100}%`);
-log(`   - Gallery 최소 점수: ${MIN_SCORE_FOR_GALLERY}점`);
-log(`\n✨ v11 핵심 변경:`);
-log(`   ✅ v10 유지: 용량 50%+ 차이 -30점, 품질 12점 미만 -20점`);
-log(`   ✅ 여러 제품 감지: -20점 → -40점 (개별 제품에 다른 제품 포함 방지)\n`);
+log(`   - ìµœì¢… í¬ê¸°: ${TARGET_SIZE}x${TARGET_SIZE}px`);
+log(`   - ì œí’ˆ ë¹„ìœ¨: ${PRODUCT_RATIO * 100}%`);
+log(`   - Gallery ìµœì†Œ ì ìˆ˜: ${MIN_SCORE_FOR_GALLERY}ì `);
+log(`\nâœ¨ v11 í•µì‹¬ ë³€ê²½:`);
+log(`   âœ… v10 ìœ ì§€: ìš©ëŸ‰ 50%+ ì°¨ì´ -30ì , í’ˆì§ˆ 12ì  ë¯¸ë§Œ -20ì `);
+log(`   âœ… ì—¬ëŸ¬ ì œí’ˆ ê°ì§€: -20ì  â†’ -40ì  (ê°œë³„ ì œí’ˆì— ë‹¤ë¥¸ ì œí’ˆ í¬í•¨ ë°©ì§€)\n`);
 
-// ==================== 유틸리티 ====================
+// ==================== ìœ í‹¸ë¦¬í‹° ====================
 const cleanupFiles = (...files) => {
     files.forEach(file => {
         if (fs.existsSync(file)) {
@@ -117,7 +116,7 @@ const cleanupFiles = (...files) => {
     });
 };
 
-// ==================== Oliveyoung 제품 정보 가져오기 ====================
+// ==================== Oliveyoung ì œí’ˆ ì •ë³´ ê°€ì ¸ì˜¤ê¸° ====================
 async function getOliveyoungProduct(productId) {
     try {
         const response = await axios.get(
@@ -133,12 +132,12 @@ async function getOliveyoungProduct(productId) {
         }
         return null;
     } catch (error) {
-        log(`   ⚠️  Oliveyoung 제품 정보 조회 실패:`, error.message);
+        log(`   âš ï¸  Oliveyoung ì œí’ˆ ì •ë³´ ì¡°íšŒ ì‹¤íŒ¨:`, error.message);
         return null;
     }
 }
 
-// ==================== NocoDB에서 제품 가져오기 ====================
+// ==================== NocoDBì—ì„œ ì œí’ˆ ê°€ì ¸ì˜¤ê¸° ====================
 async function getProductsFromNocoDB() {
     const response = await axios.get(
         `${NOCODB_API_URL}/api/v2/tables/${SHOPIFY_TABLE_ID}/records`,
@@ -154,7 +153,7 @@ async function getProductsFromNocoDB() {
     return response.data.list;
 }
 
-// ==================== 이미지 다운로드 ====================
+// ==================== ì´ë¯¸ì§€ ë‹¤ìš´ë¡œë“œ ====================
 async function downloadImage(imageUrl, outputPath) {
     const response = await axios.get(imageUrl, {
         responseType: 'arraybuffer',
@@ -167,7 +166,7 @@ async function downloadImage(imageUrl, outputPath) {
     fs.writeFileSync(outputPath, Buffer.from(response.data));
 }
 
-// ==================== 이미지 해상도 확인 ====================
+// ==================== ì´ë¯¸ì§€ í•´ìƒë„ í™•ì¸ ====================
 function getImageResolution(imagePath) {
     try {
         const pythonScript = `
@@ -191,12 +190,12 @@ print(f'{img.width},{img.height}')
         return { width, height, minDimension: Math.min(width, height) };
         
     } catch (error) {
-        log('      ❌ 해상도 확인 오류:', error.message);
+        log('      âŒ í•´ìƒë„ í™•ì¸ ì˜¤ë¥˜:', error.message);
         return null;
     }
 }
 
-// ==================== 제품명에서 정보 추출 ====================
+// ==================== ì œí’ˆëª…ì—ì„œ ì •ë³´ ì¶”ì¶œ ====================
 function extractProductInfo(productTitle) {
     const info = {
         brandName: null,
@@ -213,7 +212,7 @@ function extractProductInfo(productTitle) {
         info.brandName = brandMatch[1].toLowerCase();
     }
     
-    const productLineMatch = productTitle.match(/^[A-Za-z]+\s+(.+?)(?:\s+\d+\s*(?:ml|mL|g|G|pcs|개)|\s+Set|\s+세트|$)/i);
+    const productLineMatch = productTitle.match(/^[A-Za-z]+\s+(.+?)(?:\s+\d+\s*(?:ml|mL|g|G|pcs|ê°œ)|\s+Set|\s+ì„¸íŠ¸|$)/i);
     if (productLineMatch) {
         info.productLineName = productLineMatch[1].trim().toLowerCase();
     }
@@ -225,20 +224,20 @@ function extractProductInfo(productTitle) {
         info.volume = `${info.volumeNumber}${info.volumeUnit}`;
     }
     
-    const setMatch = productTitle.match(/set of (\d+)|(\d+)개|(\d+)\s*pcs?/i);
+    const setMatch = productTitle.match(/set of (\d+)|(\d+)ê°œ|(\d+)\s*pcs?/i);
     if (setMatch) {
         info.setCount = parseInt(setMatch[1] || setMatch[2] || setMatch[3]);
         info.isSetProduct = info.setCount > 1;
     }
     
     if (!info.isSetProduct) {
-        info.isSetProduct = /세트|set|기획|듀오|duo|트윈|twin|패키지/i.test(productTitle);
+        info.isSetProduct = /ì„¸íŠ¸|set|ê¸°íš|ë“€ì˜¤|duo|íŠ¸ìœˆ|twin|íŒ¨í‚¤ì§€/i.test(productTitle);
     }
     
     return info;
 }
 
-// ==================== 1. 해상도 점수 (0-30점) ====================
+// ==================== 1. í•´ìƒë„ ì ìˆ˜ (0-30ì ) ====================
 function calculateResolutionScore(resolution) {
     if (!resolution) return 0;
     
@@ -252,35 +251,35 @@ function calculateResolutionScore(resolution) {
     return 10;
 }
 
-// ==================== v9: 여러 제품 감지 (탈락 → 감점) ====================
+// ==================== v9: ì—¬ëŸ¬ ì œí’ˆ ê°ì§€ (íƒˆë½ â†’ ê°ì ) ====================
 async function detectMultipleProducts(imagePath, productTitle, productInfo) {
     try {
         if (productInfo.isSetProduct) {
-            log(`      🎁 세트 제품 → 여러 제품 검사 생략`);
+            log(`      ðŸŽ ì„¸íŠ¸ ì œí’ˆ â†’ ì—¬ëŸ¬ ì œí’ˆ ê²€ì‚¬ ìƒëžµ`);
             return { hasMultiple: false, count: 1, penalty: 0 };
         }
         
-        log(`      🔍 여러 제품 감지 중... (개별 제품)`);
+        log(`      ðŸ” ì—¬ëŸ¬ ì œí’ˆ ê°ì§€ ì¤‘... (ê°œë³„ ì œí’ˆ)`);
         
         const imageBuffer = fs.readFileSync(imagePath);
         const base64 = imageBuffer.toString('base64');
         
         const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
         
-        const prompt = `이 제품 이미지를 분석해주세요.
+        const prompt = `ì´ ì œí’ˆ ì´ë¯¸ì§€ë¥¼ ë¶„ì„í•´ì£¼ì„¸ìš”.
 
-제품명: "${productTitle}"
+ì œí’ˆëª…: "${productTitle}"
 
-**질문: 이 이미지에 동일한 제품이 몇 개 보이나요?**
+**ì§ˆë¬¸: ì´ ì´ë¯¸ì§€ì— ë™ì¼í•œ ì œí’ˆì´ ëª‡ ê°œ ë³´ì´ë‚˜ìš”?**
 
-판단 기준:
-1. 실물 제품(화장품 병, 튜브, 용기 등)이 몇 개 있나요?
-2. 그림자나 반사는 제품 개수에 포함하지 마세요
-3. 포장박스는 제품 개수에 포함하지 마세요
+íŒë‹¨ ê¸°ì¤€:
+1. ì‹¤ë¬¼ ì œí’ˆ(í™”ìž¥í’ˆ ë³‘, íŠœë¸Œ, ìš©ê¸° ë“±)ì´ ëª‡ ê°œ ìžˆë‚˜ìš”?
+2. ê·¸ë¦¼ìžë‚˜ ë°˜ì‚¬ëŠ” ì œí’ˆ ê°œìˆ˜ì— í¬í•¨í•˜ì§€ ë§ˆì„¸ìš”
+3. í¬ìž¥ë°•ìŠ¤ëŠ” ì œí’ˆ ê°œìˆ˜ì— í¬í•¨í•˜ì§€ ë§ˆì„¸ìš”
 
-다음 형식으로만 답변하세요:
-COUNT: [숫자]
-REASON: [한 줄 설명]`;
+ë‹¤ìŒ í˜•ì‹ìœ¼ë¡œë§Œ ë‹µë³€í•˜ì„¸ìš”:
+COUNT: [ìˆ«ìž]
+REASON: [í•œ ì¤„ ì„¤ëª…]`;
         
         const result = await model.generateContent([
             prompt,
@@ -291,9 +290,6 @@ REASON: [한 줄 설명]`;
                 }
             }
         ]);
-        
-        // Gemini API 호출 추적
-        trackGeminiCall('detectMultipleProducts');
         
         const response = result.response.text().trim();
         
@@ -301,51 +297,51 @@ REASON: [한 줄 설명]`;
         const reasonMatch = response.match(/REASON:\s*([^\n]+)/i);
         
         const detectedCount = countMatch ? parseInt(countMatch[1]) : 1;
-        const reason = reasonMatch ? reasonMatch[1].trim() : '응답 파싱 실패';
+        const reason = reasonMatch ? reasonMatch[1].trim() : 'ì‘ë‹µ íŒŒì‹± ì‹¤íŒ¨';
         
-        // ✅ v11: 여러 제품 감지 시 더 강한 감점!
+        // âœ… v11: ì—¬ëŸ¬ ì œí’ˆ ê°ì§€ ì‹œ ë” ê°•í•œ ê°ì !
         if (detectedCount >= 2) {
-            log(`      ⚠️  여러 제품 감지 (${detectedCount}개) - ${reason}`);
-            log(`      📉 감점: -40점 (개별 제품에 다른 제품 포함!)`);
+            log(`      âš ï¸  ì—¬ëŸ¬ ì œí’ˆ ê°ì§€ (${detectedCount}ê°œ) - ${reason}`);
+            log(`      ðŸ“‰ ê°ì : -40ì  (ê°œë³„ ì œí’ˆì— ë‹¤ë¥¸ ì œí’ˆ í¬í•¨!)`);
             return { hasMultiple: true, count: detectedCount, reason, penalty: -40 };
         } else {
-            log(`      ✅ 단일 제품 확인 (${detectedCount}개) - ${reason}`);
+            log(`      âœ… ë‹¨ì¼ ì œí’ˆ í™•ì¸ (${detectedCount}ê°œ) - ${reason}`);
             return { hasMultiple: false, count: detectedCount, reason, penalty: 0 };
         }
         
     } catch (error) {
-        log('      ❌ 여러 제품 감지 실패:', error.message);
+        log('      âŒ ì—¬ëŸ¬ ì œí’ˆ ê°ì§€ ì‹¤íŒ¨:', error.message);
         return { hasMultiple: false, count: 1, penalty: 0 };
     }
 }
 
-// ==================== 포장박스 감지 (탈락 → 감점) ====================
+// ==================== í¬ìž¥ë°•ìŠ¤ ê°ì§€ (íƒˆë½ â†’ ê°ì ) ====================
 async function detectPackagingBox(imagePath, productTitle) {
     try {
-        log(`      📦 포장박스 감지 중...`);
+        log(`      ðŸ“¦ í¬ìž¥ë°•ìŠ¤ ê°ì§€ ì¤‘...`);
         
         const imageBuffer = fs.readFileSync(imagePath);
         const base64 = imageBuffer.toString('base64');
         
         const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
         
-        const prompt = `이 제품 이미지를 분석해주세요.
+        const prompt = `ì´ ì œí’ˆ ì´ë¯¸ì§€ë¥¼ ë¶„ì„í•´ì£¼ì„¸ìš”.
 
-제품명: "${productTitle}"
+ì œí’ˆëª…: "${productTitle}"
 
-**질문: 이 이미지에 포장박스(패키지 상자)가 있나요?**
+**ì§ˆë¬¸: ì´ ì´ë¯¸ì§€ì— í¬ìž¥ë°•ìŠ¤(íŒ¨í‚¤ì§€ ìƒìž)ê°€ ìžˆë‚˜ìš”?**
 
-판단 기준:
-1. 제품 본체 외에 **종이 상자**, **패키지 박스**가 보이나요?
-2. 제품이 박스 안에 들어있거나, 박스 옆에 놓여있나요?
+íŒë‹¨ ê¸°ì¤€:
+1. ì œí’ˆ ë³¸ì²´ ì™¸ì— **ì¢…ì´ ìƒìž**, **íŒ¨í‚¤ì§€ ë°•ìŠ¤**ê°€ ë³´ì´ë‚˜ìš”?
+2. ì œí’ˆì´ ë°•ìŠ¤ ì•ˆì— ë“¤ì–´ìžˆê±°ë‚˜, ë°•ìŠ¤ ì˜†ì— ë†“ì—¬ìžˆë‚˜ìš”?
 
-⚠️ 주의: 
-- 제품 자체의 플라스틱 용기/튜브/병은 포장박스가 아닙니다
-- 종이로 된 외부 상자만 포장박스입니다
+âš ï¸ ì£¼ì˜: 
+- ì œí’ˆ ìžì²´ì˜ í”Œë¼ìŠ¤í‹± ìš©ê¸°/íŠœë¸Œ/ë³‘ì€ í¬ìž¥ë°•ìŠ¤ê°€ ì•„ë‹™ë‹ˆë‹¤
+- ì¢…ì´ë¡œ ëœ ì™¸ë¶€ ìƒìžë§Œ í¬ìž¥ë°•ìŠ¤ìž…ë‹ˆë‹¤
 
-다음 형식으로만 답변하세요:
+ë‹¤ìŒ í˜•ì‹ìœ¼ë¡œë§Œ ë‹µë³€í•˜ì„¸ìš”:
 PACKAGING: [YES/NO]
-REASON: [한 줄 설명]`;
+REASON: [í•œ ì¤„ ì„¤ëª…]`;
         
         const result = await model.generateContent([
             prompt,
@@ -357,37 +353,34 @@ REASON: [한 줄 설명]`;
             }
         ]);
         
-        // Gemini API 호출 추적
-        trackGeminiCall('detectPackagingBox');
-        
         const response = result.response.text().trim();
         
         const packagingMatch = response.match(/PACKAGING:\s*(YES|NO)/i);
         const reasonMatch = response.match(/REASON:\s*([^\n]+)/i);
         
         const hasPackaging = packagingMatch ? packagingMatch[1].toUpperCase() === 'YES' : false;
-        const reason = reasonMatch ? reasonMatch[1].trim() : '응답 파싱 실패';
+        const reason = reasonMatch ? reasonMatch[1].trim() : 'ì‘ë‹µ íŒŒì‹± ì‹¤íŒ¨';
         
-        // ✅ v9: 탈락 대신 감점!
+        // âœ… v9: íƒˆë½ ëŒ€ì‹  ê°ì !
         if (hasPackaging) {
-            log(`      ⚠️  포장박스 감지됨 - ${reason}`);
-            log(`      📉 감점: -15점 (탈락 아님!)`);
+            log(`      âš ï¸  í¬ìž¥ë°•ìŠ¤ ê°ì§€ë¨ - ${reason}`);
+            log(`      ðŸ“‰ ê°ì : -15ì  (íƒˆë½ ì•„ë‹˜!)`);
             return { hasPackaging: true, reason, penalty: -15 };
         } else {
-            log(`      ✅ 포장박스 없음 - ${reason}`);
+            log(`      âœ… í¬ìž¥ë°•ìŠ¤ ì—†ìŒ - ${reason}`);
             return { hasPackaging: false, reason, penalty: 0 };
         }
         
     } catch (error) {
-        log('      ❌ 포장박스 감지 실패:', error.message);
+        log('      âŒ í¬ìž¥ë°•ìŠ¤ ê°ì§€ ì‹¤íŒ¨:', error.message);
         return { hasPackaging: false, penalty: 0 };
     }
 }
 
-// ==================== 2. 완성도 점수 (0-25점) - v9: 탈락 없음! ====================
+// ==================== 2. ì™„ì„±ë„ ì ìˆ˜ (0-25ì ) - v9: íƒˆë½ ì—†ìŒ! ====================
 async function calculateCompletenessScore(imagePath, productTitle, productInfo) {
     try {
-        log(`      🔍 제품 완성도 검증 시작...`);
+        log(`      ðŸ” ì œí’ˆ ì™„ì„±ë„ ê²€ì¦ ì‹œìž‘...`);
         
         const imageBuffer = fs.readFileSync(imagePath);
         const base64 = imageBuffer.toString('base64');
@@ -396,18 +389,18 @@ async function calculateCompletenessScore(imagePath, productTitle, productInfo) 
         
         const expectedCount = productInfo.setCount || 1;
         
-        const prompt = `이 제품 이미지를 분석하여 제품이 완전한지 확인해주세요.
+        const prompt = `ì´ ì œí’ˆ ì´ë¯¸ì§€ë¥¼ ë¶„ì„í•˜ì—¬ ì œí’ˆì´ ì™„ì „í•œì§€ í™•ì¸í•´ì£¼ì„¸ìš”.
 
-제품명: "${productTitle}"
-예상 제품 개수: ${expectedCount}개
+ì œí’ˆëª…: "${productTitle}"
+ì˜ˆìƒ ì œí’ˆ ê°œìˆ˜: ${expectedCount}ê°œ
 
-다음을 검사해주세요:
-1. 제품이 잘려있나요? (캡, 바디, 하단)
-2. 제품 전체가 이미지 안에 있나요?
+ë‹¤ìŒì„ ê²€ì‚¬í•´ì£¼ì„¸ìš”:
+1. ì œí’ˆì´ ìž˜ë ¤ìžˆë‚˜ìš”? (ìº¡, ë°”ë””, í•˜ë‹¨)
+2. ì œí’ˆ ì „ì²´ê°€ ì´ë¯¸ì§€ ì•ˆì— ìžˆë‚˜ìš”?
 
-다음 형식으로만 답변하세요:
+ë‹¤ìŒ í˜•ì‹ìœ¼ë¡œë§Œ ë‹µë³€í•˜ì„¸ìš”:
 COMPLETE: [YES/NO]
-REASON: [이유를 한 줄로]`;
+REASON: [ì´ìœ ë¥¼ í•œ ì¤„ë¡œ]`;
         
         const result = await model.generateContent([
             prompt,
@@ -419,44 +412,41 @@ REASON: [이유를 한 줄로]`;
             }
         ]);
         
-        // Gemini API 호출 추적
-        trackGeminiCall('calculateCompletenessScore');
-        
         const response = result.response.text().trim();
         
         const completeMatch = response.match(/COMPLETE:\s*(YES|NO)/i);
         const reasonMatch = response.match(/REASON:\s*([^\n]+)/i);
         
         const isComplete = completeMatch ? completeMatch[1].toUpperCase() === 'YES' : false;
-        const reason = reasonMatch ? reasonMatch[1].trim() : '응답 파싱 실패';
+        const reason = reasonMatch ? reasonMatch[1].trim() : 'ì‘ë‹µ íŒŒì‹± ì‹¤íŒ¨';
         
-        // ✅ v9: 불완전해도 탈락 안함! 낮은 점수만
+        // âœ… v9: ë¶ˆì™„ì „í•´ë„ íƒˆë½ ì•ˆí•¨! ë‚®ì€ ì ìˆ˜ë§Œ
         if (isComplete) {
-            log(`      ✅ 완성도: 25/25점 - ${reason}`);
+            log(`      âœ… ì™„ì„±ë„: 25/25ì  - ${reason}`);
             return 25;
         } else {
-            log(`      ⚠️  완성도: 10/25점 - ${reason}`);
-            log(`      📉 불완전하지만 계속 평가! (탈락 아님)`);
-            return 10;  // ✅ v9: 0점 → 10점
+            log(`      âš ï¸  ì™„ì„±ë„: 10/25ì  - ${reason}`);
+            log(`      ðŸ“‰ ë¶ˆì™„ì „í•˜ì§€ë§Œ ê³„ì† í‰ê°€! (íƒˆë½ ì•„ë‹˜)`);
+            return 10;  // âœ… v9: 0ì  â†’ 10ì 
         }
         
     } catch (error) {
-        log('      ❌ 완성도 검증 실패:', error.message);
-        return 15;  // 에러 시 중립 점수
+        log('      âŒ ì™„ì„±ë„ ê²€ì¦ ì‹¤íŒ¨:', error.message);
+        return 15;  // ì—ëŸ¬ ì‹œ ì¤‘ë¦½ ì ìˆ˜
     }
 }
 
-// ==================== 3. 타이틀 매칭 점수 (0-30점) - v9: 탈락 없음! ====================
+// ==================== 3. íƒ€ì´í‹€ ë§¤ì¹­ ì ìˆ˜ (0-30ì ) - v9: íƒˆë½ ì—†ìŒ! ====================
 async function calculateTitleMatchScore(imagePath, productTitle, productInfo, originalImageUrl = null) {
     try {
-        log(`      🔍 타이틀 매칭 확인 시작...`);
+        log(`      ðŸ” íƒ€ì´í‹€ ë§¤ì¹­ í™•ì¸ ì‹œìž‘...`);
         
         let base64;
-        let imageSource = '크롭 이미지';
+        let imageSource = 'í¬ë¡­ ì´ë¯¸ì§€';
         
         if (originalImageUrl) {
             try {
-                log(`      📥 원본 이미지로 확인 중...`);
+                log(`      ðŸ“¥ ì›ë³¸ ì´ë¯¸ì§€ë¡œ í™•ì¸ ì¤‘...`);
                 const response = await axios.get(originalImageUrl, {
                     responseType: 'arraybuffer',
                     timeout: 30000,
@@ -466,10 +456,10 @@ async function calculateTitleMatchScore(imagePath, productTitle, productInfo, or
                     }
                 });
                 base64 = Buffer.from(response.data).toString('base64');
-                imageSource = '원본 이미지';
-                log(`      ✅ 원본 이미지 로드 완료`);
+                imageSource = 'ì›ë³¸ ì´ë¯¸ì§€';
+                log(`      âœ… ì›ë³¸ ì´ë¯¸ì§€ ë¡œë“œ ì™„ë£Œ`);
             } catch (err) {
-                log(`      ⚠️  원본 이미지 로드 실패, 크롭 이미지 사용`);
+                log(`      âš ï¸  ì›ë³¸ ì´ë¯¸ì§€ ë¡œë“œ ì‹¤íŒ¨, í¬ë¡­ ì´ë¯¸ì§€ ì‚¬ìš©`);
                 const imageBuffer = fs.readFileSync(imagePath);
                 base64 = imageBuffer.toString('base64');
             }
@@ -478,26 +468,26 @@ async function calculateTitleMatchScore(imagePath, productTitle, productInfo, or
             base64 = imageBuffer.toString('base64');
         }
         
-        log(`      🖼️  검사 대상: ${imageSource}`);
+        log(`      ðŸ–¼ï¸  ê²€ì‚¬ ëŒ€ìƒ: ${imageSource}`);
         
         const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
         
-        const prompt = `이 제품 이미지를 분석해주세요.
+        const prompt = `ì´ ì œí’ˆ ì´ë¯¸ì§€ë¥¼ ë¶„ì„í•´ì£¼ì„¸ìš”.
 
-**타겟 제품:**
-- 브랜드: "${productInfo.brandName || 'N/A'}"
-- 제품 라인: "${productInfo.productLineName || 'N/A'}"
-- 용량: "${productInfo.volume || 'N/A'}"
+**íƒ€ê²Ÿ ì œí’ˆ:**
+- ë¸Œëžœë“œ: "${productInfo.brandName || 'N/A'}"
+- ì œí’ˆ ë¼ì¸: "${productInfo.productLineName || 'N/A'}"
+- ìš©ëŸ‰: "${productInfo.volume || 'N/A'}"
 
-**이미지에서 확인해주세요:**
-1. 브랜드명
-2. 제품명/라인명
-3. 용량 (ml, g 등)
+**ì´ë¯¸ì§€ì—ì„œ í™•ì¸í•´ì£¼ì„¸ìš”:**
+1. ë¸Œëžœë“œëª…
+2. ì œí’ˆëª…/ë¼ì¸ëª…
+3. ìš©ëŸ‰ (ml, g ë“±)
 
-다음 형식으로만 답변:
-BRAND: [읽은 브랜드명 또는 UNKNOWN]
-PRODUCT_LINE: [읽은 제품라인명 또는 UNKNOWN]
-VOLUME: [읽은 용량 또는 UNKNOWN]`;
+ë‹¤ìŒ í˜•ì‹ìœ¼ë¡œë§Œ ë‹µë³€:
+BRAND: [ì½ì€ ë¸Œëžœë“œëª… ë˜ëŠ” UNKNOWN]
+PRODUCT_LINE: [ì½ì€ ì œí’ˆë¼ì¸ëª… ë˜ëŠ” UNKNOWN]
+VOLUME: [ì½ì€ ìš©ëŸ‰ ë˜ëŠ” UNKNOWN]`;
         
         const result = await model.generateContent([
             prompt,
@@ -509,11 +499,8 @@ VOLUME: [읽은 용량 또는 UNKNOWN]`;
             }
         ]);
         
-        // Gemini API 호출 추적
-        trackGeminiCall('calculateTitleMatchScore');
-        
         const response = result.response.text().trim();
-        log(`      📄 Gemini 응답:\n${response.split('\n').map(l => '         ' + l).join('\n')}`);
+        log(`      ðŸ“„ Gemini ì‘ë‹µ:\n${response.split('\n').map(l => '         ' + l).join('\n')}`);
         
         const brandMatch = response.match(/BRAND:\s*([^\n]+)/i);
         const productLineMatch = response.match(/PRODUCT_LINE:\s*([^\n]+)/i);
@@ -527,21 +514,21 @@ VOLUME: [읽은 용량 또는 UNKNOWN]`;
         const targetBrand = (productInfo.brandName || '').toLowerCase();
         const targetLine = (productInfo.productLineName || '').toLowerCase();
         
-        // ✅ v9: 브랜드 확인 (불일치해도 탈락 안함!)
+        // âœ… v9: ë¸Œëžœë“œ í™•ì¸ (ë¶ˆì¼ì¹˜í•´ë„ íƒˆë½ ì•ˆí•¨!)
         if (detectedBrand !== 'unknown' && targetBrand) {
             if (detectedBrand.includes(targetBrand) || targetBrand.includes(detectedBrand)) {
                 score += 10;
-                log(`      ✅ 브랜드 일치: ${detectedBrand} (+10점)`);
+                log(`      âœ… ë¸Œëžœë“œ ì¼ì¹˜: ${detectedBrand} (+10ì )`);
             } else {
-                score += 5;  // ✅ v9: 불일치해도 5점
-                log(`      ⚠️  브랜드 불일치: ${detectedBrand} ≠ ${targetBrand} (+5점)`);
+                score += 5;  // âœ… v9: ë¶ˆì¼ì¹˜í•´ë„ 5ì 
+                log(`      âš ï¸  ë¸Œëžœë“œ ë¶ˆì¼ì¹˜: ${detectedBrand} â‰  ${targetBrand} (+5ì )`);
             }
         } else {
             score += 5;
-            log(`      ⚠️  브랜드 미확인 (+5점)`);
+            log(`      âš ï¸  ë¸Œëžœë“œ ë¯¸í™•ì¸ (+5ì )`);
         }
         
-        // ✅ v9: 제품 라인 확인 (불일치해도 탈락 안함!)
+        // âœ… v9: ì œí’ˆ ë¼ì¸ í™•ì¸ (ë¶ˆì¼ì¹˜í•´ë„ íƒˆë½ ì•ˆí•¨!)
         if (detectedProductLine !== 'unknown' && targetLine) {
             const targetWords = targetLine.split(' ').slice(0, 2).join(' ');
             const detectedWords = detectedProductLine.split(' ').slice(0, 2).join(' ');
@@ -549,17 +536,17 @@ VOLUME: [읽은 용량 또는 UNKNOWN]`;
             if (detectedProductLine.includes(targetWords) || targetLine.includes(detectedWords) || 
                 detectedWords.includes(targetWords) || targetWords.includes(detectedWords)) {
                 score += 10;
-                log(`      ✅ 제품 라인 일치 (+10점)`);
+                log(`      âœ… ì œí’ˆ ë¼ì¸ ì¼ì¹˜ (+10ì )`);
             } else {
-                score += 5;  // ✅ v9: 불일치해도 5점
-                log(`      ⚠️  제품 라인 불일치 (+5점)`);
+                score += 5;  // âœ… v9: ë¶ˆì¼ì¹˜í•´ë„ 5ì 
+                log(`      âš ï¸  ì œí’ˆ ë¼ì¸ ë¶ˆì¼ì¹˜ (+5ì )`);
             }
         } else {
             score += 5;
-            log(`      ⚠️  제품 라인 미확인 (+5점)`);
+            log(`      âš ï¸  ì œí’ˆ ë¼ì¸ ë¯¸í™•ì¸ (+5ì )`);
         }
         
-        // ✅ v10: 용량 확인 (큰 차이는 강력 감점!)
+        // âœ… v10: ìš©ëŸ‰ í™•ì¸ (í° ì°¨ì´ëŠ” ê°•ë ¥ ê°ì !)
         let volumePenalty = 0;
         if (detectedVolume !== 'unknown' && productInfo.volume) {
             const detectedNum = parseInt(detectedVolume.match(/\d+/)?.[0] || '0');
@@ -570,63 +557,63 @@ VOLUME: [읽은 용량 또는 UNKNOWN]`;
                 
                 if (detectedNum === expectedNum) {
                     score += 10;
-                    log(`      ✅ 용량 일치: ${detectedVolume} (+10점)`);
+                    log(`      âœ… ìš©ëŸ‰ ì¼ì¹˜: ${detectedVolume} (+10ì )`);
                 } else if (diffPercent <= 15) {
-                    // 15% 이내 차이 (예: 220ml vs 200ml)
+                    // 15% ì´ë‚´ ì°¨ì´ (ì˜ˆ: 220ml vs 200ml)
                     score += 7;
-                    log(`      ⚠️  용량 근사: ${detectedVolume} ≈ ${productInfo.volume} (+7점)`);
+                    log(`      âš ï¸  ìš©ëŸ‰ ê·¼ì‚¬: ${detectedVolume} â‰ˆ ${productInfo.volume} (+7ì )`);
                 } else if (diffPercent <= 30) {
-                    // 30% 이내 차이
+                    // 30% ì´ë‚´ ì°¨ì´
                     score += 3;
-                    log(`      ⚠️  용량 차이: ${detectedVolume} ≠ ${productInfo.volume} (+3점)`);
+                    log(`      âš ï¸  ìš©ëŸ‰ ì°¨ì´: ${detectedVolume} â‰  ${productInfo.volume} (+3ì )`);
                 } else {
-                    // ✅ v10: 50% 이상 차이는 완전히 다른 제품! 강력 감점!
+                    // âœ… v10: 50% ì´ìƒ ì°¨ì´ëŠ” ì™„ì „ížˆ ë‹¤ë¥¸ ì œí’ˆ! ê°•ë ¥ ê°ì !
                     volumePenalty = -30;
-                    log(`      ❌ 용량 크게 불일치: ${detectedVolume} ≠ ${productInfo.volume}`);
-                    log(`      📉 다른 제품 감점: -30점`);
+                    log(`      âŒ ìš©ëŸ‰ í¬ê²Œ ë¶ˆì¼ì¹˜: ${detectedVolume} â‰  ${productInfo.volume}`);
+                    log(`      ðŸ“‰ ë‹¤ë¥¸ ì œí’ˆ ê°ì : -30ì `);
                 }
             }
         } else {
             score += 5;
-            log(`      ⚠️  용량 미확인 (+5점)`);
+            log(`      âš ï¸  ìš©ëŸ‰ ë¯¸í™•ì¸ (+5ì )`);
         }
         
         score += volumePenalty;
         
-        log(`      📊 타이틀 매칭: ${score}/30점`);
+        log(`      ðŸ“Š íƒ€ì´í‹€ ë§¤ì¹­: ${score}/30ì `);
         
-        return { score, isWrongProduct: false };  // ✅ v9: 항상 isWrongProduct: false
+        return { score, isWrongProduct: false };  // âœ… v9: í•­ìƒ isWrongProduct: false
         
     } catch (error) {
-        log('      ❌ 타이틀 매칭 확인 실패:', error.message);
+        log('      âŒ íƒ€ì´í‹€ ë§¤ì¹­ í™•ì¸ ì‹¤íŒ¨:', error.message);
         return { score: 15, isWrongProduct: false };
     }
 }
 
-// ==================== 4. 세트 구성 점수 (0-20점) ====================
+// ==================== 4. ì„¸íŠ¸ êµ¬ì„± ì ìˆ˜ (0-20ì ) ====================
 async function calculateSetCompositionScore(imagePath, productTitle, productInfo) {
     try {
-        log(`      🔍 세트 구성 분석 시작...`);
+        log(`      ðŸ” ì„¸íŠ¸ êµ¬ì„± ë¶„ì„ ì‹œìž‘...`);
         
         if (!productInfo.setCount || productInfo.setCount === 1) {
-            log(`      ✅ 단일 제품 → 자동 20점`);
+            log(`      âœ… ë‹¨ì¼ ì œí’ˆ â†’ ìžë™ 20ì `);
             return 20;
         }
         
-        log(`      🎁 세트 제품: ${productInfo.setCount}개 예상`);
+        log(`      ðŸŽ ì„¸íŠ¸ ì œí’ˆ: ${productInfo.setCount}ê°œ ì˜ˆìƒ`);
         
         const imageBuffer = fs.readFileSync(imagePath);
         const base64 = imageBuffer.toString('base64');
         
         const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
         
-        const prompt = `이 이미지를 분석하여 세트 제품 구성을 평가해주세요.
+        const prompt = `ì´ ì´ë¯¸ì§€ë¥¼ ë¶„ì„í•˜ì—¬ ì„¸íŠ¸ ì œí’ˆ êµ¬ì„±ì„ í‰ê°€í•´ì£¼ì„¸ìš”.
 
-제품명: "${productTitle}"
-예상 세트 개수: ${productInfo.setCount}개
+ì œí’ˆëª…: "${productTitle}"
+ì˜ˆìƒ ì„¸íŠ¸ ê°œìˆ˜: ${productInfo.setCount}ê°œ
 
-다음 형식으로 답변하세요:
-COUNT: [숫자]
+ë‹¤ìŒ í˜•ì‹ìœ¼ë¡œ ë‹µë³€í•˜ì„¸ìš”:
+COUNT: [ìˆ«ìž]
 SUITABLE: [EXCELLENT/GOOD/FAIR/POOR]`;
         
         const result = await model.generateContent([
@@ -638,9 +625,6 @@ SUITABLE: [EXCELLENT/GOOD/FAIR/POOR]`;
                 }
             }
         ]);
-        
-        // Gemini API 호출 추적
-        trackGeminiCall('calculateSetCompositionScore');
         
         const response = result.response.text().trim();
         
@@ -664,36 +648,36 @@ SUITABLE: [EXCELLENT/GOOD/FAIR/POOR]`;
         else score += 2;
         
         score = Math.max(0, Math.min(20, score));
-        log(`      📊 세트 구성: ${score}/20점`);
+        log(`      ðŸ“Š ì„¸íŠ¸ êµ¬ì„±: ${score}/20ì `);
         
         return score;
         
     } catch (error) {
-        log('      ❌ 세트 구성 분석 실패:', error.message);
+        log('      âŒ ì„¸íŠ¸ êµ¬ì„± ë¶„ì„ ì‹¤íŒ¨:', error.message);
         return 10;
     }
 }
 
-// ==================== 5. Gemini 품질 평가 (0-20점) ====================
+// ==================== 5. Gemini í’ˆì§ˆ í‰ê°€ (0-20ì ) ====================
 async function calculateQualityScore(imagePath, productTitle) {
     try {
-        log(`      🤖 이미지 품질 평가 중...`);
+        log(`      ðŸ¤– ì´ë¯¸ì§€ í’ˆì§ˆ í‰ê°€ ì¤‘...`);
         
         const imageBuffer = fs.readFileSync(imagePath);
         const base64 = imageBuffer.toString('base64');
         
         const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
         
-        const prompt = `이 제품 이미지의 품질을 평가해주세요.
+        const prompt = `ì´ ì œí’ˆ ì´ë¯¸ì§€ì˜ í’ˆì§ˆì„ í‰ê°€í•´ì£¼ì„¸ìš”.
 
-평가 기준:
-1. 선명도
-2. 중앙 배치
-3. 배경 품질
-4. 쇼핑몰 사용 적합성
+í‰ê°€ ê¸°ì¤€:
+1. ì„ ëª…ë„
+2. ì¤‘ì•™ ë°°ì¹˜
+3. ë°°ê²½ í’ˆì§ˆ
+4. ì‡¼í•‘ëª° ì‚¬ìš© ì í•©ì„±
 
-0-20점 사이로 점수를 매겨주세요.
-숫자만 답변하세요.`;
+0-20ì  ì‚¬ì´ë¡œ ì ìˆ˜ë¥¼ ë§¤ê²¨ì£¼ì„¸ìš”.
+ìˆ«ìžë§Œ ë‹µë³€í•˜ì„¸ìš”.`;
         
         const result = await model.generateContent([
             prompt,
@@ -705,30 +689,27 @@ async function calculateQualityScore(imagePath, productTitle) {
             }
         ]);
         
-        // Gemini API 호출 추적
-        trackGeminiCall('calculateQualityScore');
-        
         const response = result.response.text().trim();
         const score = parseInt(response);
         
         if (isNaN(score) || score < 0 || score > 20) {
-            log(`      ⚠️  유효하지 않은 점수: ${response}, 기본값 12점 사용`);
+            log(`      âš ï¸  ìœ íš¨í•˜ì§€ ì•Šì€ ì ìˆ˜: ${response}, ê¸°ë³¸ê°’ 12ì  ì‚¬ìš©`);
             return 12;
         }
         
-        log(`      📊 이미지 품질: ${score}/20점`);
+        log(`      ðŸ“Š ì´ë¯¸ì§€ í’ˆì§ˆ: ${score}/20ì `);
         return score;
         
     } catch (error) {
-        log('      ⚠️  품질 평가 실패:', error.message);
+        log('      âš ï¸  í’ˆì§ˆ í‰ê°€ ì‹¤íŒ¨:', error.message);
         return 12;
     }
 }
 
-// ==================== v9: 이미지 점수 계산 (탈락 없음!) ====================
+// ==================== v9: ì´ë¯¸ì§€ ì ìˆ˜ ê³„ì‚° (íƒˆë½ ì—†ìŒ!) ====================
 async function scoreImage(imageData, imagePath, productTitle, productInfo, index) {
-    log(`\n   이미지 ${index + 1} 평가:`);
-    log(`   ${'─'.repeat(66)}`);
+    log(`\n   ì´ë¯¸ì§€ ${index + 1} í‰ê°€:`);
+    log(`   ${'â”€'.repeat(66)}`);
     
     const scores = {
         resolution: 0,
@@ -736,48 +717,48 @@ async function scoreImage(imageData, imagePath, productTitle, productInfo, index
         titleMatch: 0,
         setComposition: 0,
         quality: 0,
-        penalties: 0  // ✅ v9: 감점 항목 추가
+        penalties: 0  // âœ… v9: ê°ì  í•­ëª© ì¶”ê°€
     };
     
     const resolution = getImageResolution(imagePath);
     scores.resolution = calculateResolutionScore(resolution);
-    log(`      📐 해상도: ${scores.resolution}/30점 (${resolution?.width}x${resolution?.height})`);
+    log(`      ðŸ“ í•´ìƒë„: ${scores.resolution}/30ì  (${resolution?.width}x${resolution?.height})`);
     
-    // ✅ v9: 여러 제품 감지 → 탈락 대신 감점!
+    // âœ… v9: ì—¬ëŸ¬ ì œí’ˆ ê°ì§€ â†’ íƒˆë½ ëŒ€ì‹  ê°ì !
     const multipleResult = await detectMultipleProducts(imagePath, productTitle, productInfo);
     scores.penalties += multipleResult.penalty;
     
-    // ✅ v9: 포장박스 감지 → 탈락 대신 감점!
+    // âœ… v9: í¬ìž¥ë°•ìŠ¤ ê°ì§€ â†’ íƒˆë½ ëŒ€ì‹  ê°ì !
     const packagingResult = await detectPackagingBox(imagePath, productTitle);
     scores.penalties += packagingResult.penalty;
     
-    // ✅ v9: 완성도 점수 (항상 평가, 탈락 없음!)
+    // âœ… v9: ì™„ì„±ë„ ì ìˆ˜ (í•­ìƒ í‰ê°€, íƒˆë½ ì—†ìŒ!)
     scores.completeness = await calculateCompletenessScore(imagePath, productTitle, productInfo);
     
-    // ✅ v9: 타이틀 매칭 (항상 평가, 탈락 없음!)
+    // âœ… v9: íƒ€ì´í‹€ ë§¤ì¹­ (í•­ìƒ í‰ê°€, íƒˆë½ ì—†ìŒ!)
     const titleMatchResult = await calculateTitleMatchScore(imagePath, productTitle, productInfo, imageData.originalUrl || null);
     scores.titleMatch = titleMatchResult.score;
     
-    // 세트 구성 점수
+    // ì„¸íŠ¸ êµ¬ì„± ì ìˆ˜
     scores.setComposition = await calculateSetCompositionScore(imagePath, productTitle, productInfo);
     
-    // 품질 점수
+    // í’ˆì§ˆ ì ìˆ˜
     scores.quality = await calculateQualityScore(imagePath, productTitle);
     
-    // ✅ v10: 품질이 너무 낮으면 감점!
+    // âœ… v10: í’ˆì§ˆì´ ë„ˆë¬´ ë‚®ìœ¼ë©´ ê°ì !
     if (scores.quality < 12) {
         scores.penalties += -20;
-        log(`      📉 품질 저하 감점: -20점 (품질 ${scores.quality}점 < 12점)`);
+        log(`      ðŸ“‰ í’ˆì§ˆ ì €í•˜ ê°ì : -20ì  (í’ˆì§ˆ ${scores.quality}ì  < 12ì )`);
     }
     
-    // ✅ v9: 총점 계산 (감점 포함)
+    // âœ… v9: ì´ì  ê³„ì‚° (ê°ì  í¬í•¨)
     const totalScore = Math.max(0, 
         scores.resolution + scores.completeness + scores.titleMatch + 
         scores.setComposition + scores.quality + scores.penalties
     );
     
-    log(`      📉 감점: ${scores.penalties}점`);
-    log(`      🎯 총점: ${totalScore}/125점`);
+    log(`      ðŸ“‰ ê°ì : ${scores.penalties}ì `);
+    log(`      ðŸŽ¯ ì´ì : ${totalScore}/125ì `);
     
     return {
         imageData,
@@ -785,7 +766,7 @@ async function scoreImage(imageData, imagePath, productTitle, productInfo, index
         resolution,
         scores,
         totalScore,
-        // ✅ v9: 모든 플래그 false (탈락 없음!)
+        // âœ… v9: ëª¨ë“  í”Œëž˜ê·¸ false (íƒˆë½ ì—†ìŒ!)
         isIncomplete: false,
         isWrongProduct: false,
         hasPackaging: false,
@@ -793,9 +774,9 @@ async function scoreImage(imageData, imagePath, productTitle, productInfo, index
     };
 }
 
-// ==================== 크기 정규화 ====================
+// ==================== í¬ê¸° ì •ê·œí™” ====================
 function normalizeImage(imagePath) {
-    log('      📐 크기 정규화 중...');
+    log('      ðŸ“ í¬ê¸° ì •ê·œí™” ì¤‘...');
     const outputPath = imagePath.replace('.png', '_normalized.png');
     
     const pythonScript = `
@@ -858,17 +839,17 @@ canvas.save('${outputPath}', 'PNG', quality=95)
     
     try {
         execSync(`${PYTHON_PATH} ${scriptPath}`);
-        log(`      ✅ 정규화 완료: ${TARGET_SIZE}x${TARGET_SIZE}px`);
+        log(`      âœ… ì •ê·œí™” ì™„ë£Œ: ${TARGET_SIZE}x${TARGET_SIZE}px`);
         cleanupFiles(scriptPath);
         return outputPath;
     } catch (error) {
-        log('      ❌ 정규화 실패:', error.message);
+        log('      âŒ ì •ê·œí™” ì‹¤íŒ¨:', error.message);
         cleanupFiles(scriptPath);
         return null;
     }
 }
 
-// ==================== NocoDB 업로드 ====================
+// ==================== NocoDB ì—…ë¡œë“œ ====================
 async function uploadToNocoDB(filePath, fileName) {
     try {
         const formData = new FormData();
@@ -889,15 +870,15 @@ async function uploadToNocoDB(filePath, fileName) {
         
         return response.data;
     } catch (error) {
-        log('      ❌ 업로드 실패:', error.message);
+        log('      âŒ ì—…ë¡œë“œ ì‹¤íŒ¨:', error.message);
         throw error;
     }
 }
 
-// ==================== 네이버 이미지 검색 ====================
+// ==================== ë„¤ì´ë²„ ì´ë¯¸ì§€ ê²€ìƒ‰ ====================
 async function searchNaverImages(titleKr, maxImages = 15) {
-    log(`\n🔍 네이버 이미지 검색 시작: "${titleKr}"`);
-    log(`   목표: 원본 이미지 ${maxImages}개 수집`);
+    log(`\nðŸ” ë„¤ì´ë²„ ì´ë¯¸ì§€ ê²€ìƒ‰ ì‹œìž‘: "${titleKr}"`);
+    log(`   ëª©í‘œ: ì›ë³¸ ì´ë¯¸ì§€ ${maxImages}ê°œ ìˆ˜ì§‘`);
     
     const imageUrls = [];
     
@@ -916,15 +897,15 @@ async function searchNaverImages(titleKr, maxImages = 15) {
         
         requestHandler: async ({ page }) => {
             try {
-                log(`   🔄 페이지 로딩 중...`);
+                log(`   ðŸ“„ íŽ˜ì´ì§€ ë¡œë”© ì¤‘...`);
                 
                 await page.waitForLoadState('domcontentloaded', { timeout: 30000 });
-                log(`   ✅ DOM 로딩 완료`);
+                log(`   âœ… DOM ë¡œë”© ì™„ë£Œ`);
                 
-                log(`   ⏳ 이미지 렌더링 대기 중 (5초)...`);
+                log(`   â³ ì´ë¯¸ì§€ ë Œë”ë§ ëŒ€ê¸° ì¤‘ (5ì´ˆ)...`);
                 await page.waitForTimeout(5000);
                 
-                log(`   🔍 인네일 이미지 URL 추출 중...\n`);
+                log(`   ðŸ” ì¸ë„¤ì¼ ì´ë¯¸ì§€ URL ì¶”ì¶œ ì¤‘...\n`);
                 
                 const extractedUrls = await page.evaluate((max) => {
                     const results = [];
@@ -958,7 +939,7 @@ async function searchNaverImages(titleKr, maxImages = 15) {
                     return results.slice(0, max);
                 }, maxImages);
                 
-                log(`   ✅ 추출 완료: ${extractedUrls.length}개\n`);
+                log(`   âœ… ì¶”ì¶œ ì™„ë£Œ: ${extractedUrls.length}ê°œ\n`);
                 
                 if (extractedUrls.length > 0) {
                     extractedUrls.forEach((item, i) => {
@@ -968,7 +949,7 @@ async function searchNaverImages(titleKr, maxImages = 15) {
                 }
                 
             } catch (error) {
-                log('   ❌ 페이지 처리 오류:', error.message);
+                log('   âŒ íŽ˜ì´ì§€ ì²˜ë¦¬ ì˜¤ë¥˜:', error.message);
             }
         },
         
@@ -981,11 +962,11 @@ async function searchNaverImages(titleKr, maxImages = 15) {
     await crawler.run([searchUrl]);
     await crawler.teardown();
 
-    log(`\n   ✅ 최종 수집: ${imageUrls.length}개 원본 이미지`);
+    log(`\n   âœ… ìµœì¢… ìˆ˜ì§‘: ${imageUrls.length}ê°œ ì›ë³¸ ì´ë¯¸ì§€`);
     return imageUrls;
 }
 
-// ==================== 이미지 크기 확인 ====================
+// ==================== ì´ë¯¸ì§€ í¬ê¸° í™•ì¸ ====================
 async function getImageDimensions(imagePath) {
     const pythonScript = `/tmp/get_dims_${Date.now()}.py`;
     const script = `import cv2
@@ -1013,10 +994,10 @@ if img is not None:
     }
 }
 
-// ==================== Gemini 크롭 좌표 요청 ====================
+// ==================== Gemini í¬ë¡­ ì¢Œí‘œ ìš”ì²­ ====================
 async function getCropCoordinates(imageUrl, productTitle, imageWidth, imageHeight) {
     try {
-        log(`      🔍 크롭 좌표 요청 중...`);
+        log(`      ðŸ” í¬ë¡­ ì¢Œí‘œ ìš”ì²­ ì¤‘...`);
         
         const response = await axios.get(imageUrl, {
             responseType: 'arraybuffer',
@@ -1030,31 +1011,28 @@ async function getCropCoordinates(imageUrl, productTitle, imageWidth, imageHeigh
         
         const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
         
-        const isSetProduct = /set of \d+|세트|\d+개입|\d+개 세트|(\d+)\s*pcs?/i.test(productTitle);
+        const isSetProduct = /set of \d+|ì„¸íŠ¸|\d+ê°œìž…|\d+ê°œ ì„¸íŠ¸|(\d+)\s*pcs?/i.test(productTitle);
 
-        const prompt = `이 이미지에서 "${productTitle}" 제품의 본체만 찾아주세요.
+        const prompt = `ì´ ì´ë¯¸ì§€ì—ì„œ "${productTitle}" ì œí’ˆì˜ ë³¸ì²´ë§Œ ì°¾ì•„ì£¼ì„¸ìš”.
 
-이미지 크기: ${imageWidth}x${imageHeight} 픽셀
-${isSetProduct ? '세트 제품: 모든 제품을 포함' : '단일 제품: 1개만 선택'}
+ì´ë¯¸ì§€ í¬ê¸°: ${imageWidth}x${imageHeight} í”½ì…€
+${isSetProduct ? 'ì„¸íŠ¸ ì œí’ˆ: ëª¨ë“  ì œí’ˆì„ í¬í•¨' : 'ë‹¨ì¼ ì œí’ˆ: 1ê°œë§Œ ì„ íƒ'}
 
-제품 본체만 포함 (포장박스 제외)
+ì œí’ˆ ë³¸ì²´ë§Œ í¬í•¨ (í¬ìž¥ë°•ìŠ¤ ì œì™¸)
 
-JSON 형식으로만 답변:
+JSON í˜•ì‹ìœ¼ë¡œë§Œ ë‹µë³€:
 {
   "found": true,
-  "x": 픽셀_x좌표,
-  "y": 픽셀_y좌표,
-  "width": 픽셀_너비,
-  "height": 픽셀_높이
+  "x": í”½ì…€_xì¢Œí‘œ,
+  "y": í”½ì…€_yì¢Œí‘œ,
+  "width": í”½ì…€_ë„ˆë¹„,
+  "height": í”½ì…€_ë†’ì´
 }`;
 
         const result = await model.generateContent([
             prompt,
             { inlineData: { data: base64, mimeType: 'image/jpeg' } }
         ]);
-        
-        // Gemini API 호출 추적
-        trackGeminiCall('getCropCoordinates_Naver');
 
         const responseText = result.response.text();
         
@@ -1062,7 +1040,7 @@ JSON 형식으로만 답변:
         if (jsonMatch) {
             const coords = JSON.parse(jsonMatch[0]);
             if (coords.found) {
-                log(`      📍 좌표: (${coords.x}, ${coords.y}) ${coords.width}x${coords.height}`);
+                log(`      ðŸ“ ì¢Œí‘œ: (${coords.x}, ${coords.y}) ${coords.width}x${coords.height}`);
             }
             return coords;
         }
@@ -1070,12 +1048,12 @@ JSON 형식으로만 답변:
         return null;
         
     } catch (error) {
-        log('      ❌ 크롭 좌표 요청 실패:', error.message);
+        log('      âŒ í¬ë¡­ ì¢Œí‘œ ìš”ì²­ ì‹¤íŒ¨:', error.message);
         return null;
     }
 }
 
-// ==================== 좌표 확장 ====================
+// ==================== ì¢Œí‘œ í™•ìž¥ ====================
 function expandCoordinates(coords, imageWidth, imageHeight, expandRatio = 0.2) {
     const expandWidth = coords.width * expandRatio;
     const expandHeight = coords.height * expandRatio;
@@ -1093,7 +1071,7 @@ function expandCoordinates(coords, imageWidth, imageHeight, expandRatio = 0.2) {
     return { x: newX, y: newY, width: newWidth, height: newHeight };
 }
 
-// ==================== 이미지 크롭 ====================
+// ==================== ì´ë¯¸ì§€ í¬ë¡­ ====================
 async function cropImage(inputPath, outputPath, x, y, width, height) {
     const pythonScript = `/tmp/crop_${Date.now()}.py`;
     const script = `import cv2
@@ -1115,7 +1093,7 @@ if img is not None:
         cleanupFiles(pythonScript);
         
         if (fs.existsSync(outputPath)) {
-            log(`      ✅ 크롭 완료`);
+            log(`      âœ… í¬ë¡­ ì™„ë£Œ`);
             return true;
         }
         return false;
@@ -1126,9 +1104,9 @@ if img is not None:
     }
 }
 
-// ==================== 배경 제거 + 흰색 배경 ====================
+// ==================== ë°°ê²½ ì œê±° + í°ìƒ‰ ë°°ê²½ ====================
 async function removeBackgroundAndAddWhite(inputPath, outputPath) {
-    log(`      🎨 배경 제거 + 흰색 배경 중...`);
+    log(`      ðŸŽ¨ ë°°ê²½ ì œê±° + í°ìƒ‰ ë°°ê²½ ì¤‘...`);
     
     try {
         const tempTransparent = outputPath.replace('.png', '_temp.png');
@@ -1153,25 +1131,25 @@ white_bg.convert('RGB').save('${outputPath}', 'PNG')
         cleanupFiles(tempTransparent, pythonScript);
         
         if (fs.existsSync(outputPath)) {
-            log(`      ✅ 완료!`);
+            log(`      âœ… ì™„ë£Œ!`);
             return true;
         }
         return false;
         
     } catch (error) {
-        log('      ❌ rembg 실패:', error.message);
+        log('      âŒ rembg ì‹¤íŒ¨:', error.message);
         return false;
     }
 }
 
-// ==================== 제품 처리 (핵심) ====================
+// ==================== ì œí’ˆ ì²˜ë¦¬ (í•µì‹¬) ====================
 async function processProduct(product, productIndex, totalProducts) {
     const { Id, validated_images } = product;
     
     log(`\n${'='.repeat(70)}`);
-    log(`📦 제품 ${productIndex}/${totalProducts} - ID: ${Id}`);
+    log(`ðŸ“¦ ì œí’ˆ ${productIndex}/${totalProducts} - ID: ${Id}`);
     
-    log(`\n🗑️  Step 0: 초기화`);
+    log(`\nðŸ—‘ï¸  Step 0: ì´ˆê¸°í™”`);
     
     try {
         await axios.patch(
@@ -1179,13 +1157,13 @@ async function processProduct(product, productIndex, totalProducts) {
             { Id: Id, main_image: null, gallery_images: null },
             { headers: { 'xc-token': NOCODB_API_TOKEN, 'Content-Type': 'application/json' } }
         );
-        log(`   ✅ 초기화 완료!\n`);
+        log(`   âœ… ì´ˆê¸°í™” ì™„ë£Œ!\n`);
     } catch (error) {
-        log(`   ❌ 초기화 실패:`, error.message);
+        log(`   âŒ ì´ˆê¸°í™” ì‹¤íŒ¨:`, error.message);
         return;
     }
     
-    log(`🔍 Step 1: 제품 정보 조회`);
+    log(`ðŸ” Step 1: ì œí’ˆ ì •ë³´ ì¡°íšŒ`);
     
     const oliveyoungProduct = await getOliveyoungProduct(Id);
     
@@ -1194,27 +1172,27 @@ async function processProduct(product, productIndex, totalProducts) {
     if (oliveyoungProduct) {
         productTitle = oliveyoungProduct.title_en || oliveyoungProduct.title_kr || 'Unknown Product';
         titleKr = oliveyoungProduct.title_kr || 'Unknown Product';
-        log(`✅ 제품명 (EN): ${productTitle}`);
-        log(`✅ 제품명 (KR): ${titleKr}`);
+        log(`âœ… ì œí’ˆëª… (EN): ${productTitle}`);
+        log(`âœ… ì œí’ˆëª… (KR): ${titleKr}`);
     }
     
     const productInfo = extractProductInfo(productTitle);
     
-    log(`📋 제품 정보:`);
-    log(`   - 브랜드: ${productInfo.brandName || 'N/A'}`);
-    log(`   - 제품 라인: ${productInfo.productLineName || 'N/A'}`);
-    log(`   - 용량: ${productInfo.volume || 'N/A'}`);
-    log(`   - 세트: ${productInfo.isSetProduct ? '✅' : '❌'}`);
+    log(`ðŸ“‹ ì œí’ˆ ì •ë³´:`);
+    log(`   - ë¸Œëžœë“œ: ${productInfo.brandName || 'N/A'}`);
+    log(`   - ì œí’ˆ ë¼ì¸: ${productInfo.productLineName || 'N/A'}`);
+    log(`   - ìš©ëŸ‰: ${productInfo.volume || 'N/A'}`);
+    log(`   - ì„¸íŠ¸: ${productInfo.isSetProduct ? 'âœ…' : 'âŒ'}`);
     
     if (!validated_images || validated_images.length === 0) {
-        log('⚠️  validated_images 없음');
+        log('âš ï¸  validated_images ì—†ìŒ');
         return;
     }
     
-    log(`📸 검증된 이미지: ${validated_images.length}개\n`);
+    log(`ðŸ“¸ ê²€ì¦ëœ ì´ë¯¸ì§€: ${validated_images.length}ê°œ\n`);
     
-    log(`📊 Step 2: 이미지 평가 (v9 완화 버전)`);
-    log(`${'─'.repeat(70)}`);
+    log(`ðŸ“Š Step 2: ì´ë¯¸ì§€ í‰ê°€ (v9 ì™„í™” ë²„ì „)`);
+    log(`${'â”€'.repeat(70)}`);
     
     const scoredImages = [];
     
@@ -1237,79 +1215,79 @@ async function processProduct(product, productIndex, totalProducts) {
             scoredImages.push(scored);
             
             if (i < validated_images.length - 1) {
-                log(`\n      ⏳ 10초 대기...`);
+                log(`\n      â³ 10ì´ˆ ëŒ€ê¸°...`);
                 await new Promise(resolve => setTimeout(resolve, 10000));
             }
             
         } catch (error) {
-            log(`\n   ❌ 이미지 ${i + 1} 평가 실패:`, error.message);
+            log(`\n   âŒ ì´ë¯¸ì§€ ${i + 1} í‰ê°€ ì‹¤íŒ¨:`, error.message);
             cleanupFiles(tempPath);
         }
     }
     
     if (scoredImages.length === 0) {
-        log('\n⚠️  평가된 이미지 없음');
+        log('\nâš ï¸  í‰ê°€ëœ ì´ë¯¸ì§€ ì—†ìŒ');
         return;
     }
     
-    // ✅ v9: 모든 이미지가 점수를 받으므로 필터링 없이 정렬만!
+    // âœ… v9: ëª¨ë“  ì´ë¯¸ì§€ê°€ ì ìˆ˜ë¥¼ ë°›ìœ¼ë¯€ë¡œ í•„í„°ë§ ì—†ì´ ì •ë ¬ë§Œ!
     scoredImages.sort((a, b) => b.totalScore - a.totalScore);
     
-    log(`\n📊 평가 결과 (점수순):`);
+    log(`\nðŸ“Š í‰ê°€ ê²°ê³¼ (ì ìˆ˜ìˆœ):`);
     scoredImages.forEach((img, idx) => {
-        log(`   ${idx + 1}위: ${img.totalScore}/125점 (감점: ${img.scores.penalties})`);
+        log(`   ${idx + 1}ìœ„: ${img.totalScore}/125ì  (ê°ì : ${img.scores.penalties})`);
     });
     
-    log(`\n✂️  Step 3: 상위 3개 선별`);
+    log(`\nâœ‚ï¸  Step 3: ìƒìœ„ 3ê°œ ì„ ë³„`);
     
-    const selectedForSave = scoredImages.slice(0, 3);  // ✅ v9: 상위 3개 선택
+    const selectedForSave = scoredImages.slice(0, 3);  // âœ… v9: ìƒìœ„ 3ê°œ ì„ íƒ
     
-    log(`   선별됨: ${selectedForSave.length}개`);
+    log(`   ì„ ë³„ë¨: ${selectedForSave.length}ê°œ`);
     
-    log(`\n📐 Step 4: 정규화 + 업로드`);
+    log(`\nðŸ“ Step 4: ì •ê·œí™” + ì—…ë¡œë“œ`);
     
     const processedImages = [];
     
     for (let i = 0; i < selectedForSave.length; i++) {
         const selected = selectedForSave[i];
         
-        log(`\n   ${i + 1}/${selectedForSave.length} 처리 중...`);
+        log(`\n   ${i + 1}/${selectedForSave.length} ì²˜ë¦¬ ì¤‘...`);
         
         if (!selected || !selected.imagePath || !fs.existsSync(selected.imagePath)) {
-            log('      ❌ 유효하지 않은 이미지');
+            log('      âŒ ìœ íš¨í•˜ì§€ ì•Šì€ ì´ë¯¸ì§€');
             continue;
         }
         
         const normalizedPath = normalizeImage(selected.imagePath);
         if (!normalizedPath || !fs.existsSync(normalizedPath)) {
-            log('      ❌ 정규화 실패');
+            log('      âŒ ì •ê·œí™” ì‹¤íŒ¨');
             cleanupFiles(selected.imagePath);
             continue;
         }
         
         try {
-            log('      📤 NocoDB 업로드 중...');
+            log('      ðŸ“¤ NocoDB ì—…ë¡œë“œ ì¤‘...');
             const fileName = `final-${Id}-${i + 1}-${Date.now()}.png`;
             const uploadResult = await uploadToNocoDB(normalizedPath, fileName);
             
             if (uploadResult && uploadResult.length > 0) {
                 processedImages.push(uploadResult[0]);
-                log('      ✅ 완료!');
+                log('      âœ… ì™„ë£Œ!');
             }
         } catch (uploadError) {
-            log('      ❌ 업로드 오류:', uploadError.message);
+            log('      âŒ ì—…ë¡œë“œ ì˜¤ë¥˜:', uploadError.message);
         }
         
         cleanupFiles(selected.imagePath, normalizedPath);
     }
     
     if (processedImages.length === 0) {
-        log('\n⚠️  처리된 이미지 없음');
+        log('\nâš ï¸  ì²˜ë¦¬ëœ ì´ë¯¸ì§€ ì—†ìŒ');
         scoredImages.forEach(img => cleanupFiles(img.imagePath));
         return;
     }
     
-    log(`\n💾 Step 5: DB 저장`);
+    log(`\nðŸ’¾ Step 5: DB ì €ìž¥`);
     
     const mainImage = processedImages[0];
     const galleryImages = processedImages.slice(1);
@@ -1327,19 +1305,19 @@ async function processProduct(product, productIndex, totalProducts) {
             { headers: { 'xc-token': NOCODB_API_TOKEN, 'Content-Type': 'application/json' } }
         );
         
-        log(`✅ 저장 완료!`);
-        log(`   - main_image: 1개`);
-        log(`   - gallery_images: ${galleryImages.length}개`);
+        log(`âœ… ì €ìž¥ ì™„ë£Œ!`);
+        log(`   - main_image: 1ê°œ`);
+        log(`   - gallery_images: ${galleryImages.length}ê°œ`);
     } catch (error) {
-        log(`❌ 저장 실패:`, error.message);
+        log(`âŒ ì €ìž¥ ì‹¤íŒ¨:`, error.message);
         scoredImages.forEach(img => cleanupFiles(img.imagePath));
         return;
     }
     
     scoredImages.forEach(img => cleanupFiles(img.imagePath));
     
-    // Step 6: DB 확인
-    log(`\n🔍 Step 6: DB 확인`);
+    // Step 6: DB í™•ì¸
+    log(`\nðŸ” Step 6: DB í™•ì¸`);
     
     let actualMainCount = 0;
     let actualGalleryCount = 0;
@@ -1355,8 +1333,8 @@ async function processProduct(product, productIndex, totalProducts) {
             actualMainCount = savedProduct.main_image?.length > 0 ? 1 : 0;
             actualGalleryCount = savedProduct.gallery_images?.length || 0;
             
-            log(`   - Main: ${actualMainCount}개`);
-            log(`   - Gallery: ${actualGalleryCount}개`);
+            log(`   - Main: ${actualMainCount}ê°œ`);
+            log(`   - Gallery: ${actualGalleryCount}ê°œ`);
         }
     } catch (error) {
         actualMainCount = 1;
@@ -1366,20 +1344,20 @@ async function processProduct(product, productIndex, totalProducts) {
     const totalCount = actualMainCount + actualGalleryCount;
     
     if (totalCount >= 3) {
-        log(`\n✅ 충분함! (${totalCount}/3개)`);
+        log(`\nâœ… ì¶©ë¶„í•¨! (${totalCount}/3ê°œ)`);
         return;
     }
     
-    log(`\n⚠️  부족함! (${totalCount}/3개) → 네이버 보충`);
+    log(`\nâš ï¸  ë¶€ì¡±í•¨! (${totalCount}/3ê°œ) â†’ ë„¤ì´ë²„ ë³´ì¶©`);
     const needed = 3 - totalCount;
     
-    // 네이버 보충 로직 (간소화)
-    log(`\n🌐 Step 7: 네이버 검색`);
+    // ë„¤ì´ë²„ ë³´ì¶© ë¡œì§ (ê°„ì†Œí™”)
+    log(`\nðŸŒ Step 7: ë„¤ì´ë²„ ê²€ìƒ‰`);
     
     const naverUrls = await searchNaverImages(titleKr, needed === 1 ? 10 : 15);
     
     if (naverUrls.length === 0) {
-        log(`   ❌ 네이버 이미지 없음`);
+        log(`   âŒ ë„¤ì´ë²„ ì´ë¯¸ì§€ ì—†ìŒ`);
         return;
     }
     
@@ -1389,17 +1367,17 @@ async function processProduct(product, productIndex, totalProducts) {
                !lowerUrl.includes('small') && 
                !lowerUrl.includes('thumb') &&
                !lowerUrl.includes('box') &&
-               !lowerUrl.includes('패키지');
+               !lowerUrl.includes('íŒ¨í‚¤ì§€');
     });
     
-    log(`\n🖼️  Step 8: 네이버 처리`);
+    log(`\nðŸ–¼ï¸  Step 8: ë„¤ì´ë²„ ì²˜ë¦¬`);
     
     const naverProcessed = [];
     
     for (let i = 0; i < Math.min(filteredUrls.length, needed + 2); i++) {
         const imageUrl = filteredUrls[i];
         
-        log(`\n   네이버 ${i + 1}: ${imageUrl.substring(0, 60)}...`);
+        log(`\n   ë„¤ì´ë²„ ${i + 1}: ${imageUrl.substring(0, 60)}...`);
         
         const timestamp = Date.now();
         const inputPath = `/tmp/naver-${timestamp}-${i}.jpg`;
@@ -1431,13 +1409,13 @@ async function processProduct(product, productIndex, totalProducts) {
                 const fileName = `naver-${Id}-${i + 1}-${timestamp}.png`;
                 const uploadedData = await uploadToNocoDB(finalPath, fileName);
                 naverProcessed.push(uploadedData[0]);
-                log(`      ✅ 저장!`);
+                log(`      âœ… ì €ìž¥!`);
             }
             
             cleanupFiles(inputPath, croppedPath, finalPath);
             
         } catch (error) {
-            log(`      ❌ 실패:`, error.message);
+            log(`      âŒ ì‹¤íŒ¨:`, error.message);
             cleanupFiles(inputPath, croppedPath, finalPath);
         }
         
@@ -1447,12 +1425,12 @@ async function processProduct(product, productIndex, totalProducts) {
     }
     
     if (naverProcessed.length === 0) {
-        log(`\n⚠️  네이버 이미지 처리 실패`);
+        log(`\nâš ï¸  ë„¤ì´ë²„ ì´ë¯¸ì§€ ì²˜ë¦¬ ì‹¤íŒ¨`);
         return;
     }
     
-    // Gallery 업데이트
-    log(`\n➕ Step 9: Gallery 추가`);
+    // Gallery ì—…ë°ì´íŠ¸
+    log(`\nâž• Step 9: Gallery ì¶”ê°€`);
     
     let currentGallery = [];
     try {
@@ -1475,26 +1453,26 @@ async function processProduct(product, productIndex, totalProducts) {
             { headers: { 'xc-token': NOCODB_API_TOKEN, 'Content-Type': 'application/json' } }
         );
         
-        log(`✅ Gallery 업데이트: ${updatedGallery.length}개`);
+        log(`âœ… Gallery ì—…ë°ì´íŠ¸: ${updatedGallery.length}ê°œ`);
         
     } catch (error) {
-        log(`❌ 업데이트 실패:`, error.message);
+        log(`âŒ ì—…ë°ì´íŠ¸ ì‹¤íŒ¨:`, error.message);
     }
 }
 
-// ==================== 메인 ====================
+// ==================== ë©”ì¸ ====================
 async function main() {
     try {
-        log('\n📥 NocoDB에서 3개 제품 가져오는 중...\n');
+        log('\nðŸ“¥ NocoDBì—ì„œ 3ê°œ ì œí’ˆ ê°€ì ¸ì˜¤ëŠ” ì¤‘...\n');
         
         const products = await getProductsFromNocoDB();
         
         if (!products || products.length === 0) {
-            log('❌ 처리할 제품이 없습니다.');
+            log('âŒ ì²˜ë¦¬í•  ì œí’ˆì´ ì—†ìŠµë‹ˆë‹¤.');
             return;
         }
         
-        log(`✅ ${products.length}개 제품 발견\n`);
+        log(`âœ… ${products.length}ê°œ ì œí’ˆ ë°œê²¬\n`);
         
         for (let i = 0; i < products.length; i++) {
             try {
@@ -1502,26 +1480,23 @@ async function main() {
                 
                 if (i < products.length - 1) {
                     log(`\n${'='.repeat(70)}`);
-                    log('⏳ 다음 제품 20초 대기...\n');
+                    log('â³ ë‹¤ìŒ ì œí’ˆ 20ì´ˆ ëŒ€ê¸°...\n');
                     await new Promise(resolve => setTimeout(resolve, 20000));
                 }
             } catch (productError) {
-                log(`\n❌ 제품 ${i + 1} 오류:`, productError.message);
+                log(`\nâŒ ì œí’ˆ ${i + 1} ì˜¤ë¥˜:`, productError.message);
             }
         }
         
         log(`\n${'='.repeat(70)}`);
-        log('🎉 Phase 4 v11 완료!');
+        log('ðŸŽ‰ Phase 4 v11 ì™„ë£Œ!');
         log('='.repeat(70));
-        log(`\n✨ v11 핵심 변경:`);
-        log('   ✅ v10 유지: 용량 50%+ 차이 -30점, 품질 12점 미만 -20점');
-        log('   ✅ 여러 제품 감지: -40점 (개별 제품에 다른 제품 포함 방지)\n');
-        
-        // Gemini API 호출 통계 출력
-        geminiCounter.printSummary();
+        log(`\nâœ¨ v11 í•µì‹¬ ë³€ê²½:`);
+        log('   âœ… v10 ìœ ì§€: ìš©ëŸ‰ 50%+ ì°¨ì´ -30ì , í’ˆì§ˆ 12ì  ë¯¸ë§Œ -20ì ');
+        log('   âœ… ì—¬ëŸ¬ ì œí’ˆ ê°ì§€: -40ì  (ê°œë³„ ì œí’ˆì— ë‹¤ë¥¸ ì œí’ˆ í¬í•¨ ë°©ì§€)\n');
         
     } catch (error) {
-        log('\n❌ 오류:', error.message);
+        log('\nâŒ ì˜¤ë¥˜:', error.message);
     }
 }
 

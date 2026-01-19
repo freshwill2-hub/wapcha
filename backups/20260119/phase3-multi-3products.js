@@ -6,7 +6,6 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import path from 'path';
 import dotenv from 'dotenv';
-import { trackGeminiCall, geminiCounter } from './gemini-api-counter.js';
 
 dotenv.config();
 
@@ -245,9 +244,6 @@ REASON: [한 줄 설명]`;
             prompt,
             { inlineData: { data: imageData.base64, mimeType: imageData.mimeType } }
         ]);
-        
-        // Gemini API 호출 추적
-        trackGeminiCall('analyzeImage');
 
         const response = result.response.text();
         
@@ -331,9 +327,6 @@ JSON만 출력하세요.`;
             prompt,
             { inlineData: { data: imageData.base64, mimeType: imageData.mimeType } }
         ]);
-        
-        // Gemini API 호출 추적
-        trackGeminiCall('getBadgeCropCoordinates');
 
         const response = result.response.text();
         
@@ -394,9 +387,6 @@ JSON만 출력하세요.`;
             prompt,
             { inlineData: { data: imageData.base64, mimeType: imageData.mimeType } }
         ]);
-        
-        // Gemini API 호출 추적
-        trackGeminiCall('getSingleProductCropCoordinates');
 
         const response = result.response.text();
         
@@ -842,10 +832,6 @@ async function processProducts() {
         log('   ⚠️  배지 있는 이미지 → 배지만 크롭 제거');
         log('   🆕 개별 제품 + 여러 개 보임 → 1개만 크롭');
         log('   🆕 세트 제품 + 1개만 보임 → 제외\n');
-        
-        // Gemini API 호출 통계 출력
-        geminiCounter.printSummary();
-        
         log(`📝 로그 파일: ${LOG_PATH}`);
         log('💡 다음 단계:');
         log('   node phase4-final-data.js');
