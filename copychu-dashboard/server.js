@@ -1177,6 +1177,272 @@ app.delete('/api/oliveyoung/products/:id', async (req, res) => {
     }
 });
 
+// ==================== 로그 파일 API ====================
+// 이 코드를 server.js의 API 라우트 섹션에 추가하세요
+// (// ==================== 강제 종료 API ==================== 위에 추가)
+
+const LOGS_DIR = path.join(SCRIPTS_DIR, 'logs');
+
+// 유틸리티 함수
+function formatFileSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+function formatDateTime(date) {
+    const d = new Date(date);
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    return `${month}/${day} ${hours}:${minutes}`;
+}
+
+// 로그 파일 목록 조회
+app.get('/api/logs/files', (req, res) => {
+    try {
+        if (!fs.existsSync(LOGS_DIR)) {
+            return res.json({ files: {}, latestFile: null, totalFiles: 0 });
+        }
+        
+        const allFiles = fs.readdirSync(LOGS_DIR)
+            .filter(f => f.endsWith('.log'))
+            .map(f => {
+                const filePath = path.join(LOGS_DIR, f);
+                const stats = fs.statSync(filePath);
+                return {
+                    name: f,
+                    size: stats.size,
+                    sizeFormatted: formatFileSize(stats.size),
+                    modifiedAt: stats.mtime.toISOString(),
+                    modifiedAtFormatted: formatDateTime(stats.mtime)
+                };
+            })
+            .sort((a, b) => new Date(b.modifiedAt) - new Date(a.modifiedAt));
+        
+        // Phase별로 그룹화
+        const grouped = {
+            phase0: [],
+            phase1: [],
+            phase2: [],
+            phase3: [],
+            phase4: [],
+            phase5: []
+        };
+        
+        allFiles.forEach(file => {
+            const match = file.name.match(/^phase(\d)/);
+            if (match) {
+                const phase = `phase${match[1]}`;
+                if (grouped[phase]) {
+                    grouped[phase].push(file);
+                }
+            }
+        });
+        
+        res.json({
+            files: grouped,
+            latestFile: allFiles.length > 0 ? allFiles[0].name : null,
+            totalFiles: allFiles.length
+        });
+        
+    } catch (error) {
+        console.error('로그 파일 목록 조회 실패:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// 특정 로그 파일 내용 조회
+app.get('/api/logs/file/:filename', (req, res) => {
+    try {
+        const { filename } = req.params;
+        const { filter = 'all', lines: maxLines = 2000 } = req.query;
+        
+        // 보안: 경로 탐색 방지
+        if (filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
+            return res.status(400).json({ error: '잘못된 파일명' });
+        }
+        
+        const filePath = path.join(LOGS_DIR, filename);
+        
+        if (!fs.existsSync(filePath)) {
+            return res.status(404).json({ error: '파일을 찾을 수 없습니다' });
+        }
+        
+        const stats = fs.statSync(filePath);
+        const content = fs.readFileSync(filePath, 'utf-8');
+        let lines = content.split('\n').filter(l => l.trim());
+        
+        // 필터 적용
+        if (filter === 'summary') {
+            lines = lines.filter(l => 
+                l.includes('결과') || l.includes('완료') || l.includes('실패') ||
+                l.includes('🎉') || l.includes('✅') || l.includes('❌') ||
+                l.includes('성공:') || l.includes('총') || l.includes('📊') ||
+                l.includes('시작') || l.includes('종료')
+            );
+        } else if (filter === 'errors') {
+            lines = lines.filter(l => 
+                l.includes('❌') || l.includes('실패') || l.includes('오류') || 
+                l.includes('Error') || l.includes('error') || l.includes('Exception')
+            );
+        }
+        
+        // 최대 줄 수 제한
+        const limitedLines = lines.slice(-parseInt(maxLines));
+        
+        res.json({
+            filename,
+            size: stats.size,
+            modifiedAt: formatDateTime(stats.mtime),
+            totalLines: lines.length,
+            lines: limitedLines,
+            content: limitedLines.join('\n')
+        });
+        
+    } catch (error) {
+        console.error('로그 파일 조회 실패:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// 전체 로그 요약
+app.get('/api/logs/summary', (req, res) => {
+    try {
+        if (!fs.existsSync(LOGS_DIR)) {
+            return res.json({ phases: {} });
+        }
+        
+        const phases = ['phase0', 'phase1', 'phase2', 'phase3', 'phase4', 'phase5'];
+        const result = {};
+        
+        phases.forEach(phase => {
+            const phaseFiles = fs.readdirSync(LOGS_DIR)
+                .filter(f => f.startsWith(phase) && f.endsWith('.log'))
+                .map(f => {
+                    const filePath = path.join(LOGS_DIR, f);
+                    const stats = fs.statSync(filePath);
+                    return { name: f, mtime: stats.mtime };
+                })
+                .sort((a, b) => b.mtime - a.mtime);
+            
+            if (phaseFiles.length === 0) {
+                result[phase] = {
+                    latestFile: null,
+                    modifiedAt: null,
+                    summary: ['로그 파일 없음'],
+                    hasErrors: false,
+                    hasWarnings: false,
+                    totalFiles: 0
+                };
+                return;
+            }
+            
+            // 가장 최근 파일 분석
+            const latestFile = phaseFiles[0];
+            const filePath = path.join(LOGS_DIR, latestFile.name);
+            const content = fs.readFileSync(filePath, 'utf-8');
+            const lines = content.split('\n');
+            
+            // 요약 추출 (결과/완료 부분)
+            const summaryLines = [];
+            let hasErrors = false;
+            let hasWarnings = false;
+            
+            // 역순으로 검색하여 결과 부분 찾기
+            for (let i = lines.length - 1; i >= 0 && summaryLines.length < 10; i--) {
+                const line = lines[i].trim();
+                if (!line) continue;
+                
+                // 결과/완료/통계 관련 줄 수집
+                if (line.includes('🎉') || line.includes('결과') || line.includes('완료') ||
+                    line.includes('성공:') || line.includes('실패:') || line.includes('총') ||
+                    line.includes('📊') || line.includes('처리') || line.includes('수집') ||
+                    (line.includes('✅') && (line.includes('개') || line.includes('완료'))) ||
+                    (line.includes('❌') && (line.includes('개') || line.includes('실패')))) {
+                    summaryLines.unshift(line);
+                }
+                
+                if (line.includes('❌') || line.includes('실패') || line.includes('Error')) {
+                    hasErrors = true;
+                }
+                if (line.includes('⚠️') || line.includes('경고') || line.includes('스킵')) {
+                    hasWarnings = true;
+                }
+            }
+            
+            result[phase] = {
+                latestFile: latestFile.name,
+                modifiedAt: formatDateTime(latestFile.mtime),
+                summary: summaryLines.length > 0 ? summaryLines : ['요약 정보 없음'],
+                hasErrors,
+                hasWarnings,
+                totalFiles: phaseFiles.length
+            };
+        });
+        
+        res.json({ phases: result });
+        
+    } catch (error) {
+        console.error('로그 요약 조회 실패:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// 특정 Phase 최신 로그 요약
+app.get('/api/logs/summary/:phase', (req, res) => {
+    try {
+        const { phase } = req.params;
+        
+        if (!['phase0', 'phase1', 'phase2', 'phase3', 'phase4', 'phase5'].includes(phase)) {
+            return res.status(400).json({ error: '유효하지 않은 Phase' });
+        }
+        
+        if (!fs.existsSync(LOGS_DIR)) {
+            return res.json({ summary: [], latestFile: null });
+        }
+        
+        const phaseFiles = fs.readdirSync(LOGS_DIR)
+            .filter(f => f.startsWith(phase) && f.endsWith('.log'))
+            .map(f => {
+                const filePath = path.join(LOGS_DIR, f);
+                const stats = fs.statSync(filePath);
+                return { name: f, mtime: stats.mtime };
+            })
+            .sort((a, b) => b.mtime - a.mtime);
+        
+        if (phaseFiles.length === 0) {
+            return res.json({ summary: ['로그 파일 없음'], latestFile: null });
+        }
+        
+        const latestFile = phaseFiles[0];
+        const filePath = path.join(LOGS_DIR, latestFile.name);
+        const content = fs.readFileSync(filePath, 'utf-8');
+        const lines = content.split('\n').filter(l => l.trim());
+        
+        // 핵심 요약만 추출
+        const summaryLines = lines.filter(l => 
+            l.includes('🎉') || l.includes('결과') || l.includes('완료') ||
+            l.includes('성공:') || l.includes('실패:') || l.includes('📊') ||
+            (l.includes('✅') && l.includes('개')) || (l.includes('❌') && l.includes('개'))
+        ).slice(-15);
+        
+        res.json({
+            phase,
+            latestFile: latestFile.name,
+            modifiedAt: formatDateTime(latestFile.mtime),
+            summary: summaryLines,
+            totalLines: lines.length,
+            totalFiles: phaseFiles.length
+        });
+        
+    } catch (error) {
+        console.error('Phase 로그 요약 조회 실패:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // ==================== 강제 종료 API ==================== ✅ 추가됨!
 app.post('/api/force-kill', async (req, res) => {
     console.log('🛑 강제 종료 요청됨...');
