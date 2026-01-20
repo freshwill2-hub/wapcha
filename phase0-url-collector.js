@@ -1,6 +1,89 @@
 import 'dotenv/config';
 import axios from 'axios';
 import { PlaywrightCrawler } from 'crawlee';
+import fs from 'fs';
+import path from 'path';
+
+// ==================== 로그 시스템 설정 ====================
+const SYDNEY_TIMEZONE = 'Australia/Sydney';
+const LOG_DIR = path.join(process.cwd(), 'logs');
+const LOG_RETENTION_DAYS = 5;  // ✅ 5일간만 로그 보관
+
+if (!fs.existsSync(LOG_DIR)) {
+    fs.mkdirSync(LOG_DIR, { recursive: true });
+}
+
+function getSydneyTime() {
+    return new Date().toLocaleString('en-AU', { 
+        timeZone: SYDNEY_TIMEZONE,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+    });
+}
+
+function getSydneyTimeForFile() {
+    const now = new Date();
+    const sydneyDate = new Date(now.toLocaleString('en-US', { timeZone: SYDNEY_TIMEZONE }));
+    const year = sydneyDate.getFullYear();
+    const month = String(sydneyDate.getMonth() + 1).padStart(2, '0');
+    const day = String(sydneyDate.getDate()).padStart(2, '0');
+    const hour = String(sydneyDate.getHours()).padStart(2, '0');
+    const min = String(sydneyDate.getMinutes()).padStart(2, '0');
+    const sec = String(sydneyDate.getSeconds()).padStart(2, '0');
+    return `${year}-${month}-${day}_${hour}-${min}-${sec}`;
+}
+
+// ✅ 오래된 로그 자동 삭제 함수
+function cleanupOldLogs() {
+    const now = Date.now();
+    const maxAge = LOG_RETENTION_DAYS * 24 * 60 * 60 * 1000;
+    const deletedFiles = [];
+    
+    try {
+        const files = fs.readdirSync(LOG_DIR);
+        
+        for (const file of files) {
+            if (!file.endsWith('.log')) continue;
+            
+            const filePath = path.join(LOG_DIR, file);
+            
+            try {
+                const stats = fs.statSync(filePath);
+                const fileAge = now - stats.mtime.getTime();
+                
+                if (fileAge > maxAge) {
+                    fs.unlinkSync(filePath);
+                    deletedFiles.push(file);
+                }
+            } catch (error) {
+                // 파일 삭제 실패 시 무시
+            }
+        }
+    } catch (error) {
+        // 디렉토리 읽기 실패 시 무시
+    }
+    
+    return deletedFiles;
+}
+
+// ✅ 시작 시 오래된 로그 삭제
+const deletedLogs = cleanupOldLogs();
+
+const LOG_FILENAME = `phase0_${getSydneyTimeForFile()}.log`;
+const LOG_PATH = path.join(LOG_DIR, LOG_FILENAME);
+const logStream = fs.createWriteStream(LOG_PATH, { flags: 'a' });
+
+function log(...args) {
+    const timestamp = `[${getSydneyTime()}]`;
+    const message = args.join(' ');
+    console.log(timestamp, message);
+    logStream.write(`${timestamp} ${message}\n`);
+}
 
 // ==================== 설정 ====================
 const NOCODB_API_URL = process.env.NOCODB_API_URL || 'http://77.42.67.165:8080';
@@ -18,29 +101,35 @@ const MAX_PRODUCTS = parseInt(process.env.MAX_PRODUCTS) || parseInt(process.argv
 const MAX_PAGES = parseInt(process.env.MAX_PAGES) || parseInt(process.argv[4]) || 0;
 const UNLIMITED_PAGES = MAX_PAGES === 0;
 
-console.log('🚀 Phase 0: 올리브영 URL 수집기 (v2.0 - Shopify 중복 체크 추가)');
-console.log('='.repeat(70));
-console.log(`📂 카테고리 URL: ${CATEGORY_URL}`);
-console.log(`📊 최대 수집 개수: ${MAX_PRODUCTS}`);
-console.log(`📄 최대 페이지 수: ${UNLIMITED_PAGES ? '무제한 (마지막까지)' : MAX_PAGES}`);
-console.log(`💾 저장 테이블: ${OLIVEYOUNG_TABLE_ID}`);
-console.log(`🛒 Shopify 스토어: ${SHOPIFY_STORE_URL}`);
-console.log('='.repeat(70));
-console.log('');
-console.log('✨ v2.0 변경사항:');
-console.log('   ✅ Shopify에 이미 업로드된 SKU 체크 추가');
-console.log('   ✅ 스크래핑 전에 미리 중복 제외 → 시간 절약!');
-console.log('='.repeat(70) + '\n');
+log('🚀 Phase 0: 올리브영 URL 수집기 (v2.1 - 로그 시스템 추가)');
+log('='.repeat(70));
+log(`📂 카테고리 URL: ${CATEGORY_URL}`);
+log(`📊 최대 수집 개수: ${MAX_PRODUCTS}`);
+log(`📄 최대 페이지 수: ${UNLIMITED_PAGES ? '무제한 (마지막까지)' : MAX_PAGES}`);
+log(`💾 저장 테이블: ${OLIVEYOUNG_TABLE_ID}`);
+log(`🛒 Shopify 스토어: ${SHOPIFY_STORE_URL}`);
+log(`📝 로그 파일: ${LOG_PATH}`);
+if (deletedLogs.length > 0) {
+    log(`🧹 오래된 로그 ${deletedLogs.length}개 삭제됨 (${LOG_RETENTION_DAYS}일 이상)`);
+}
+log('='.repeat(70));
+log('');
+log('✨ v2.1 변경사항:');
+log('   ✅ 로그 시스템 추가 (logs/phase0_*.log)');
+log('   ✅ 시드니 시간대 기반 타임스탬프');
+log('   ✅ 5일 이상 된 로그 자동 삭제');
+log('   ✅ Shopify에 이미 업로드된 SKU 체크 (v2.0에서 계승)');
+log('='.repeat(70) + '\n');
 
 // ==================== ✅ NEW: Shopify에서 기존 SKU 가져오기 ====================
 async function getShopifyExistingSkus() {
     if (!SHOPIFY_ACCESS_TOKEN) {
-        console.log('⚠️  Shopify Access Token 없음 - Shopify 중복 체크 스킵');
+        log('⚠️  Shopify Access Token 없음 - Shopify 중복 체크 스킵');
         return new Set();
     }
     
     try {
-        console.log('🛒 Shopify에서 기존 제품 SKU 가져오는 중...');
+        log('🛒 Shopify에서 기존 제품 SKU 가져오는 중...');
         
         const shopifySkus = new Set();
         let nextPageUrl = `https://${SHOPIFY_STORE_URL}/admin/api/${SHOPIFY_API_VERSION}/products.json?limit=250&fields=id,variants`;
@@ -82,15 +171,15 @@ async function getShopifyExistingSkus() {
             await new Promise(resolve => setTimeout(resolve, 500));
         }
         
-        console.log(`✅ Shopify 기존 SKU ${shopifySkus.size}개 확인됨\n`);
+        log(`✅ Shopify 기존 SKU ${shopifySkus.size}개 확인됨\n`);
         return shopifySkus;
         
     } catch (error) {
-        console.error('⚠️  Shopify SKU 조회 실패:', error.message);
+        log('⚠️  Shopify SKU 조회 실패:', error.message);
         if (error.response?.status === 401) {
-            console.error('   → Access Token을 확인해주세요');
+            log('   → Access Token을 확인해주세요');
         }
-        console.log('   → Shopify 중복 체크 없이 계속 진행합니다\n');
+        log('   → Shopify 중복 체크 없이 계속 진행합니다\n');
         return new Set();
     }
 }
@@ -98,7 +187,7 @@ async function getShopifyExistingSkus() {
 // ==================== NocoDB: 기존 SKU 확인 ====================
 async function getExistingSkus() {
     try {
-        console.log('📥 NocoDB에서 기존 SKU 목록 가져오는 중...');
+        log('📥 NocoDB에서 기존 SKU 목록 가져오는 중...');
         
         const allSkus = new Set();
         let offset = 0;
@@ -130,11 +219,11 @@ async function getExistingSkus() {
             if (records.length < limit) break;
         }
         
-        console.log(`✅ NocoDB 기존 SKU ${allSkus.size}개 확인됨\n`);
+        log(`✅ NocoDB 기존 SKU ${allSkus.size}개 확인됨\n`);
         return allSkus;
         
     } catch (error) {
-        console.error('❌ NocoDB SKU 조회 실패:', error.message);
+        log('❌ NocoDB SKU 조회 실패:', error.message);
         return new Set();
     }
 }
@@ -160,7 +249,7 @@ async function saveProductUrl(productData) {
         if (error.response?.status === 422 || error.message.includes('duplicate')) {
             return null;
         }
-        console.error('❌ 저장 실패:', error.message);
+        log('❌ 저장 실패:', error.message);
         return null;
     }
 }
@@ -168,9 +257,10 @@ async function saveProductUrl(productData) {
 // ==================== 메인: 카테고리 스크래핑 (경량 버전) ====================
 async function collectUrls() {
     if (!CATEGORY_URL) {
-        console.error('❌ 카테고리 URL이 필요합니다!');
-        console.log('\n사용법:');
-        console.log('  node phase0-url-collector.js "카테고리URL" [최대개수] [최대페이지수]');
+        log('❌ 카테고리 URL이 필요합니다!');
+        log('\n사용법:');
+        log('  node phase0-url-collector.js "카테고리URL" [최대개수] [최대페이지수]');
+        logStream.end();
         return;
     }
     
@@ -182,10 +272,10 @@ async function collectUrls() {
     
     // ✅ Step 3: 모든 기존 SKU 합치기
     const allExistingSkus = new Set([...shopifySkus, ...nocodbSkus]);
-    console.log('📊 중복 체크 요약:');
-    console.log(`   - Shopify에 있는 SKU: ${shopifySkus.size}개`);
-    console.log(`   - NocoDB에 있는 SKU: ${nocodbSkus.size}개`);
-    console.log(`   - 총 제외할 SKU: ${allExistingSkus.size}개\n`);
+    log('📊 중복 체크 요약:');
+    log(`   - Shopify에 있는 SKU: ${shopifySkus.size}개`);
+    log(`   - NocoDB에 있는 SKU: ${nocodbSkus.size}개`);
+    log(`   - 총 제외할 SKU: ${allExistingSkus.size}개\n`);
     
     const collectedProducts = [];  // {url, sku} 형태
     let currentPage = 1;
@@ -219,12 +309,12 @@ async function collectUrls() {
         requestHandler: async ({ page, request }) => {
             const pageNum = request.userData?.pageNum || 1;
             
-            console.log(`\n📄 카테고리 페이지 ${pageNum}${UNLIMITED_PAGES ? '' : '/' + MAX_PAGES} 로딩 중...`);
+            log(`\n📄 카테고리 페이지 ${pageNum}${UNLIMITED_PAGES ? '' : '/' + MAX_PAGES} 로딩 중...`);
             
             try {
                 await page.waitForLoadState('load', { timeout: 30000 });
             } catch (e) {
-                console.log('⚠️  load 타임아웃, domcontentloaded로 재시도...');
+                log('⚠️  load 타임아웃, domcontentloaded로 재시도...');
                 await page.waitForLoadState('domcontentloaded', { timeout: 15000 });
             }
             
@@ -232,12 +322,12 @@ async function collectUrls() {
             
             try {
                 await page.waitForSelector('a[href*="goodsNo="]', { timeout: 10000 });
-                console.log('✅ 제품 목록 로딩 완료');
+                log('✅ 제품 목록 로딩 완료');
             } catch (e) {
-                console.log('⚠️  제품 목록 선택자 대기 타임아웃');
+                log('⚠️  제품 목록 선택자 대기 타임아웃');
             }
             
-            console.log('📜 페이지 스크롤 중...');
+            log('📜 페이지 스크롤 중...');
             
             for (let i = 0; i < 5; i++) {
                 await page.evaluate(() => window.scrollBy(0, 1000));
@@ -275,7 +365,7 @@ async function collectUrls() {
                 return items;
             });
             
-            console.log(`📊 페이지 ${pageNum}에서 ${products.length}개 제품 발견`);
+            log(`📊 페이지 ${pageNum}에서 ${products.length}개 제품 발견`);
             
             // ✅ SKU 기반 중복 체크 (Shopify + NocoDB 통합)
             let pageSkippedShopify = 0;
@@ -306,9 +396,9 @@ async function collectUrls() {
             skippedNocodbCount += pageSkippedNocodb;
             
             const totalSkipped = pageSkippedShopify + pageSkippedNocodb;
-            console.log(`🆕 새 제품: ${newProducts.length}개`);
+            log(`🆕 새 제품: ${newProducts.length}개`);
             if (totalSkipped > 0) {
-                console.log(`   ⏭️  스킵: ${totalSkipped}개 (Shopify: ${pageSkippedShopify}, NocoDB: ${pageSkippedNocodb})`);
+                log(`   ⏭️  스킵: ${totalSkipped}개 (Shopify: ${pageSkippedShopify}, NocoDB: ${pageSkippedNocodb})`);
             }
             
             // 최대 개수까지만 추가
@@ -319,15 +409,15 @@ async function collectUrls() {
                 collectedProducts.push(product);
             }
             
-            console.log(`📦 현재까지 수집: ${collectedProducts.length}/${MAX_PRODUCTS}개`);
+            log(`📦 현재까지 수집: ${collectedProducts.length}/${MAX_PRODUCTS}개`);
             
             // 다음 페이지 확인
             if (collectedProducts.length >= MAX_PRODUCTS) {
                 hasMorePages = false;
             } else if (newProducts.length === 0 && products.length > 0) {
-                console.log(`⚠️  새 제품 없음 - 다음 페이지 확인...`);
+                log(`⚠️  새 제품 없음 - 다음 페이지 확인...`);
             } else if (products.length === 0) {
-                console.log(`⚠️  제품 없음 - 마지막 페이지로 판단`);
+                log(`⚠️  제품 없음 - 마지막 페이지로 판단`);
                 hasMorePages = false;
             } else if (!UNLIMITED_PAGES && pageNum >= MAX_PAGES) {
                 hasMorePages = false;
@@ -335,13 +425,13 @@ async function collectUrls() {
         },
         
         failedRequestHandler: async ({ request }) => {
-            console.error(`❌ 페이지 로드 실패: ${request.url}`);
+            log(`❌ 페이지 로드 실패: ${request.url}`);
         }
     });
     
     // 페이지별 URL 수집
-    console.log('📥 카테고리 페이지에서 제품 URL 수집\n');
-    console.log('─'.repeat(70));
+    log('📥 카테고리 페이지에서 제품 URL 수집\n');
+    log('─'.repeat(70));
     
     while (hasMorePages && collectedProducts.length < MAX_PRODUCTS) {
         const pageUrl = new URL(CATEGORY_URL);
@@ -353,14 +443,14 @@ async function collectUrls() {
         }]);
         
         if (!UNLIMITED_PAGES && currentPage >= MAX_PAGES) {
-            console.log(`\n✅ 최대 페이지 수(${MAX_PAGES}) 도달`);
+            log(`\n✅ 최대 페이지 수(${MAX_PAGES}) 도달`);
             break;
         }
         
         currentPage++;
         
         if (hasMorePages && collectedProducts.length < MAX_PRODUCTS) {
-            console.log(`⏳ 다음 페이지 로딩 전 2초 대기...`);
+            log(`⏳ 다음 페이지 로딩 전 2초 대기...`);
             await new Promise(resolve => setTimeout(resolve, 2000));
         }
     }
@@ -370,8 +460,8 @@ async function collectUrls() {
     
     // 수집된 URL을 NocoDB에 저장
     if (collectedProducts.length > 0) {
-        console.log(`\n${'='.repeat(70)}`);
-        console.log(`📥 ${collectedProducts.length}개 제품 URL NocoDB에 저장 중...\n`);
+        log(`\n${'='.repeat(70)}`);
+        log(`📥 ${collectedProducts.length}개 제품 URL NocoDB에 저장 중...\n`);
         
         for (let i = 0; i < collectedProducts.length; i++) {
             const product = collectedProducts[i];
@@ -386,7 +476,7 @@ async function collectUrls() {
             if (saved) {
                 savedCount++;
                 if (savedCount % 10 === 0 || savedCount === collectedProducts.length) {
-                    console.log(`   💾 저장 진행: ${savedCount}/${collectedProducts.length}`);
+                    log(`   💾 저장 진행: ${savedCount}/${collectedProducts.length}`);
                 }
             } else {
                 skippedCount++;
@@ -397,21 +487,42 @@ async function collectUrls() {
     }
     
     // 최종 결과
-    console.log('\n' + '='.repeat(70));
-    console.log('🎉 Phase 0 완료!');
-    console.log('='.repeat(70));
-    console.log(`📊 결과:`);
-    console.log(`   - 스캔한 페이지: ${currentPage}개`);
-    console.log(`   - 발견된 제품: ${collectedProducts.length}개`);
-    console.log(`   - 저장 성공: ${savedCount}개`);
-    console.log(`   - 건너뜀(저장 중복): ${skippedCount}개`);
-    console.log('');
-    console.log(`📊 중복 체크 결과:`);
-    console.log(`   - Shopify 중복으로 스킵: ${skippedShopifyCount}개 ← 🆕 시간 절약!`);
-    console.log(`   - NocoDB 중복으로 스킵: ${skippedNocodbCount}개`);
-    console.log(`\n💡 다음 단계: node phase1-main-gallery.js`);
-    console.log(`   (Phase 1에서 제품 정보 + 이미지를 함께 수집합니다)`);
+    log('\n' + '='.repeat(70));
+    log('🎉 Phase 0 완료!');
+    log('='.repeat(70));
+    log(`📊 결과:`);
+    log(`   - 스캔한 페이지: ${currentPage}개`);
+    log(`   - 발견된 제품: ${collectedProducts.length}개`);
+    log(`   - 저장 성공: ${savedCount}개`);
+    log(`   - 건너뜀(저장 중복): ${skippedCount}개`);
+    log('');
+    log(`📊 중복 체크 결과:`);
+    log(`   - Shopify 중복으로 스킵: ${skippedShopifyCount}개 ← 🆕 시간 절약!`);
+    log(`   - NocoDB 중복으로 스킵: ${skippedNocodbCount}개`);
+    log(`\n📝 로그 파일: ${LOG_PATH}`);
+    log(`\n💡 다음 단계: node phase1-main-gallery.js`);
+    log(`   (Phase 1에서 제품 정보 + 이미지를 함께 수집합니다)`);
+    
+    logStream.end();
 }
 
+// Graceful shutdown
+process.on('SIGINT', () => {
+    log('');
+    log('⚠️  SIGINT 수신 - 안전하게 종료 중...');
+    logStream.end();
+    process.exit(0);
+});
+
+process.on('SIGTERM', () => {
+    log('');
+    log('⚠️  SIGTERM 수신 - 안전하게 종료 중...');
+    logStream.end();
+    process.exit(0);
+});
+
 // 실행
-collectUrls().catch(console.error);
+collectUrls().catch(error => {
+    log('❌ 치명적 오류:', error.message);
+    logStream.end();
+});
