@@ -1,0 +1,181 @@
+{
+  "date": "2026-01-20",
+  "dailyCalls": 32,
+  "dailyLimit": 1500,
+  "remaining": 1468,
+  "sessionCalls": 22,
+  "byFunction": {
+    "analyzeImage": 7,
+    "getBadgeCropCoordinates": 2,
+    "getSingleProductCropCoordinates": 1,
+    "detectPackagingBox": 5,
+    "calculateCompletenessScore": 5,
+    "calculateTitleMatchScore": 4,
+    "calculateQualityScore": 4,
+    "getCropCoordinates_Naver": 1,
+    "detectMultipleProducts": 3
+  },
+  "callHistory": [
+    {
+      "function": "analyzeImage",
+      "time": "2026-01-20T00:55:58.596Z",
+      "dailyTotal": 1
+    },
+    {
+      "function": "getBadgeCropCoordinates",
+      "time": "2026-01-20T00:56:00.876Z",
+      "dailyTotal": 2
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-01-20T00:56:17.370Z",
+      "dailyTotal": 3
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-01-20T00:56:45.570Z",
+      "dailyTotal": 4
+    },
+    {
+      "function": "getSingleProductCropCoordinates",
+      "time": "2026-01-20T00:56:47.747Z",
+      "dailyTotal": 5
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-01-20T00:57:04.490Z",
+      "dailyTotal": 6
+    },
+    {
+      "function": "getBadgeCropCoordinates",
+      "time": "2026-01-20T00:57:06.533Z",
+      "dailyTotal": 7
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-01-20T00:57:23.131Z",
+      "dailyTotal": 8
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-01-20T00:57:39.225Z",
+      "dailyTotal": 9
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-01-20T00:57:55.217Z",
+      "dailyTotal": 10
+    },
+    {
+      "function": "detectPackagingBox",
+      "time": "2026-01-20T00:58:01.499Z",
+      "dailyTotal": 11
+    },
+    {
+      "function": "calculateCompletenessScore",
+      "time": "2026-01-20T00:58:03.480Z",
+      "dailyTotal": 12
+    },
+    {
+      "function": "calculateTitleMatchScore",
+      "time": "2026-01-20T00:58:05.056Z",
+      "dailyTotal": 13
+    },
+    {
+      "function": "calculateQualityScore",
+      "time": "2026-01-20T00:58:06.513Z",
+      "dailyTotal": 14
+    },
+    {
+      "function": "detectPackagingBox",
+      "time": "2026-01-20T00:58:17.944Z",
+      "dailyTotal": 15
+    },
+    {
+      "function": "calculateCompletenessScore",
+      "time": "2026-01-20T00:58:19.073Z",
+      "dailyTotal": 16
+    },
+    {
+      "function": "calculateTitleMatchScore",
+      "time": "2026-01-20T00:58:20.764Z",
+      "dailyTotal": 17
+    },
+    {
+      "function": "calculateQualityScore",
+      "time": "2026-01-20T00:58:21.706Z",
+      "dailyTotal": 18
+    },
+    {
+      "function": "getCropCoordinates_Naver",
+      "time": "2026-01-20T00:58:55.938Z",
+      "dailyTotal": 19
+    },
+    {
+      "function": "detectMultipleProducts",
+      "time": "2026-01-20T00:59:22.003Z",
+      "dailyTotal": 20
+    },
+    {
+      "function": "detectPackagingBox",
+      "time": "2026-01-20T00:59:23.221Z",
+      "dailyTotal": 21
+    },
+    {
+      "function": "calculateCompletenessScore",
+      "time": "2026-01-20T00:59:24.424Z",
+      "dailyTotal": 22
+    },
+    {
+      "function": "calculateTitleMatchScore",
+      "time": "2026-01-20T00:59:25.633Z",
+      "dailyTotal": 23
+    },
+    {
+      "function": "calculateQualityScore",
+      "time": "2026-01-20T00:59:26.752Z",
+      "dailyTotal": 24
+    },
+    {
+      "function": "detectMultipleProducts",
+      "time": "2026-01-20T00:59:38.560Z",
+      "dailyTotal": 25
+    },
+    {
+      "function": "detectPackagingBox",
+      "time": "2026-01-20T00:59:40.468Z",
+      "dailyTotal": 26
+    },
+    {
+      "function": "calculateCompletenessScore",
+      "time": "2026-01-20T00:59:42.246Z",
+      "dailyTotal": 27
+    },
+    {
+      "function": "calculateTitleMatchScore",
+      "time": "2026-01-20T00:59:43.631Z",
+      "dailyTotal": 28
+    },
+    {
+      "function": "calculateQualityScore",
+      "time": "2026-01-20T00:59:45.214Z",
+      "dailyTotal": 29
+    },
+    {
+      "function": "detectMultipleProducts",
+      "time": "2026-01-20T00:59:57.030Z",
+      "dailyTotal": 30
+    },
+    {
+      "function": "detectPackagingBox",
+      "time": "2026-01-20T00:59:58.662Z",
+      "dailyTotal": 31
+    },
+    {
+      "function": "calculateCompletenessScore",
+      "time": "2026-01-20T01:00:00.316Z",
+      "dailyTotal": 32
+    }
+  ],
+  "lastUpdated": "2026-01-20T01:00:00.316Z"
+}
