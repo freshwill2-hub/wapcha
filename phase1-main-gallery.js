@@ -88,7 +88,7 @@ const MEMORY_CHECK_INTERVAL = 5;
 
 const openai = OPENAI_API_KEY ? new OpenAI({ apiKey: OPENAI_API_KEY }) : null;
 
-log('🚀 Phase 1: 제품 상세 스크래핑 (v2.5 - 가격 셀렉터 분리)');
+log('🚀 Phase 1: 제품 상세 스크래핑 (v2.6 - 타이틀 클리닝 개선)');
 log('='.repeat(70));
 log('🔧 설정 확인:');
 log(`- NocoDB URL: ${NOCODB_API_URL}`);
@@ -100,10 +100,12 @@ if (deletedLogs.length > 0) {
     log(`🧹 오래된 로그 ${deletedLogs.length}개 삭제됨 (${LOG_RETENTION_DAYS}일 이상)`);
 }
 log('');
-log('🆕 v2.5 수정 사항:');
-log('   ✅ 가격 셀렉터 분리: price-before (정가), price-text (할인가)');
-log('   ✅ 타이틀 셀렉터 개선: goodsDetailInfo_title_name_unity 추가');
-log('   ✅ 상품정보 제공고시 테이블 파싱 개선');
+log('🆕 v2.6 수정 사항:');
+log('   ✅ 타이틀 클리닝: 유니코드 공백 정규화 추가');
+log('   ✅ "| 올리브영" 제거: 강화된 정규식 (전각 문자 포함)');
+log('   ✅ 키워드 목록 확장: 더블 기획, 듀오 기획, 1+1 기획 등');
+log('   ✅ 클리닝 순서 최적화: 조합 키워드 우선 처리');
+log('   ✅ 가격 셀렉터 분리 (v2.5에서 계승)');
 log('   ✅ URL 변환 제거 유지 (v2.4에서 계승)');
 log('');
 
@@ -174,41 +176,102 @@ function checkMissingFields(product) {
     return missing;
 }
 
-// ==================== 타이틀 클리닝 함수 ====================
+// ==================== 타이틀 클리닝 함수 (v2.6 개선) ====================
 function cleanProductTitle(rawTitle) {
     if (!rawTitle) return '';
     
     let cleaned = rawTitle;
     
-    // 1단계: "| 올리브영" 또는 "- 올리브영" 제거
-    cleaned = cleaned.replace(/\s*\|\s*올리브영.*$/g, '');
-    cleaned = cleaned.replace(/\s*-\s*올리브영.*$/g, '');
-    cleaned = cleaned.replace(/\s*올리브영$/, '');
+    // ===== 0단계: 문자열 정규화 (v2.6 신규) =====
+    // 모든 유니코드 공백 문자를 일반 공백으로 변환
+    // \u00A0: non-breaking space
+    // \u2000-\u200B: various unicode spaces
+    // \u202F: narrow no-break space
+    // \u205F: medium mathematical space
+    // \u3000: ideographic space (전각 공백)
+    cleaned = cleaned.replace(/[\u00A0\u2000-\u200B\u202F\u205F\u3000]/g, ' ');
+    // 연속 공백을 하나로
+    cleaned = cleaned.replace(/\s+/g, ' ').trim();
     
-    // 2단계: 괄호 제거
+    // ===== 1단계: "| 올리브영" 제거 (강화된 정규식) =====
+    // 파이프 기호 (일반 | 및 전각 ｜) 처리
+    cleaned = cleaned.replace(/\s*[\|｜]\s*올리브영.*$/g, '');
+    // 대시 기호 (일반 -, en-dash –, em-dash —) 처리
+    cleaned = cleaned.replace(/\s*[-–—]\s*올리브영.*$/g, '');
+    // 끝에 "올리브영"만 있는 경우
+    cleaned = cleaned.replace(/\s+올리브영\s*$/g, '');
+    // 혹시 앞에 남은 경우도 처리
+    cleaned = cleaned.replace(/^\s*올리브영\s*[\|｜\-–—]\s*/g, '');
+    
+    // ===== 2단계: 대괄호/프로모션 태그 제거 =====
+    // 문자열 시작 부분의 대괄호 우선 제거 (예: [1월 올영픽])
+    cleaned = cleaned.replace(/^\s*\[[^\]]*\]\s*/g, '');
+    // 나머지 대괄호
     cleaned = cleaned.replace(/\[[^\]]*\]/g, '');
+    // 소괄호 (증정품 정보 포함, 예: (+징크테카세럼3mL))
     cleaned = cleaned.replace(/\([^)]*\)/g, '');
+    // 기타 괄호 (동아시아 괄호)
     cleaned = cleaned.replace(/【[^】]*】/g, '');
     cleaned = cleaned.replace(/〔[^〕]*〕/g, '');
+    cleaned = cleaned.replace(/〈[^〉]*〉/g, '');
+    cleaned = cleaned.replace(/《[^》]*》/g, '');
     cleaned = cleaned.replace(/\{[^}]*\}/g, '');
     
-    // 3단계: 제거할 키워드
+    // ===== 3단계: 제거할 키워드 (확장된 목록 v2.6) =====
+    // 중요: 긴 조합 키워드를 먼저 처리해야 함!
     const removeKeywords = [
-        '기획증정', '기획 증정', '증정기획', '증정 기획', '기획세트', '기획 세트',
-        '기획', '증정', '한정기획', '한정 기획', '한정판', '한정',
-        '추가증정', '추가 증정', '추가', '어워즈', '올영픽', '올영세일',
-        '올영드', '올영추천', '단독기획', '단독', '특가', '세일', 'SALE',
-        '행사', '이벤트', '스페셜', 'Special', '리미티드', 'Limited',
-        '에디션', 'Edition', '선물세트', '선물 세트', '홀리데이', 'Holiday',
-        '베스트', 'Best', '인기', '추천', 'NEW', '신상', '신제품', '런칭',
+        // ===== 조합 키워드 (먼저 처리) =====
+        '더블 기획', '듀오 기획', '트리플 기획', '쿼드 기획',
+        '더블기획', '듀오기획', '트리플기획', '쿼드기획',
+        '2개 기획', '3개 기획', '4개 기획', '5개 기획',
+        '1\\+1 기획', '2\\+1 기획', '3\\+1 기획',  // + 이스케이프
+        '세트 기획', '세트기획', '리필 기획', '리필기획',
+        '대용량 기획', '대용량기획', '미니 기획', '미니기획',
+        '본품 기획', '본품기획',
+        
+        // 기획+증정 조합
+        '기획증정', '기획 증정', '증정기획', '증정 기획',
+        '기획세트', '기획 세트',
+        '한정기획', '한정 기획', '단독기획', '단독 기획',
+        '추가증정', '추가 증정',
+        '선물세트', '선물 세트',
+        
+        // 한정판 조합
+        '한정판', '한정 판매', '한정수량',
+        
+        // ===== 단독 키워드 (조합 처리 후에 실행) =====
+        '기획', '증정', '한정', '단독', '추가',
+        
+        // ===== 프로모션/마케팅 키워드 =====
+        '어워즈', '올영픽', '올영세일', '올영드', '올영추천', '올영딜',
+        '특가', '세일', 'SALE', 'Sale', '행사', '이벤트', 'EVENT',
+        '스페셜', 'Special', 'SPECIAL', '리미티드', 'Limited', 'LIMITED',
+        '에디션', 'Edition', 'EDITION', '홀리데이', 'Holiday', 'HOLIDAY',
+        '베스트', 'Best', 'BEST', '인기', '추천', '핫딜', 'HOT',
+        'NEW', 'New', '신상', '신제품', '런칭', '출시기념',
+        '리뉴얼', 'Renewal', 'RENEWAL',
+        
+        // ===== 수량 관련 단어 =====
+        '더블', '듀오', '트리플', '쿼드', '싱글',
+        'Double', 'Duo', 'Triple', 'Quad', 'Single',
     ];
     
     for (const keyword of removeKeywords) {
-        const regex = new RegExp(keyword, 'gi');
-        cleaned = cleaned.replace(regex, '');
+        // 단어 경계 처리
+        // 한글은 \b가 안 먹으므로 공백/시작/끝으로 처리
+        try {
+            const regex = new RegExp(`(^|\\s)${keyword}(\\s|$)`, 'gi');
+            cleaned = cleaned.replace(regex, ' ');
+        } catch (e) {
+            // 정규식 오류 시 단순 replace
+            cleaned = cleaned.replace(new RegExp(keyword, 'gi'), '');
+        }
     }
     
-    // 4단계: 공백 정리
+    // ===== 4단계: 숫자+숫자 패턴 제거 (1+1, 2+1 등) =====
+    cleaned = cleaned.replace(/\d\s*\+\s*\d/g, '');
+    
+    // ===== 5단계: 최종 공백 정리 =====
     cleaned = cleaned.replace(/\s+/g, ' ').trim();
     
     return cleaned;
@@ -610,7 +673,7 @@ async function processProductImages(product, imageUrls) {
 
 // ==================== 메인 ====================
 async function main() {
-    log('🚀 Phase 1: 메인 갤러리 이미지 + 타이틀/가격/설명 추출 (v2.5)');
+    log('🚀 Phase 1: 메인 갤러리 이미지 + 타이틀/가격/설명 추출 (v2.6)');
     log('='.repeat(70));
     log('');
     
@@ -1174,7 +1237,7 @@ async function main() {
                             hasUpdates = true;
                             stats.titleKrFilled++;
                             
-                            log(`📝 타이틀 클리닝:`);
+                            log(`📝 타이틀 클리닝 (v2.6):`);
                             log(`   원본: "${productData.rawTitle.substring(0, 60)}"`);
                             log(`   정제: "${cleanedTitle}"`);
                             
