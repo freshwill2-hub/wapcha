@@ -987,73 +987,43 @@ async function main() {
                                 }
                             }
                             
-                            // ===== 정가 추출 (셀렉터 분리) =====
-                            const originalPriceSelectors = [
-                                '[class*="price-before"]',
-                                '[class*="GoodsDetailInfo_price-before"]',
-                                '.price-1 strike',
-                                '.price-1 span',
-                                '.tx_org',
-                                '.original-price',
-                                'del',
-                                '[class*="org"]',
-                                '.origin-price',
-                                '.before-price'
+                            // ===== ✅ v2.8: 가격 추출 (한 덩어리 파싱 방식) =====
+                            // 올리브영 가격은 "47,800원37%29,700원" 형태로 한 덩어리로 표시됨
+                            const priceSelectors = [
+                                '[class*="GoodsDetailInfo_price"]',
+                                '[class*="price-area"]',
+                                '[class*="price_area"]',
+                                '[class*="prd_price"]',
+                                '[class*="goods_price"]',
+                                '.price-box',
+                                '.price_box',
+                                '[class*="price"]'
                             ];
                             
-                            for (const selector of originalPriceSelectors) {
+                            for (const selector of priceSelectors) {
                                 try {
-                                    const el = document.querySelector(selector);
-                                    if (el) {
-                                        const text = el.textContent.replace(/[^0-9]/g, '');
-                                        const num = parseInt(text);
-                                        if (num > 0) {
-                                            result.priceOriginal = num;
+                                    const priceEl = document.querySelector(selector);
+                                    if (priceEl) {
+                                        const priceText = priceEl.textContent;
+                                        // 정규식으로 모든 가격 추출 (예: "47,800원37%29,700원")
+                                        const prices = priceText.match(/[\d,]+원/g);
+                                        
+                                        if (prices && prices.length >= 2) {
+                                            // 첫 번째: 정가, 두 번째: 할인가
+                                            result.priceOriginal = parseInt(prices[0].replace(/[^0-9]/g, ''));
+                                            result.priceDiscount = parseInt(prices[1].replace(/[^0-9]/g, ''));
+                                            break;
+                                        } else if (prices && prices.length === 1) {
+                                            // 할인 없는 경우
+                                            result.priceOriginal = parseInt(prices[0].replace(/[^0-9]/g, ''));
+                                            result.priceDiscount = result.priceOriginal;
                                             break;
                                         }
                                     }
                                 } catch (e) {}
                             }
                             
-                            // ===== 할인가 추출 (셀렉터 분리) =====
-                            const discountPriceSelectors = [
-                                '[class*="price-text"]',
-                                '[class*="GoodsDetailInfo_price-text"]',
-                                '.price-2 strong',
-                                '.tx_cur',
-                                '.final-price',
-                                '.sale_price',
-                                '.prd-price strong',
-                                '#finalPrc',
-                                '.real-price strong',
-                                '[class*="price"] strong'
-                            ];
-                            
-                            for (const selector of discountPriceSelectors) {
-                                try {
-                                    const el = document.querySelector(selector);
-                                    if (el) {
-                                        const text = el.textContent.replace(/[^0-9]/g, '');
-                                        const num = parseInt(text);
-                                        if (num > 0) {
-                                            result.priceDiscount = num;
-                                            break;
-                                        }
-                                    }
-                                } catch (e) {}
-                            }
-                            
-                            // 정가가 없으면 할인가를 정가로 사용
-                            if (!result.priceOriginal && result.priceDiscount) {
-                                result.priceOriginal = result.priceDiscount;
-                            }
-                            
-                            // 할인가가 없으면 정가를 할인가로 사용
-                            if (!result.priceDiscount && result.priceOriginal) {
-                                result.priceDiscount = result.priceOriginal;
-                            }
-                            
-                            // 정가가 할인가보다 작으면 스왑
+                            // 정가가 할인가보다 작으면 스왑 (데이터 정합성)
                             if (result.priceOriginal && result.priceDiscount && 
                                 result.priceOriginal < result.priceDiscount) {
                                 const temp = result.priceOriginal;
