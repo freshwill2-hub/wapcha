@@ -179,11 +179,7 @@ function checkMissingFields(product) {
     return missing;
 }
 
-// ==================== ✅ v2.8.2: 개선된 타이틀 클리닝 함수 ====================
-// 변경사항:
-//   - STEP 1.5: 대괄호 먼저 제거 (불완전한 대괄호 문제 해결)
-//   - STEP 2.5: 괄호 없는 용량+용량 패턴 (40ml+20ml) 처리
-//   - 메인 용량 유지: 다른 용량일 때 큰 용량 보존 (증정품 제거)
+// ==================== ✅ v2.7: 개선된 타이틀 클리닝 함수 (세트 감지 로직 복원) ====================
 function cleanProductTitle(rawTitle) {
     if (!rawTitle) return '';
     
@@ -193,6 +189,7 @@ function cleanProductTitle(rawTitle) {
     log(`   🔍 타이틀 클리닝 시작: "${cleaned.substring(0, 80)}..."`);
     
     // ==================== STEP 0: 문자열 정규화 ====================
+    // 모든 유니코드 공백 문자를 일반 공백으로 변환
     cleaned = cleaned.replace(/[\u00A0\u2000-\u200B\u202F\u205F\u3000]/g, ' ');
     cleaned = cleaned.replace(/\s+/g, ' ').trim();
     
@@ -202,13 +199,9 @@ function cleanProductTitle(rawTitle) {
     cleaned = cleaned.replace(/\s+올리브영\s*$/g, '');
     cleaned = cleaned.replace(/^\s*올리브영\s*[\|｜\-–—]\s*/g, '');
     
-    // ==================== STEP 1.5: ✅ v2.8.2 대괄호 먼저 제거 ====================
-    // [20ml추가증정/1+1] 같은 패턴에서 1+1이 먼저 제거되면 [20ml추가증정/]가 남는 문제 방지
-    cleaned = cleaned.replace(/\[[^\]]*\]/g, '');
-    cleaned = cleaned.replace(/\[[^\]]*$/g, '');  // 불완전한 대괄호
-    
-    // ==================== STEP 2: 세트 감지 - 같은 용량 반복 패턴 (괄호 안) ====================
-    // 패턴: (55ml+55ml), (100ml+100ml) 등
+    // ==================== STEP 2: 세트 감지 - 같은 용량 반복 패턴 (괄호 제거 전!) ====================
+    // 패턴: (55ml+55ml), (100ml+100ml), (150ml+150ml) 등
+    // ✅ 핵심: 같은 용량이면 세트, 다른 용량이면 증정품
     const sameVolumeMatch = cleaned.match(/\((\d+)(ml|mL|ML|g|G)\s*\+\s*(\d+)(ml|mL|ML|g|G)\)/i);
     if (sameVolumeMatch) {
         const vol1 = parseInt(sameVolumeMatch[1]);
@@ -223,44 +216,17 @@ function cleanProductTitle(rawTitle) {
             cleaned = cleaned.replace(sameVolumeMatch[0], '');
             stats.setDetected++;
         } else {
-            // ❌ 다른 용량 → 증정품! 메인 용량(큰 것) 유지
+            // ❌ 다른 용량 → 증정품! 메인 용량만 유지
             const mainVolume = Math.max(vol1, vol2);
             const mainUnit = vol1 > vol2 ? unit1 : unit2;
-            log(`   ⚠️  다른 용량 감지 (증정품): ${vol1}${unit1} + ${vol2}${unit2} → ${mainVolume}${mainUnit} 유지`);
-            cleaned = cleaned.replace(sameVolumeMatch[0], `${mainVolume}${mainUnit}`);
+            log(`   ⚠️  다른 용량 감지 (증정품): ${vol1}${unit1} + ${vol2}${unit2} → ${mainVolume}${mainUnit}만 유지`);
+            cleaned = cleaned.replace(sameVolumeMatch[0], '');
             stats.promotionalRemoved++;
         }
     }
     
-    // ==================== STEP 2.5: ✅ v2.8.2 괄호 없는 용량+용량 패턴 ====================
-    // 패턴: 40ml+20ml, 50g+50g 등 (괄호 없이 각 숫자에 단위가 붙은 경우)
-    if (!setInfo) {
-        const volumePlusVolumeMatch = cleaned.match(/(\d+)(ml|mL|ML|g|G)\s*\+\s*(\d+)(ml|mL|ML|g|G)/i);
-        if (volumePlusVolumeMatch) {
-            const vol1 = parseInt(volumePlusVolumeMatch[1]);
-            const unit1 = volumePlusVolumeMatch[2].toLowerCase();
-            const vol2 = parseInt(volumePlusVolumeMatch[3]);
-            const unit2 = volumePlusVolumeMatch[4].toLowerCase();
-            
-            if (vol1 === vol2 && unit1 === unit2) {
-                // ✅ 같은 용량 반복 → 세트!
-                setInfo = { volume: `${vol1}${unit1}`, count: 2, type: 'same_volume_no_paren' };
-                log(`   ✅ 세트 감지 (괄호 없는 같은 용량): ${vol1}${unit1} × 2`);
-                cleaned = cleaned.replace(volumePlusVolumeMatch[0], '');
-                stats.setDetected++;
-            } else {
-                // ❌ 다른 용량 → 증정품! 메인 용량(큰 것) 유지
-                const mainVolume = Math.max(vol1, vol2);
-                const mainUnit = vol1 > vol2 ? unit1 : unit2;
-                log(`   ⚠️  다른 용량 감지 (증정품): ${vol1}${unit1} + ${vol2}${unit2} → ${mainVolume}${mainUnit} 유지`);
-                cleaned = cleaned.replace(volumePlusVolumeMatch[0], `${mainVolume}${mainUnit}`);
-                stats.promotionalRemoved++;
-            }
-        }
-    }
-    
     // ==================== STEP 3: 세트 감지 - 50+50g 패턴 (괄호 없이) ====================
-    // 패턴: 50+50g, 100+100ml 등 (단위가 마지막에만 있는 경우)
+    // 패턴: 50+50g, 100+100ml 등
     const volumePlusMatch = cleaned.match(/(\d+)\s*\+\s*(\d+)\s*(ml|mL|ML|g|G)/i);
     if (volumePlusMatch && !setInfo) {
         const vol1 = parseInt(volumePlusMatch[1]);
@@ -271,18 +237,14 @@ function cleanProductTitle(rawTitle) {
             // ✅ 같은 용량 반복 → 세트!
             setInfo = { volume: `${vol1}${unit}`, count: 2, type: 'volume_plus' };
             log(`   ✅ 세트 감지 (용량+용량): ${vol1}${unit} × 2`);
+            // 패턴을 단일 용량으로 대체
             cleaned = cleaned.replace(volumePlusMatch[0], `${vol1}${unit}`);
             stats.setDetected++;
-        } else {
-            // ❌ v2.8.2: 다른 용량 → 메인 용량 유지
-            const mainVolume = Math.max(vol1, vol2);
-            log(`   ⚠️  다른 용량 감지: ${vol1}${unit} + ${vol2}${unit} → ${mainVolume}${unit} 유지`);
-            cleaned = cleaned.replace(volumePlusMatch[0], `${mainVolume}${unit}`);
-            stats.promotionalRemoved++;
         }
     }
     
     // ==================== STEP 4: 프로모션 키워드로 세트 감지 ====================
+    // 1+1, 더블기획, 더블, +1 패턴 감지
     const promoSetPatterns = [
         { pattern: /\[?\s*1\s*\+\s*1\s*\]?/gi, count: 2, name: '1+1' },
         { pattern: /\[?\s*2\s*\+\s*1\s*\]?/gi, count: 3, name: '2+1' },
@@ -300,14 +262,17 @@ function cleanProductTitle(rawTitle) {
                 log(`   ✅ 세트 감지 (프로모션 키워드): ${name} → ${count}개`);
                 stats.setDetected++;
             } else if (setInfo.count < count) {
+                // 이미 세트 정보가 있지만, 더 큰 수량이면 업데이트
+                // 단, 용량이 같을 때만! (2+1인데 다른 용량이면 증정품)
                 log(`   ⚠️  세트 수량 업데이트: ${setInfo.count} → ${count}개`);
                 setInfo.count = count;
             }
+            // 해당 키워드 제거
             cleaned = cleaned.replace(pattern, ' ');
         }
     }
     
-    // 더블 (단독) 처리
+    // 더블 (단독) 처리 - 다른 키워드가 없을 때만
     if (!setInfo && /더블/gi.test(cleaned)) {
         setInfo = { volume: null, count: 2, type: 'promo_double' };
         log(`   ✅ 세트 감지 (더블): 2개`);
@@ -315,7 +280,8 @@ function cleanProductTitle(rawTitle) {
         stats.setDetected++;
     }
     
-    // +1 패턴 처리
+    // +1 패턴 처리 (단, 다른 제품 증정이 아닌 경우만)
+    // "+1" 뒤에 다른 제품명이 없으면 같은 제품 2개로 판단
     const plusOneMatch = cleaned.match(/\+\s*1\s*(?!개|입|매|ml|mL|g|G)/i);
     if (plusOneMatch && !cleaned.match(/\+\s*1\s*(파우치|미니|샘플|증정|크림|세럼|토너|로션|에센스)/i)) {
         if (!setInfo) {
@@ -326,11 +292,12 @@ function cleanProductTitle(rawTitle) {
         cleaned = cleaned.replace(/\+\s*1\s*(?!개|입|매|ml|mL|g|G)/gi, ' ');
     }
     
-    // ==================== STEP 5: 대괄호 제거 (남은 것들) ====================
+    // ==================== STEP 5: 대괄호 제거 ====================
     cleaned = cleaned.replace(/^\s*\[[^\]]*\]\s*/g, '');
     cleaned = cleaned.replace(/\[[^\]]*\]/g, '');
     
     // ==================== STEP 6: 소괄호 제거 (증정품 정보) ====================
+    // 이미 세트 정보는 STEP 2에서 추출했으므로, 남은 괄호는 증정품
     cleaned = cleaned.replace(/\([^)]*\)/g, '');
     
     // ==================== STEP 7: 기타 괄호 제거 ====================
@@ -342,6 +309,7 @@ function cleanProductTitle(rawTitle) {
     
     // ==================== STEP 8: 프로모션/마케팅 키워드 제거 ====================
     const removeKeywords = [
+        // 기획 관련 (세트 정보는 이미 추출했으므로 제거)
         '기획증정', '기획 증정', '증정기획', '증정 기획',
         '기획세트', '기획 세트',
         '한정기획', '한정 기획', '단독기획', '단독 기획',
@@ -349,6 +317,8 @@ function cleanProductTitle(rawTitle) {
         '선물세트', '선물 세트',
         '한정판', '한정 판매', '한정수량',
         '기획', '증정', '한정', '단독', '추가',
+        
+        // 프로모션/마케팅 키워드
         '어워즈', '올영픽', '올영세일', '올영드', '올영추천', '올영딜',
         '특가', '세일', 'SALE', 'Sale', '행사', '이벤트', 'EVENT',
         '스페셜', 'Special', 'SPECIAL', '리미티드', 'Limited', 'LIMITED',
@@ -356,7 +326,10 @@ function cleanProductTitle(rawTitle) {
         '베스트', 'Best', 'BEST', '인기', '추천', '핫딜', 'HOT',
         'NEW', 'New', '신상', '신제품', '런칭', '출시기념',
         '리뉴얼', 'Renewal', 'RENEWAL',
-        '듀오', '싱글', 'Duo', 'Single',
+        
+        // 수량 관련 (세트 정보는 이미 추출했으므로 제거)
+        '듀오', '싱글',
+        'Duo', 'Single',
     ];
     
     for (const keyword of removeKeywords) {
@@ -373,12 +346,16 @@ function cleanProductTitle(rawTitle) {
     
     // ==================== STEP 10: 세트 정보 추가 ====================
     if (setInfo) {
+        // 이미 "X개" 또는 "X입" 패턴이 있는지 확인
         const existingCountMatch = cleaned.match(/(\d+)\s*(개|입|매|pcs)/i);
         
         if (!existingCountMatch) {
+            // 세트 정보 추가
             if (setInfo.volume) {
+                // 용량 정보가 있으면: "55ml 2개"
                 cleaned = `${cleaned} ${setInfo.volume} ${setInfo.count}개`;
             } else {
+                // 용량 정보가 없으면: "2개"만 추가
                 cleaned = `${cleaned} ${setInfo.count}개`;
             }
             log(`   ✅ 세트 정보 추가: ${setInfo.volume ? setInfo.volume + ' ' : ''}${setInfo.count}개`);
@@ -387,7 +364,6 @@ function cleanProductTitle(rawTitle) {
     
     // ==================== STEP 11: 최종 정리 ====================
     cleaned = cleaned.replace(/\s+/g, ' ').trim();
-    cleaned = cleaned.replace(/^[\/\-\s\+]+|[\/\-\s\+]+$/g, '');
     
     log(`   📝 클리닝 완료: "${cleaned}"`);
     
