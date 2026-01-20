@@ -343,7 +343,8 @@ async function processUrlQueue() {
 }
 
 // ==================== 파이프라인 실행 ====================
-async function runPhase(phase, productLimit) {
+// ✅ 수정: categoryUrl 옵션 추가
+async function runPhase(phase, productLimit, categoryUrl = null, maxProducts = null, maxPages = null) {
     return new Promise((resolve, reject) => {
         const scriptPath = path.join(SCRIPTS_DIR, phase.script);
         
@@ -355,11 +356,20 @@ async function runPhase(phase, productLimit) {
         
         addLog('info', `🚀 ${phase.name} 시작 (${productLimit}개 제품)`, phase.id);
         
+        // ✅ 환경변수 설정 - categoryUrl이 있으면 추가
         const env = {
             ...process.env,
             PRODUCT_LIMIT: productLimit.toString(),
             MAX_VOLUME_LIMIT: (config.maxVolumeLimit || 0).toString()  // ✅ v2.9: 용량 제한 전달
         };
+        
+        // ✅ Phase 0인 경우 URL 관련 환경변수 추가
+        if (phase.id === 'phase0' && categoryUrl) {
+            env.CATEGORY_URL = categoryUrl;
+            env.MAX_PRODUCTS = (maxProducts || productLimit).toString();
+            env.MAX_PAGES = (maxPages || 0).toString();
+            addLog('info', `📂 URL: ${categoryUrl.substring(0, 60)}...`, phase.id);
+        }
         
         const child = spawn('node', [scriptPath], {
             cwd: SCRIPTS_DIR,
@@ -438,8 +448,15 @@ async function runPhase(phase, productLimit) {
     });
 }
 
+// ✅ 수정: categoryUrl 옵션 추가
 async function runPipeline(options = {}) {
-    const { productLimit = config.productLimit, phases = config.phases } = options;
+    const { 
+        productLimit = config.productLimit, 
+        phases = config.phases,
+        categoryUrl = null,    // ✅ NEW
+        maxProducts = null,    // ✅ NEW
+        maxPages = null        // ✅ NEW
+    } = options;
     
     const executionId = uuidv4();
     const startTime = new Date();
@@ -464,7 +481,27 @@ async function runPipeline(options = {}) {
     io.emit('state', systemState);
     addLog('info', `🎬 파이프라인 시작 (${productLimit}개 제품)`);
     
-    // Phase 1~5만 필터링 (Phase 0 제외)  // ✅ Phase 5 포함!
+    // ✅ NEW: categoryUrl이 있으면 Phase 0 먼저 실행
+    if (categoryUrl && phases.phase0) {
+        try {
+            systemState.currentPhase = 'phase0';
+            io.emit('state', systemState);
+            
+            addLog('info', `📂 새 URL에서 제품 수집: ${categoryUrl.substring(0, 60)}...`);
+            await runPhase0(categoryUrl, maxProducts || productLimit, 'URL 수집', maxPages || 0);
+            
+            await new Promise(resolve => setTimeout(resolve, 2000));
+        } catch (error) {
+            addLog('error', `❌ Phase 0 실패: ${error.message}`);
+            
+            // Phase 0 실패 시 전체 파이프라인 중단 여부 결정
+            systemState.status = 'error';
+            io.emit('state', systemState);
+            return { success: false, error: error.message };
+        }
+    }
+    
+    // Phase 1~5만 필터링 (Phase 0 이미 처리됨 또는 제외)
     const pipelinePhases = PHASES.filter(p => p.id !== 'phase0');
     const enabledPhases = pipelinePhases.filter(p => phases[p.id]);
     
@@ -697,19 +734,27 @@ app.post('/api/config', (req, res) => {
     res.json({ success: true, config });
 });
 
-// 파이프라인 실행
+// ✅ 수정: 파이프라인 실행 - categoryUrl 파라미터 추가
 app.post('/api/pipeline/start', async (req, res) => {
     if (systemState.status === 'running') {
         return res.status(400).json({ error: '이미 실행 중입니다' });
     }
     
-    const { productLimit, phases } = req.body;
+    const { productLimit, phases, categoryUrl, maxProducts, maxPages } = req.body;
+    
+    // ✅ URL 유효성 검사
+    if (categoryUrl && !categoryUrl.includes('oliveyoung.co.kr')) {
+        return res.status(400).json({ error: '올리브영 URL이 아닙니다' });
+    }
     
     res.json({ success: true, message: '파이프라인 시작됨' });
     
     runPipeline({
         productLimit: productLimit || config.productLimit,
-        phases: phases || config.phases
+        phases: phases || config.phases,
+        categoryUrl: categoryUrl || null,      // ✅ NEW
+        maxProducts: maxProducts || null,      // ✅ NEW
+        maxPages: maxPages || null             // ✅ NEW
     });
 });
 
@@ -750,17 +795,27 @@ app.post('/api/pipeline/stop', (req, res) => {
     res.json({ success: true, message: '중지됨' });
 });
 
-// 단일 Phase 실행
+// ✅ 수정: 단일 Phase 실행 - categoryUrl 파라미터 추가
 app.post('/api/pipeline/run-phase', async (req, res) => {
     if (systemState.status === 'running') {
         return res.status(400).json({ error: '이미 실행 중입니다' });
     }
     
-    const { phaseId, productLimit } = req.body;
+    const { phaseId, productLimit, categoryUrl, maxProducts, maxPages } = req.body;
     const phase = PHASES.find(p => p.id === phaseId);
     
     if (!phase) {
         return res.status(400).json({ error: '유효하지 않은 Phase' });
+    }
+    
+    // ✅ Phase 0인 경우 URL 필수 체크
+    if (phaseId === 'phase0') {
+        if (!categoryUrl) {
+            return res.status(400).json({ error: 'Phase 0 실행에는 카테고리 URL이 필요합니다' });
+        }
+        if (!categoryUrl.includes('oliveyoung.co.kr')) {
+            return res.status(400).json({ error: '올리브영 URL이 아닙니다' });
+        }
     }
     
     res.json({ success: true, message: `${phase.name} 시작됨` });
@@ -770,7 +825,13 @@ app.post('/api/pipeline/run-phase', async (req, res) => {
     io.emit('state', systemState);
     
     try {
-        await runPhase(phase, productLimit || config.productLimit);
+        // ✅ Phase 0인 경우 runPhase0 사용, 그 외에는 runPhase 사용
+        if (phaseId === 'phase0') {
+            await runPhase0(categoryUrl, maxProducts || productLimit || config.productLimit, 'URL 수집', maxPages || 0);
+        } else {
+            await runPhase(phase, productLimit || config.productLimit);
+        }
+        
         systemState.status = 'idle';
         systemState.currentPhase = null;
         io.emit('state', systemState);

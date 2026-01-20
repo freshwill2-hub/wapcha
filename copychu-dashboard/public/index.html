@@ -690,6 +690,56 @@
             opacity: 0.5;
         }
         
+        /* ✅ NEW: 데이터 소스 선택 스타일 */
+        .data-source-selector {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .data-source-selector .radio-group {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 12px;
+        }
+        
+        .data-source-selector .radio-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+        
+        .data-source-selector input[type="radio"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent);
+        }
+        
+        .url-input-wrapper {
+            display: none;
+            margin-top: 12px;
+        }
+        
+        .url-input-wrapper.active {
+            display: block;
+        }
+        
+        .url-input-wrapper .input-row {
+            display: grid;
+            grid-template-columns: 1fr 150px 150px;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+        
+        @media (max-width: 900px) {
+            .url-input-wrapper .input-row {
+                grid-template-columns: 1fr;
+            }
+        }
+        
         /* Responsive */
         @media (max-width: 1200px) {
             .stats-grid {
@@ -818,10 +868,35 @@
                     </div>
                 </div>
                 
+                <!-- ✅ NEW: 빠른 실행에 URL 소스 옵션 추가 -->
                 <div class="card">
                     <div class="card-header">
                         <h3 class="card-title">🚀 빠른 실행</h3>
                     </div>
+                    
+                    <!-- ✅ 데이터 소스 선택 -->
+                    <div class="data-source-selector">
+                        <label class="input-label">📦 데이터 소스 선택</label>
+                        <div class="radio-group">
+                            <label class="radio-item">
+                                <input type="radio" name="quickDataSource" value="existing" checked onchange="toggleQuickUrlInput()">
+                                <span>기존 데이터 (NocoDB)</span>
+                            </label>
+                            <label class="radio-item">
+                                <input type="radio" name="quickDataSource" value="newUrl" onchange="toggleQuickUrlInput()">
+                                <span>🆕 새 URL에서 수집</span>
+                            </label>
+                        </div>
+                        <div id="quickUrlInputWrapper" class="url-input-wrapper">
+                            <div class="input-row">
+                                <input type="text" class="input" id="quickCategoryUrl" placeholder="https://www.oliveyoung.co.kr/store/main/getBestList.do?dispCatNo=...">
+                                <input type="number" class="input" id="quickMaxProducts" value="100" placeholder="최대 개수" min="1" max="1000">
+                                <input type="number" class="input" id="quickMaxPages" value="0" placeholder="페이지 (0=무제한)" min="0" max="100">
+                            </div>
+                            <p style="color: var(--text-muted); font-size: 12px; margin-top: 4px;">💡 페이지 0 = 마지막 페이지까지 자동 수집</p>
+                        </div>
+                    </div>
+                    
                     <div class="quick-actions">
                         <div class="quick-action" onclick="quickRun(3)">
                             <div class="quick-action-icon">🧪</div>
@@ -871,6 +946,29 @@
                 <div class="card">
                     <div class="card-header">
                         <h3 class="card-title">⚙️ 실행 설정</h3>
+                    </div>
+                    
+                    <!-- ✅ NEW: 데이터 소스 선택 -->
+                    <div class="data-source-selector">
+                        <label class="input-label">📦 데이터 소스 선택</label>
+                        <div class="radio-group">
+                            <label class="radio-item">
+                                <input type="radio" name="pipelineDataSource" value="existing" checked onchange="togglePipelineUrlInput()">
+                                <span>기존 데이터 (NocoDB)</span>
+                            </label>
+                            <label class="radio-item">
+                                <input type="radio" name="pipelineDataSource" value="newUrl" onchange="togglePipelineUrlInput()">
+                                <span>🆕 새 URL에서 수집 (Phase 0 포함)</span>
+                            </label>
+                        </div>
+                        <div id="pipelineUrlInputWrapper" class="url-input-wrapper">
+                            <div class="input-row">
+                                <input type="text" class="input" id="pipelineCategoryUrl" placeholder="https://www.oliveyoung.co.kr/store/main/getBestList.do?dispCatNo=...">
+                                <input type="number" class="input" id="pipelineMaxProducts" value="100" placeholder="최대 개수" min="1" max="1000">
+                                <input type="number" class="input" id="pipelineMaxPages" value="0" placeholder="페이지 (0=무제한)" min="0" max="100">
+                            </div>
+                            <p style="color: var(--text-muted); font-size: 12px; margin-top: 4px;">💡 Phase 0에서 URL을 먼저 수집한 후 선택된 Phase를 실행합니다</p>
+                        </div>
                     </div>
                     
                     <div class="input-group">
@@ -986,10 +1084,23 @@
                     </div>
                 </div>
                 
+                <!-- ✅ 단일 Phase 실행 (URL 입력 옵션 추가) -->
                 <div class="card">
                     <div class="card-header">
                         <h3 class="card-title">🔧 단일 Phase 실행</h3>
                     </div>
+                    
+                    <!-- ✅ 단일 Phase용 URL 입력 (Phase 0 전용) -->
+                    <div class="data-source-selector" id="singlePhaseUrlSection">
+                        <label class="input-label">📦 Phase 0 실행 시 URL 설정</label>
+                        <div class="input-row">
+                            <input type="text" class="input" id="singlePhaseCategoryUrl" placeholder="https://www.oliveyoung.co.kr/store/main/getBestList.do?dispCatNo=...">
+                            <input type="number" class="input" id="singlePhaseMaxProducts" value="100" placeholder="최대 개수" min="1" max="1000">
+                            <input type="number" class="input" id="singlePhaseMaxPages" value="0" placeholder="페이지 (0=무제한)" min="0" max="100">
+                        </div>
+                        <p style="color: var(--text-muted); font-size: 12px; margin-top: 4px;">💡 Phase 0만 실행할 때 이 URL에서 제품을 수집합니다</p>
+                    </div>
+                    
                     <div class="btn-group">
                         <button class="btn btn-secondary" onclick="runSinglePhase('phase0')">Phase 0만 실행하기</button>
                         <button class="btn btn-secondary" onclick="runSinglePhase('phase1')">Phase 1만 실행하기</button>
@@ -1241,6 +1352,73 @@
             updateProgress(progress);
         });
         
+        // ==================== ✅ NEW: URL 입력 토글 함수들 ====================
+        function toggleQuickUrlInput() {
+            const selected = document.querySelector('input[name="quickDataSource"]:checked').value;
+            const wrapper = document.getElementById('quickUrlInputWrapper');
+            
+            if (selected === 'newUrl') {
+                wrapper.classList.add('active');
+            } else {
+                wrapper.classList.remove('active');
+            }
+        }
+        
+        function togglePipelineUrlInput() {
+            const selected = document.querySelector('input[name="pipelineDataSource"]:checked').value;
+            const wrapper = document.getElementById('pipelineUrlInputWrapper');
+            
+            if (selected === 'newUrl') {
+                wrapper.classList.add('active');
+                // Phase 0 자동 체크
+                const phase0Checkbox = document.querySelector('.checkbox[data-phase="phase0"]');
+                if (phase0Checkbox && !phase0Checkbox.classList.contains('checked')) {
+                    phase0Checkbox.classList.add('checked');
+                }
+            } else {
+                wrapper.classList.remove('active');
+            }
+        }
+        
+        // ==================== ✅ NEW: URL 데이터 가져오기 헬퍼 ====================
+        function getQuickUrlSettings() {
+            const dataSource = document.querySelector('input[name="quickDataSource"]:checked').value;
+            
+            if (dataSource === 'newUrl') {
+                return {
+                    useNewUrl: true,
+                    categoryUrl: document.getElementById('quickCategoryUrl').value.trim(),
+                    maxProducts: parseInt(document.getElementById('quickMaxProducts').value) || 100,
+                    maxPages: parseInt(document.getElementById('quickMaxPages').value) || 0
+                };
+            }
+            
+            return { useNewUrl: false };
+        }
+        
+        function getPipelineUrlSettings() {
+            const dataSource = document.querySelector('input[name="pipelineDataSource"]:checked').value;
+            
+            if (dataSource === 'newUrl') {
+                return {
+                    useNewUrl: true,
+                    categoryUrl: document.getElementById('pipelineCategoryUrl').value.trim(),
+                    maxProducts: parseInt(document.getElementById('pipelineMaxProducts').value) || 100,
+                    maxPages: parseInt(document.getElementById('pipelineMaxPages').value) || 0
+                };
+            }
+            
+            return { useNewUrl: false };
+        }
+        
+        function getSinglePhaseUrlSettings() {
+            return {
+                categoryUrl: document.getElementById('singlePhaseCategoryUrl').value.trim(),
+                maxProducts: parseInt(document.getElementById('singlePhaseMaxProducts').value) || 100,
+                maxPages: parseInt(document.getElementById('singlePhaseMaxPages').value) || 0
+            };
+        }
+        
         // ==================== UI 업데이트 ====================
         function updateUI() {
             const badge = document.getElementById('statusBadge');
@@ -1359,11 +1537,34 @@
                 phases[cb.dataset.phase] = cb.classList.contains('checked');
             });
             
+            // ✅ URL 설정 가져오기
+            const urlSettings = getPipelineUrlSettings();
+            
+            // URL 유효성 검사
+            if (urlSettings.useNewUrl && !urlSettings.categoryUrl) {
+                alert('⚠️ 새 URL에서 수집 옵션을 선택했지만 URL이 입력되지 않았습니다.');
+                return;
+            }
+            
+            if (urlSettings.useNewUrl && !urlSettings.categoryUrl.includes('oliveyoung.co.kr')) {
+                alert('⚠️ 올리브영 카테고리 URL이 아닙니다.');
+                return;
+            }
+            
             try {
+                const requestBody = { 
+                    productLimit, 
+                    phases,
+                    // ✅ URL 관련 파라미터 추가
+                    categoryUrl: urlSettings.useNewUrl ? urlSettings.categoryUrl : null,
+                    maxProducts: urlSettings.useNewUrl ? urlSettings.maxProducts : null,
+                    maxPages: urlSettings.useNewUrl ? urlSettings.maxPages : null
+                };
+                
                 const response = await fetch('/api/pipeline/start', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ productLimit, phases })
+                    body: JSON.stringify(requestBody)
                 });
                 
                 const data = await response.json();
@@ -1392,11 +1593,36 @@
         async function runSinglePhase(phaseId) {
             const productLimit = parseInt(document.getElementById('productLimit').value);
             
+            // ✅ Phase 0인 경우 URL 설정 가져오기
+            let urlSettings = {};
+            if (phaseId === 'phase0') {
+                urlSettings = getSinglePhaseUrlSettings();
+                
+                if (!urlSettings.categoryUrl) {
+                    alert('⚠️ Phase 0 실행에는 카테고리 URL이 필요합니다.');
+                    return;
+                }
+                
+                if (!urlSettings.categoryUrl.includes('oliveyoung.co.kr')) {
+                    alert('⚠️ 올리브영 카테고리 URL이 아닙니다.');
+                    return;
+                }
+            }
+            
             try {
+                const requestBody = { 
+                    phaseId, 
+                    productLimit,
+                    // ✅ Phase 0인 경우 URL 파라미터 추가
+                    categoryUrl: urlSettings.categoryUrl || null,
+                    maxProducts: urlSettings.maxProducts || null,
+                    maxPages: urlSettings.maxPages || null
+                };
+                
                 const response = await fetch('/api/pipeline/run-phase', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ phaseId, productLimit })
+                    body: JSON.stringify(requestBody)
                 });
                 
                 const data = await response.json();
@@ -1408,8 +1634,39 @@
             }
         }
         
+        // ✅ 수정된 quickRun 함수
         function quickRun(count) {
-            document.getElementById('productLimit').value = count;
+            const urlSettings = getQuickUrlSettings();
+            
+            // URL 유효성 검사
+            if (urlSettings.useNewUrl) {
+                if (!urlSettings.categoryUrl) {
+                    alert('⚠️ 새 URL에서 수집 옵션을 선택했지만 URL이 입력되지 않았습니다.');
+                    return;
+                }
+                
+                if (!urlSettings.categoryUrl.includes('oliveyoung.co.kr')) {
+                    alert('⚠️ 올리브영 카테고리 URL이 아닙니다.');
+                    return;
+                }
+                
+                // 파이프라인 탭으로 이동하고 설정 복사
+                document.getElementById('productLimit').value = count;
+                document.getElementById('pipelineCategoryUrl').value = urlSettings.categoryUrl;
+                document.getElementById('pipelineMaxProducts').value = urlSettings.maxProducts;
+                document.getElementById('pipelineMaxPages').value = urlSettings.maxPages;
+                
+                // 새 URL 옵션 선택
+                document.querySelector('input[name="pipelineDataSource"][value="newUrl"]').checked = true;
+                togglePipelineUrlInput();
+            } else {
+                document.getElementById('productLimit').value = count;
+                
+                // 기존 데이터 옵션 선택
+                document.querySelector('input[name="pipelineDataSource"][value="existing"]').checked = true;
+                togglePipelineUrlInput();
+            }
+            
             navigateTo('pipeline');
             window.location.hash = 'pipeline';
         }
