@@ -525,7 +525,7 @@
             if (!confirm('🚀 전체 파이프라인을 실행합니다.\n\nPhase 0: URL 수집\nPhase 1: 제품 정보 스크래핑\nPhase 2: 배경 제거\nPhase 2.5: AI 이미지 검증\nPhase 2.6: 이미지 선별\nPhase 4: 최종 이미지 생성\nPhase 5: Shopify 업로드\n\n시간이 오래 걸릴 수 있습니다. 계속하시겠습니까?')) return;
             
             try {
-                addLogMessage({ type: 'info', message: '🚀 전체 파이프라인 시작 (Phase 0→1→2→2.5→2.6→4→5)', timestamp: new Date().toISOString() });
+                addLogMessage({ type: 'info', message: '🚀 전체 파이프라인 시작 (Phase 0→1→2→3→4→5)', timestamp: new Date().toISOString() });
                 showProgress();
                 
                 const response = await fetch('/api/url-queue/process-full', { method: 'POST' });

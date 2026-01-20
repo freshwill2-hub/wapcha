@@ -1,0 +1,9 @@
+{
+	"id": "43YPS4nBOaVCiu0",
+	"json": "{\"id\":\"43YPS4nBOaVCiu0\",\"url\":\"https://search.naver.com/search.naver?ssc=tab.image.all&where=image&sm=tab_jum&query=%EB%A9%94%EB%94%94%ED%9E%90%20%EB%A7%88%EB%8D%B0%EC%B9%B4%EC%86%8C%EC%82%AC%EC%9D%B4%EB%93%9C%20%EC%88%98%EB%B6%84%20%EC%84%A0%EC%84%B8%EB%9F%BC%20%ED%9D%94%EC%A0%81%20%EB%A6%AC%ED%8E%98%EC%96%B4%2050g\",\"loadedUrl\":\"https://search.naver.com/search.naver?ssc=tab.image.all&where=image&sm=tab_jum&query=%EB%A9%94%EB%94%94%ED%9E%90%20%EB%A7%88%EB%8D%B0%EC%B9%B4%EC%86%8C%EC%82%AC%EC%9D%B4%EB%93%9C%20%EC%88%98%EB%B6%84%20%EC%84%A0%EC%84%B8%EB%9F%BC%20%ED%9D%94%EC%A0%81%20%EB%A6%AC%ED%8E%98%EC%96%B4%2050g\",\"uniqueKey\":\"https://search.naver.com/search.naver?query=%EB%A9%94%EB%94%94%ED%9E%90+%EB%A7%88%EB%8D%B0%EC%B9%B4%EC%86%8C%EC%82%AC%EC%9D%B4%EB%93%9C+%EC%88%98%EB%B6%84+%EC%84%A0%EC%84%B8%EB%9F%BC+%ED%9D%94%EC%A0%81+%EB%A6%AC%ED%8E%98%EC%96%B4+50g&sm=tab_jum&ssc=tab.image.all&where=image\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"state\":4}},\"handledAt\":\"2026-01-20T04:11:36.683Z\"}",
+	"method": "GET",
+	"orderNo": null,
+	"retryCount": 0,
+	"uniqueKey": "https://search.naver.com/search.naver?query=%EB%A9%94%EB%94%94%ED%9E%90+%EB%A7%88%EB%8D%B0%EC%B9%B4%EC%86%8C%EC%82%AC%EC%9D%B4%EB%93%9C+%EC%88%98%EB%B6%84+%EC%84%A0%EC%84%B8%EB%9F%BC+%ED%9D%94%EC%A0%81+%EB%A6%AC%ED%8E%98%EC%96%B4+50g&sm=tab_jum&ssc=tab.image.all&where=image",
+	"url": "https://search.naver.com/search.naver?ssc=tab.image.all&where=image&sm=tab_jum&query=%EB%A9%94%EB%94%94%ED%9E%90%20%EB%A7%88%EB%8D%B0%EC%B9%B4%EC%86%8C%EC%82%AC%EC%9D%B4%EB%93%9C%20%EC%88%98%EB%B6%84%20%EC%84%A0%EC%84%B8%EB%9F%BC%20%ED%9D%94%EC%A0%81%20%EB%A6%AC%ED%8E%98%EC%96%B4%2050g"
+}
