@@ -72,6 +72,7 @@ let config = {
     targetImageSize: 1200,
     productRatio: 0.75,
     geminiApiKey: '',
+    maxVolumeLimit: 700,  // ✅ v2.9: 용량 제한 (ml) - 0이면 무제한
     schedules: [],
     phases: {
         phase1: true,
@@ -356,7 +357,8 @@ async function runPhase(phase, productLimit) {
         
         const env = {
             ...process.env,
-            PRODUCT_LIMIT: productLimit.toString()
+            PRODUCT_LIMIT: productLimit.toString(),
+            MAX_VOLUME_LIMIT: (config.maxVolumeLimit || 0).toString()  // ✅ v2.9: 용량 제한 전달
         };
         
         const child = spawn('node', [scriptPath], {

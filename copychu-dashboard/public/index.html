@@ -1162,6 +1162,14 @@
                             <input type="number" class="input" id="settingImageSize" value="1200">
                         </div>
                         
+                        <div class="input-group">
+                            <label class="input-label">📦 제품 용량 제한 (ml) - 0이면 무제한</label>
+                            <input type="number" class="input" id="settingMaxVolume" value="700" min="0" max="10000">
+                            <p style="color: var(--text-secondary); font-size: 12px; margin-top: 4px;">
+                                설정된 용량을 초과하는 제품은 Phase 1에서 자동 스킵됩니다.
+                            </p>
+                        </div>
+                        
                         <button class="btn btn-primary" onclick="saveSettings()">💾 설정 저장</button>
                     </div>
                     
@@ -1600,6 +1608,7 @@
                 document.getElementById('settingProductLimit').value = config.productLimit || 3;
                 document.getElementById('settingMinScore').value = config.minScoreForGallery || 70;
                 document.getElementById('settingImageSize').value = config.targetImageSize || 1200;
+                document.getElementById('settingMaxVolume').value = config.maxVolumeLimit || 700;
                 
                 loadSchedules();
             } catch (error) {
@@ -1611,7 +1620,8 @@
             const config = {
                 productLimit: parseInt(document.getElementById('settingProductLimit').value),
                 minScoreForGallery: parseInt(document.getElementById('settingMinScore').value),
-                targetImageSize: parseInt(document.getElementById('settingImageSize').value)
+                targetImageSize: parseInt(document.getElementById('settingImageSize').value),
+                maxVolumeLimit: parseInt(document.getElementById('settingMaxVolume').value) || 0
             };
             
             try {

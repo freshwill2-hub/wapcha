@@ -81,6 +81,7 @@ const NOCODB_API_URL = process.env.NOCODB_API_URL || 'http://77.42.67.165:8080';
 const NOCODB_TOKEN = process.env.NOCODB_API_TOKEN;
 const OLIVEYOUNG_TABLE_ID = process.env.OLIVEYOUNG_TABLE_ID || 'mufuxqsjgqcvh80';
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const MAX_VOLUME_LIMIT = parseInt(process.env.MAX_VOLUME_LIMIT) || 0;  // ✅ v2.9: 용량 제한 (ml), 0이면 무제한
 
 // ✅ 메모리 관리 설정
 const BATCH_SIZE = 10;
@@ -88,25 +89,25 @@ const MEMORY_CHECK_INTERVAL = 5;
 
 const openai = OPENAI_API_KEY ? new OpenAI({ apiKey: OPENAI_API_KEY }) : null;
 
-log('🚀 Phase 1: 제품 상세 스크래핑 (v2.7 - 세트 감지 로직 복원)');
+log('🚀 Phase 1: 제품 상세 스크래핑 (v2.9 - 용량 제한 기능 추가)');
 log('='.repeat(70));
 log('🔧 설정 확인:');
 log(`- NocoDB URL: ${NOCODB_API_URL}`);
 log(`- Table ID: ${OLIVEYOUNG_TABLE_ID}`);
 log(`- OpenAI API: ${OPENAI_API_KEY ? '✅ 설정됨' : '❌ 없음'}`);
+log(`- 용량 제한: ${MAX_VOLUME_LIMIT > 0 ? MAX_VOLUME_LIMIT + 'ml' : '무제한'}`);  // ✅ v2.9
 log(`- 시간대: ${SYDNEY_TIMEZONE} (시드니)`);
 log(`- 로그 파일: ${LOG_PATH}`);
 if (deletedLogs.length > 0) {
     log(`🧹 오래된 로그 ${deletedLogs.length}개 삭제됨 (${LOG_RETENTION_DAYS}일 이상)`);
 }
 log('');
-log('🆕 v2.7 수정 사항:');
-log('   ✅ 세트 감지 로직 복원!');
-log('   ✅ 1+1, 더블기획, 더블, +1 → 같은 제품이면 "2개"로 변환');
-log('   ✅ (55ml+55ml) 같은 용량 반복 → "55ml 2개"로 변환');
-log('   ✅ (220ml+80ml) 다른 용량 → 메인 용량만 유지, 증정품 제거');
-log('   ✅ 2+1 패턴: (50ml+50ml)+50ml → 3개, (50ml+50ml)+100ml → 2개');
-log('   ✅ 가격 셀렉터 분리 유지 (v2.5에서 계승)');
+log('🆕 v2.9 수정 사항:');
+log('   ✅ 용량 제한 기능 추가 (MAX_VOLUME_LIMIT 환경변수)');
+log('   ✅ 타이틀에서 총 용량 계산 (ml, g 단위)');
+log('   ✅ 용량 초과 제품 자동 스킵');
+log('   ✅ 세트 감지 로직 유지 (v2.7에서 계승)');
+log('   ✅ 가격 셀렉터 분리 유지 (v2.8에서 계승)');
 log('');
 
 // ==================== 전역 변수 ====================
@@ -130,7 +131,9 @@ const stats = {
     images404Skipped: 0,
     // ✅ v2.7: 세트 감지 통계
     setDetected: 0,
-    promotionalRemoved: 0
+    promotionalRemoved: 0,
+    // ✅ v2.9: 용량 제한 통계
+    volumeExceededSkipped: 0
 };
 
 // ==================== 메모리 관리 함수 ====================
@@ -177,6 +180,47 @@ function checkMissingFields(product) {
                          !missing.needsDescriptionEn && !missing.needsImages;
     
     return missing;
+}
+
+// ==================== ✅ v2.9: 용량 총합 계산 함수 ====================
+function calculateTotalVolume(title) {
+    if (!title) return 0;
+    
+    let totalVolume = 0;
+    
+    // 1. 개수 정보 추출 (예: "2개", "3입")
+    const countMatch = title.match(/(\d+)\s*(개|입|매|pcs)/i);
+    const productCount = countMatch ? parseInt(countMatch[1]) : 1;
+    
+    // 2. 모든 용량 추출 (ml, g 단위)
+    const volumePattern = /(\d+)\s*(ml|mL|ML|g|G)/gi;
+    const volumes = [];
+    let match;
+    
+    while ((match = volumePattern.exec(title)) !== null) {
+        const value = parseInt(match[1]);
+        const unit = match[2].toLowerCase();
+        // g를 ml로 대략 변환 (밀도 ~1 가정, 화장품은 대체로 비슷)
+        const mlValue = unit === 'g' ? value : value;
+        volumes.push(mlValue);
+    }
+    
+    // 3. 용량 합계 계산
+    if (volumes.length === 0) {
+        return 0;  // 용량 정보 없음
+    } else if (volumes.length === 1) {
+        // 단일 용량 × 개수
+        totalVolume = volumes[0] * productCount;
+    } else {
+        // 여러 용량이 있으면 합산 (세트 제품)
+        totalVolume = volumes.reduce((sum, v) => sum + v, 0);
+        // 개수가 명시되어 있고 용량이 하나만 반복된 것 같으면 곱하기
+        if (productCount > 1 && volumes.every(v => v === volumes[0])) {
+            totalVolume = volumes[0] * productCount;
+        }
+    }
+    
+    return totalVolume;
 }
 
 // ==================== ✅ v2.8.2: 개선된 타이틀 클리닝 함수 ====================
@@ -790,7 +834,7 @@ async function processProductImages(product, imageUrls) {
 
 // ==================== 메인 ====================
 async function main() {
-    log('🚀 Phase 1: 메인 갤러리 이미지 + 타이틀/가격/설명 추출 (v2.7)');
+    log('🚀 Phase 1: 메인 갤러리 이미지 + 타이틀/가격/설명 추출 (v2.9)');
     log('='.repeat(70));
     log('');
     
@@ -1290,9 +1334,23 @@ async function main() {
                             hasUpdates = true;
                             stats.titleKrFilled++;
                             
-                            log(`📝 타이틀 클리닝 (v2.7):`);
+                            log(`📝 타이틀 클리닝 (v2.9):`);
                             log(`   원본: "${productData.rawTitle.substring(0, 60)}"`);
                             log(`   정제: "${cleanedTitle}"`);
+                            
+                            // ✅ v2.9: 용량 제한 체크
+                            if (MAX_VOLUME_LIMIT > 0) {
+                                const totalVolume = calculateTotalVolume(cleanedTitle);
+                                log(`   📦 용량 계산: ${totalVolume}ml (제한: ${MAX_VOLUME_LIMIT}ml)`);
+                                
+                                if (totalVolume > MAX_VOLUME_LIMIT) {
+                                    log(`   ⚠️  용량 초과! ${totalVolume}ml > ${MAX_VOLUME_LIMIT}ml → 스킵`);
+                                    stats.volumeExceededSkipped++;
+                                    skippedCount++;
+                                    processedCount++;
+                                    return;  // 다음 제품으로
+                                }
+                            }
                             
                             if (missingFields.needsTitleEn) {
                                 const englishTitle = await translateToEnglish(cleanedTitle);
@@ -1305,6 +1363,20 @@ async function main() {
                             log(`📝 타이틀: 이미 있음 → 스킵`);
                             stats.titleKrSkipped++;
                             cleanedTitle = product.title_kr || '';
+                            
+                            // ✅ v2.9: 기존 타이틀로도 용량 체크
+                            if (MAX_VOLUME_LIMIT > 0 && cleanedTitle) {
+                                const totalVolume = calculateTotalVolume(cleanedTitle);
+                                log(`   📦 용량 계산 (기존 타이틀): ${totalVolume}ml (제한: ${MAX_VOLUME_LIMIT}ml)`);
+                                
+                                if (totalVolume > MAX_VOLUME_LIMIT) {
+                                    log(`   ⚠️  용량 초과! ${totalVolume}ml > ${MAX_VOLUME_LIMIT}ml → 스킵`);
+                                    stats.volumeExceededSkipped++;
+                                    skippedCount++;
+                                    processedCount++;
+                                    return;  // 다음 제품으로
+                                }
+                            }
                             
                             if (missingFields.needsTitleEn && product.title_kr) {
                                 const englishTitle = await translateToEnglish(product.title_kr);
@@ -1455,6 +1527,7 @@ async function main() {
         log(`   - images 다운로드 실패: ${stats.imagesDownloadFailed}개`);
         log(`   - 세트 감지: ${stats.setDetected}개`);
         log(`   - 증정품 제거: ${stats.promotionalRemoved}개`);
+        log(`   - 용량 초과 스킵: ${stats.volumeExceededSkipped}개`);
         
         logMemoryUsage('최종');
         
