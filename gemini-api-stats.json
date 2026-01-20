@@ -1,19 +1,19 @@
 {
   "date": "2026-01-20",
-  "dailyCalls": 32,
+  "dailyCalls": 59,
   "dailyLimit": 1500,
-  "remaining": 1468,
-  "sessionCalls": 22,
+  "remaining": 1441,
+  "sessionCalls": 9,
   "byFunction": {
-    "analyzeImage": 7,
-    "getBadgeCropCoordinates": 2,
-    "getSingleProductCropCoordinates": 1,
-    "detectPackagingBox": 5,
-    "calculateCompletenessScore": 5,
-    "calculateTitleMatchScore": 4,
-    "calculateQualityScore": 4,
-    "getCropCoordinates_Naver": 1,
-    "detectMultipleProducts": 3
+    "analyzeImage": 14,
+    "getBadgeCropCoordinates": 3,
+    "getSingleProductCropCoordinates": 4,
+    "detectPackagingBox": 8,
+    "calculateCompletenessScore": 8,
+    "calculateTitleMatchScore": 8,
+    "calculateQualityScore": 8,
+    "getCropCoordinates_Naver": 2,
+    "detectMultipleProducts": 4
   },
   "callHistory": [
     {
@@ -175,7 +175,142 @@
       "function": "calculateCompletenessScore",
       "time": "2026-01-20T01:00:00.316Z",
       "dailyTotal": 32
+    },
+    {
+      "function": "calculateTitleMatchScore",
+      "time": "2026-01-20T01:00:02.082Z",
+      "dailyTotal": 33
+    },
+    {
+      "function": "calculateQualityScore",
+      "time": "2026-01-20T01:00:03.481Z",
+      "dailyTotal": 34
+    },
+    {
+      "function": "detectMultipleProducts",
+      "time": "2026-01-20T01:00:15.315Z",
+      "dailyTotal": 35
+    },
+    {
+      "function": "detectPackagingBox",
+      "time": "2026-01-20T01:00:16.702Z",
+      "dailyTotal": 36
+    },
+    {
+      "function": "calculateCompletenessScore",
+      "time": "2026-01-20T01:00:18.054Z",
+      "dailyTotal": 37
+    },
+    {
+      "function": "calculateTitleMatchScore",
+      "time": "2026-01-20T01:00:19.196Z",
+      "dailyTotal": 38
+    },
+    {
+      "function": "calculateQualityScore",
+      "time": "2026-01-20T01:00:20.323Z",
+      "dailyTotal": 39
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-01-20T01:17:18.330Z",
+      "dailyTotal": 40
+    },
+    {
+      "function": "getBadgeCropCoordinates",
+      "time": "2026-01-20T01:17:20.536Z",
+      "dailyTotal": 41
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-01-20T01:17:36.693Z",
+      "dailyTotal": 42
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-01-20T01:18:04.659Z",
+      "dailyTotal": 43
+    },
+    {
+      "function": "getSingleProductCropCoordinates",
+      "time": "2026-01-20T01:18:06.764Z",
+      "dailyTotal": 44
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-01-20T01:18:23.310Z",
+      "dailyTotal": 45
+    },
+    {
+      "function": "getSingleProductCropCoordinates",
+      "time": "2026-01-20T01:18:25.678Z",
+      "dailyTotal": 46
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-01-20T01:18:43.095Z",
+      "dailyTotal": 47
+    },
+    {
+      "function": "getSingleProductCropCoordinates",
+      "time": "2026-01-20T01:18:45.189Z",
+      "dailyTotal": 48
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-01-20T01:19:01.116Z",
+      "dailyTotal": 49
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-01-20T01:19:17.463Z",
+      "dailyTotal": 50
+    },
+    {
+      "function": "detectPackagingBox",
+      "time": "2026-01-20T01:19:23.222Z",
+      "dailyTotal": 51
+    },
+    {
+      "function": "calculateCompletenessScore",
+      "time": "2026-01-20T01:19:25.121Z",
+      "dailyTotal": 52
+    },
+    {
+      "function": "calculateTitleMatchScore",
+      "time": "2026-01-20T01:19:26.722Z",
+      "dailyTotal": 53
+    },
+    {
+      "function": "calculateQualityScore",
+      "time": "2026-01-20T01:19:28.477Z",
+      "dailyTotal": 54
+    },
+    {
+      "function": "detectPackagingBox",
+      "time": "2026-01-20T01:19:39.727Z",
+      "dailyTotal": 55
+    },
+    {
+      "function": "calculateCompletenessScore",
+      "time": "2026-01-20T01:19:40.839Z",
+      "dailyTotal": 56
+    },
+    {
+      "function": "calculateTitleMatchScore",
+      "time": "2026-01-20T01:19:42.169Z",
+      "dailyTotal": 57
+    },
+    {
+      "function": "calculateQualityScore",
+      "time": "2026-01-20T01:19:43.217Z",
+      "dailyTotal": 58
+    },
+    {
+      "function": "getCropCoordinates_Naver",
+      "time": "2026-01-20T01:20:01.178Z",
+      "dailyTotal": 59
     }
   ],
-  "lastUpdated": "2026-01-20T01:00:00.316Z"
+  "lastUpdated": "2026-01-20T01:20:01.178Z"
 }
