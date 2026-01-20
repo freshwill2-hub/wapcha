@@ -412,6 +412,10 @@ function cleanProductTitle(rawTitle) {
         }
     }
     
+    // ==================== STEP 8.5: "외 N종" 패턴 제거 ====================
+    // "외 2종", "외 3종", "외2종" 등 제거 (다른 제품 포함 세트 표시)
+    cleaned = cleaned.replace(/외\s*\d+\s*종/gi, '');
+
     // ==================== STEP 9: 공백 정리 ====================
     cleaned = cleaned.replace(/\s+/g, ' ').trim();
     
@@ -1352,6 +1356,41 @@ async function main() {
                                 }
                             }
                             
+                            // ✅ v2.10: 용량 제한 체크 (상세설명 용량 포함)
+                            if (MAX_VOLUME_LIMIT > 0) {
+                                let totalVolume = calculateTotalVolume(cleanedTitle);
+                                let volumeSource = '타이틀';
+                                
+                                // 타이틀에 용량이 없으면 상세설명에서 가져오기
+                                if (totalVolume === 0 && productData.infoTable.volume) {
+                                    totalVolume = calculateTotalVolume(productData.infoTable.volume);
+                                    volumeSource = '상세설명';
+                                    
+                                    // 용량이 제한 이하이고 타이틀에 용량이 없으면 추가
+                                    if (totalVolume > 0 && totalVolume <= MAX_VOLUME_LIMIT) {
+                                        // 상세설명에서 첫 번째 용량 추출
+                                        const volumeMatch = productData.infoTable.volume.match(/(\d+)\s*(ml|mL|ML|g|G)/i);
+                                        if (volumeMatch) {
+                                            const volumeStr = `${volumeMatch[1]}${volumeMatch[2].toLowerCase()}`;
+                                            cleanedTitle = `${cleanedTitle} ${volumeStr}`;
+                                            updateData.title_kr = cleanedTitle;
+                                            log(`   ✅ 타이틀에 용량 추가: "${cleanedTitle}"`);
+                                        }
+                                    }
+                                }
+                                
+                                log(`   📦 용량 계산 (${volumeSource}): ${totalVolume}ml (제한: ${MAX_VOLUME_LIMIT}ml)`);
+                                
+                                if (totalVolume > MAX_VOLUME_LIMIT) {
+                                    log(`   ⚠️  용량 초과! ${totalVolume}ml > ${MAX_VOLUME_LIMIT}ml → 스킵`);
+                                    stats.volumeExceededSkipped++;
+                                    skippedCount++;
+                                    processedCount++;
+                                    return;  // 다음 제품으로
+                                }
+                            }
+
+
                             if (missingFields.needsTitleEn) {
                                 const englishTitle = await translateToEnglish(cleanedTitle);
                                 if (englishTitle) {
