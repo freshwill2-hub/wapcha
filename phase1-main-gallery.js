@@ -88,7 +88,7 @@ const MEMORY_CHECK_INTERVAL = 5;
 
 const openai = OPENAI_API_KEY ? new OpenAI({ apiKey: OPENAI_API_KEY }) : null;
 
-log('🚀 Phase 1: 제품 상세 스크래핑 (v2.6 - 타이틀 클리닝 개선)');
+log('🚀 Phase 1: 제품 상세 스크래핑 (v2.7 - 세트 감지 로직 복원)');
 log('='.repeat(70));
 log('🔧 설정 확인:');
 log(`- NocoDB URL: ${NOCODB_API_URL}`);
@@ -100,13 +100,13 @@ if (deletedLogs.length > 0) {
     log(`🧹 오래된 로그 ${deletedLogs.length}개 삭제됨 (${LOG_RETENTION_DAYS}일 이상)`);
 }
 log('');
-log('🆕 v2.6 수정 사항:');
-log('   ✅ 타이틀 클리닝: 유니코드 공백 정규화 추가');
-log('   ✅ "| 올리브영" 제거: 강화된 정규식 (전각 문자 포함)');
-log('   ✅ 키워드 목록 확장: 더블 기획, 듀오 기획, 1+1 기획 등');
-log('   ✅ 클리닝 순서 최적화: 조합 키워드 우선 처리');
-log('   ✅ 가격 셀렉터 분리 (v2.5에서 계승)');
-log('   ✅ URL 변환 제거 유지 (v2.4에서 계승)');
+log('🆕 v2.7 수정 사항:');
+log('   ✅ 세트 감지 로직 복원!');
+log('   ✅ 1+1, 더블기획, 더블, +1 → 같은 제품이면 "2개"로 변환');
+log('   ✅ (55ml+55ml) 같은 용량 반복 → "55ml 2개"로 변환');
+log('   ✅ (220ml+80ml) 다른 용량 → 메인 용량만 유지, 증정품 제거');
+log('   ✅ 2+1 패턴: (50ml+50ml)+50ml → 3개, (50ml+50ml)+100ml → 2개');
+log('   ✅ 가격 셀렉터 분리 유지 (v2.5에서 계승)');
 log('');
 
 // ==================== 전역 변수 ====================
@@ -127,7 +127,10 @@ const stats = {
     descriptionSkipped: 0,
     imagesSkipped: 0,
     imagesDownloadFailed: 0,
-    images404Skipped: 0
+    images404Skipped: 0,
+    // ✅ v2.7: 세트 감지 통계
+    setDetected: 0,
+    promotionalRemoved: 0
 };
 
 // ==================== 메모리 관리 함수 ====================
@@ -176,73 +179,146 @@ function checkMissingFields(product) {
     return missing;
 }
 
-// ==================== 타이틀 클리닝 함수 (v2.6 개선) ====================
+// ==================== ✅ v2.7: 개선된 타이틀 클리닝 함수 (세트 감지 로직 복원) ====================
 function cleanProductTitle(rawTitle) {
     if (!rawTitle) return '';
     
     let cleaned = rawTitle;
+    let setInfo = null;  // 세트 정보 저장
     
-    // ===== 0단계: 문자열 정규화 (v2.6 신규) =====
+    log(`   🔍 타이틀 클리닝 시작: "${cleaned.substring(0, 80)}..."`);
+    
+    // ==================== STEP 0: 문자열 정규화 ====================
     // 모든 유니코드 공백 문자를 일반 공백으로 변환
-    // \u00A0: non-breaking space
-    // \u2000-\u200B: various unicode spaces
-    // \u202F: narrow no-break space
-    // \u205F: medium mathematical space
-    // \u3000: ideographic space (전각 공백)
     cleaned = cleaned.replace(/[\u00A0\u2000-\u200B\u202F\u205F\u3000]/g, ' ');
-    // 연속 공백을 하나로
     cleaned = cleaned.replace(/\s+/g, ' ').trim();
     
-    // ===== 1단계: "| 올리브영" 제거 (강화된 정규식) =====
-    // 파이프 기호 (일반 | 및 전각 ｜) 처리
+    // ==================== STEP 1: "| 올리브영" 또는 "- 올리브영" 제거 ====================
     cleaned = cleaned.replace(/\s*[\|｜]\s*올리브영.*$/g, '');
-    // 대시 기호 (일반 -, en-dash –, em-dash —) 처리
     cleaned = cleaned.replace(/\s*[-–—]\s*올리브영.*$/g, '');
-    // 끝에 "올리브영"만 있는 경우
     cleaned = cleaned.replace(/\s+올리브영\s*$/g, '');
-    // 혹시 앞에 남은 경우도 처리
     cleaned = cleaned.replace(/^\s*올리브영\s*[\|｜\-–—]\s*/g, '');
     
-    // ===== 2단계: 대괄호/프로모션 태그 제거 =====
-    // 문자열 시작 부분의 대괄호 우선 제거 (예: [1월 올영픽])
+    // ==================== STEP 2: 세트 감지 - 같은 용량 반복 패턴 (괄호 제거 전!) ====================
+    // 패턴: (55ml+55ml), (100ml+100ml), (150ml+150ml) 등
+    // ✅ 핵심: 같은 용량이면 세트, 다른 용량이면 증정품
+    const sameVolumeMatch = cleaned.match(/\((\d+)(ml|mL|ML|g|G)\s*\+\s*(\d+)(ml|mL|ML|g|G)\)/i);
+    if (sameVolumeMatch) {
+        const vol1 = parseInt(sameVolumeMatch[1]);
+        const unit1 = sameVolumeMatch[2].toLowerCase();
+        const vol2 = parseInt(sameVolumeMatch[3]);
+        const unit2 = sameVolumeMatch[4].toLowerCase();
+        
+        if (vol1 === vol2 && unit1 === unit2) {
+            // ✅ 같은 용량 반복 → 세트!
+            setInfo = { volume: `${vol1}${unit1}`, count: 2, type: 'same_volume' };
+            log(`   ✅ 세트 감지 (같은 용량): ${vol1}${unit1} × 2`);
+            cleaned = cleaned.replace(sameVolumeMatch[0], '');
+            stats.setDetected++;
+        } else {
+            // ❌ 다른 용량 → 증정품! 메인 용량만 유지
+            const mainVolume = Math.max(vol1, vol2);
+            const mainUnit = vol1 > vol2 ? unit1 : unit2;
+            log(`   ⚠️  다른 용량 감지 (증정품): ${vol1}${unit1} + ${vol2}${unit2} → ${mainVolume}${mainUnit}만 유지`);
+            cleaned = cleaned.replace(sameVolumeMatch[0], '');
+            stats.promotionalRemoved++;
+        }
+    }
+    
+    // ==================== STEP 3: 세트 감지 - 50+50g 패턴 (괄호 없이) ====================
+    // 패턴: 50+50g, 100+100ml 등
+    const volumePlusMatch = cleaned.match(/(\d+)\s*\+\s*(\d+)\s*(ml|mL|ML|g|G)/i);
+    if (volumePlusMatch && !setInfo) {
+        const vol1 = parseInt(volumePlusMatch[1]);
+        const vol2 = parseInt(volumePlusMatch[2]);
+        const unit = volumePlusMatch[3].toLowerCase();
+        
+        if (vol1 === vol2) {
+            // ✅ 같은 용량 반복 → 세트!
+            setInfo = { volume: `${vol1}${unit}`, count: 2, type: 'volume_plus' };
+            log(`   ✅ 세트 감지 (용량+용량): ${vol1}${unit} × 2`);
+            // 패턴을 단일 용량으로 대체
+            cleaned = cleaned.replace(volumePlusMatch[0], `${vol1}${unit}`);
+            stats.setDetected++;
+        }
+    }
+    
+    // ==================== STEP 4: 프로모션 키워드로 세트 감지 ====================
+    // 1+1, 더블기획, 더블, +1 패턴 감지
+    const promoSetPatterns = [
+        { pattern: /\[?\s*1\s*\+\s*1\s*\]?/gi, count: 2, name: '1+1' },
+        { pattern: /\[?\s*2\s*\+\s*1\s*\]?/gi, count: 3, name: '2+1' },
+        { pattern: /\[?\s*3\s*\+\s*1\s*\]?/gi, count: 4, name: '3+1' },
+        { pattern: /더블기획/gi, count: 2, name: '더블기획' },
+        { pattern: /더블\s*세트/gi, count: 2, name: '더블세트' },
+        { pattern: /트리플기획/gi, count: 3, name: '트리플기획' },
+        { pattern: /트리플\s*세트/gi, count: 3, name: '트리플세트' },
+    ];
+    
+    for (const { pattern, count, name } of promoSetPatterns) {
+        if (pattern.test(cleaned)) {
+            if (!setInfo) {
+                setInfo = { volume: null, count: count, type: 'promo_keyword' };
+                log(`   ✅ 세트 감지 (프로모션 키워드): ${name} → ${count}개`);
+                stats.setDetected++;
+            } else if (setInfo.count < count) {
+                // 이미 세트 정보가 있지만, 더 큰 수량이면 업데이트
+                // 단, 용량이 같을 때만! (2+1인데 다른 용량이면 증정품)
+                log(`   ⚠️  세트 수량 업데이트: ${setInfo.count} → ${count}개`);
+                setInfo.count = count;
+            }
+            // 해당 키워드 제거
+            cleaned = cleaned.replace(pattern, ' ');
+        }
+    }
+    
+    // 더블 (단독) 처리 - 다른 키워드가 없을 때만
+    if (!setInfo && /더블/gi.test(cleaned)) {
+        setInfo = { volume: null, count: 2, type: 'promo_double' };
+        log(`   ✅ 세트 감지 (더블): 2개`);
+        cleaned = cleaned.replace(/더블/gi, ' ');
+        stats.setDetected++;
+    }
+    
+    // +1 패턴 처리 (단, 다른 제품 증정이 아닌 경우만)
+    // "+1" 뒤에 다른 제품명이 없으면 같은 제품 2개로 판단
+    const plusOneMatch = cleaned.match(/\+\s*1\s*(?!개|입|매|ml|mL|g|G)/i);
+    if (plusOneMatch && !cleaned.match(/\+\s*1\s*(파우치|미니|샘플|증정|크림|세럼|토너|로션|에센스)/i)) {
+        if (!setInfo) {
+            setInfo = { volume: null, count: 2, type: 'plus_one' };
+            log(`   ✅ 세트 감지 (+1): 같은 제품 2개`);
+            stats.setDetected++;
+        }
+        cleaned = cleaned.replace(/\+\s*1\s*(?!개|입|매|ml|mL|g|G)/gi, ' ');
+    }
+    
+    // ==================== STEP 5: 대괄호 제거 ====================
     cleaned = cleaned.replace(/^\s*\[[^\]]*\]\s*/g, '');
-    // 나머지 대괄호
     cleaned = cleaned.replace(/\[[^\]]*\]/g, '');
-    // 소괄호 (증정품 정보 포함, 예: (+징크테카세럼3mL))
+    
+    // ==================== STEP 6: 소괄호 제거 (증정품 정보) ====================
+    // 이미 세트 정보는 STEP 2에서 추출했으므로, 남은 괄호는 증정품
     cleaned = cleaned.replace(/\([^)]*\)/g, '');
-    // 기타 괄호 (동아시아 괄호)
+    
+    // ==================== STEP 7: 기타 괄호 제거 ====================
     cleaned = cleaned.replace(/【[^】]*】/g, '');
     cleaned = cleaned.replace(/〔[^〕]*〕/g, '');
     cleaned = cleaned.replace(/〈[^〉]*〉/g, '');
     cleaned = cleaned.replace(/《[^》]*》/g, '');
     cleaned = cleaned.replace(/\{[^}]*\}/g, '');
     
-    // ===== 3단계: 제거할 키워드 (확장된 목록 v2.6) =====
-    // 중요: 긴 조합 키워드를 먼저 처리해야 함!
+    // ==================== STEP 8: 프로모션/마케팅 키워드 제거 ====================
     const removeKeywords = [
-        // ===== 조합 키워드 (먼저 처리) =====
-        '더블 기획', '듀오 기획', '트리플 기획', '쿼드 기획',
-        '더블기획', '듀오기획', '트리플기획', '쿼드기획',
-        '2개 기획', '3개 기획', '4개 기획', '5개 기획',
-        '1\\+1 기획', '2\\+1 기획', '3\\+1 기획',  // + 이스케이프
-        '세트 기획', '세트기획', '리필 기획', '리필기획',
-        '대용량 기획', '대용량기획', '미니 기획', '미니기획',
-        '본품 기획', '본품기획',
-        
-        // 기획+증정 조합
+        // 기획 관련 (세트 정보는 이미 추출했으므로 제거)
         '기획증정', '기획 증정', '증정기획', '증정 기획',
         '기획세트', '기획 세트',
         '한정기획', '한정 기획', '단독기획', '단독 기획',
         '추가증정', '추가 증정',
         '선물세트', '선물 세트',
-        
-        // 한정판 조합
         '한정판', '한정 판매', '한정수량',
-        
-        // ===== 단독 키워드 (조합 처리 후에 실행) =====
         '기획', '증정', '한정', '단독', '추가',
         
-        // ===== 프로모션/마케팅 키워드 =====
+        // 프로모션/마케팅 키워드
         '어워즈', '올영픽', '올영세일', '올영드', '올영추천', '올영딜',
         '특가', '세일', 'SALE', 'Sale', '행사', '이벤트', 'EVENT',
         '스페셜', 'Special', 'SPECIAL', '리미티드', 'Limited', 'LIMITED',
@@ -251,28 +327,45 @@ function cleanProductTitle(rawTitle) {
         'NEW', 'New', '신상', '신제품', '런칭', '출시기념',
         '리뉴얼', 'Renewal', 'RENEWAL',
         
-        // ===== 수량 관련 단어 =====
-        '더블', '듀오', '트리플', '쿼드', '싱글',
-        'Double', 'Duo', 'Triple', 'Quad', 'Single',
+        // 수량 관련 (세트 정보는 이미 추출했으므로 제거)
+        '듀오', '싱글',
+        'Duo', 'Single',
     ];
     
     for (const keyword of removeKeywords) {
-        // 단어 경계 처리
-        // 한글은 \b가 안 먹으므로 공백/시작/끝으로 처리
         try {
             const regex = new RegExp(`(^|\\s)${keyword}(\\s|$)`, 'gi');
             cleaned = cleaned.replace(regex, ' ');
         } catch (e) {
-            // 정규식 오류 시 단순 replace
             cleaned = cleaned.replace(new RegExp(keyword, 'gi'), '');
         }
     }
     
-    // ===== 4단계: 숫자+숫자 패턴 제거 (1+1, 2+1 등) =====
-    cleaned = cleaned.replace(/\d\s*\+\s*\d/g, '');
-    
-    // ===== 5단계: 최종 공백 정리 =====
+    // ==================== STEP 9: 공백 정리 ====================
     cleaned = cleaned.replace(/\s+/g, ' ').trim();
+    
+    // ==================== STEP 10: 세트 정보 추가 ====================
+    if (setInfo) {
+        // 이미 "X개" 또는 "X입" 패턴이 있는지 확인
+        const existingCountMatch = cleaned.match(/(\d+)\s*(개|입|매|pcs)/i);
+        
+        if (!existingCountMatch) {
+            // 세트 정보 추가
+            if (setInfo.volume) {
+                // 용량 정보가 있으면: "55ml 2개"
+                cleaned = `${cleaned} ${setInfo.volume} ${setInfo.count}개`;
+            } else {
+                // 용량 정보가 없으면: "2개"만 추가
+                cleaned = `${cleaned} ${setInfo.count}개`;
+            }
+            log(`   ✅ 세트 정보 추가: ${setInfo.volume ? setInfo.volume + ' ' : ''}${setInfo.count}개`);
+        }
+    }
+    
+    // ==================== STEP 11: 최종 정리 ====================
+    cleaned = cleaned.replace(/\s+/g, ' ').trim();
+    
+    log(`   📝 클리닝 완료: "${cleaned}"`);
     
     return cleaned;
 }
@@ -619,7 +712,7 @@ async function processProductImages(product, imageUrls) {
         
         log(`📊 추출된 메인 갤러리 이미지: ${imageUrls.length}개`);
         imageUrls.slice(0, 7).forEach((url, i) => {
-            log(`   ${i + 1}. ${url}`);  // 전체 URL 출력 (디버깅용)
+            log(`   ${i + 1}. ${url}`);
         });
         
         const maxImages = Math.min(imageUrls.length, 7);
@@ -629,7 +722,7 @@ async function processProductImages(product, imageUrls) {
         
         for (let i = 0; i < maxImages; i++) {
             const url = imageUrls[i];
-            log(`${i + 1}/${maxImages}: ${url}`);  // 전체 URL 출력
+            log(`${i + 1}/${maxImages}: ${url}`);
             
             const buffer = await downloadImage(url);
             if (!buffer) {
@@ -673,7 +766,7 @@ async function processProductImages(product, imageUrls) {
 
 // ==================== 메인 ====================
 async function main() {
-    log('🚀 Phase 1: 메인 갤러리 이미지 + 타이틀/가격/설명 추출 (v2.6)');
+    log('🚀 Phase 1: 메인 갤러리 이미지 + 타이틀/가격/설명 추출 (v2.7)');
     log('='.repeat(70));
     log('');
     
@@ -804,17 +897,15 @@ async function main() {
                                     ingredients: ''
                                 },
                                 imageUrls: [],
-                                expectedImageCount: 0,  // ✅ 예상 이미지 개수
-                                debugInfo: ''           // ✅ 디버그 정보
+                                expectedImageCount: 0,
+                                debugInfo: ''
                             };
                             
-                            // ===== 타이틀 추출 (v2.5 개선) =====
+                            // ===== 타이틀 추출 =====
                             const titleSelectors = [
-                                // ✅ 올리브영 실제 셀렉터 (우선순위)
                                 '.goodsDetailInfo_title_name_unity',
                                 '[class*="title_name_unity"]',
                                 '[data-ref="prod-product-title"]',
-                                // 기존 폴백 셀렉터
                                 'p.prd_name',
                                 '.prd_name',
                                 '.goods-name',
@@ -872,12 +963,10 @@ async function main() {
                                 }
                             }
                             
-                            // ===== v2.5 수정: 정가 추출 (셀렉터 분리) =====
+                            // ===== 정가 추출 (셀렉터 분리) =====
                             const originalPriceSelectors = [
-                                // ✅ 올리브영 실제 셀렉터 (우선순위)
                                 '[class*="price-before"]',
                                 '[class*="GoodsDetailInfo_price-before"]',
-                                // 기존 폴백 셀렉터
                                 '.price-1 strike',
                                 '.price-1 span',
                                 '.tx_org',
@@ -902,12 +991,10 @@ async function main() {
                                 } catch (e) {}
                             }
                             
-                            // ===== v2.5 수정: 할인가 추출 (셀렉터 분리) =====
+                            // ===== 할인가 추출 (셀렉터 분리) =====
                             const discountPriceSelectors = [
-                                // ✅ 올리브영 실제 셀렉터 (우선순위)
                                 '[class*="price-text"]',
                                 '[class*="GoodsDetailInfo_price-text"]',
-                                // 기존 폴백 셀렉터
                                 '.price-2 strong',
                                 '.tx_cur',
                                 '.final-price',
@@ -950,11 +1037,10 @@ async function main() {
                                 result.priceDiscount = temp;
                             }
                             
-                            // ===== ✅ v2.2 수정: 메인 갤러리 이미지 추출 (정확한 셀렉터) =====
+                            // ===== 메인 갤러리 이미지 추출 =====
                             const seenUrls = new Set();
                             const mainGalleryImages = [];
                             
-                            // ✅ 1. 페이지 인디케이터에서 예상 이미지 개수 확인 (예: "1 / 5")
                             const paginationEl = document.querySelector('.swiper-pagination, [class*="pagination"]');
                             if (paginationEl) {
                                 const paginationText = paginationEl.textContent.trim();
@@ -964,21 +1050,13 @@ async function main() {
                                 }
                             }
                             
-                            // ✅ 2. 메인 갤러리 컨테이너 (vis-swiper) 타겟팅 - 최우선!
                             const mainGallerySelectors = [
-                                // ✅ 올리브영 메인 갤러리 (2024-2025 구조)
                                 '.vis-swiper .swiper-slide img',
                                 '.vis-swiper [data-swiper-slide-index] img',
                                 '[class*="vis-swiper"] .swiper-slide img',
-                                
-                                // ✅ GoodsDetail_Carousel 클래스 (React 컴포넌트)
                                 '[class*="GoodsDetail_Carousel"] img',
                                 '[class*="Carousel_content"] img',
-                                
-                                // ✅ data-swiper-slide-index 속성이 있는 슬라이드만
                                 '.swiper-slide[data-swiper-slide-index] img',
-                                
-                                // ✅ 메인 이미지 영역 (좌측 상단)
                                 '.prd-img .swiper-slide img',
                                 '.goods-img .swiper-slide img',
                             ];
@@ -993,7 +1071,6 @@ async function main() {
                                         foundMethod = selector;
                                         
                                         imgs.forEach(img => {
-                                            // ✅ 여러 속성에서 URL 추출
                                             let src = img.getAttribute('data-src') ||
                                                       img.getAttribute('data-origin') ||
                                                       img.getAttribute('data-lazy') ||
@@ -1003,17 +1080,14 @@ async function main() {
                                             
                                             if (!src) return;
                                             
-                                            // 프로토콜 추가
                                             if (src.startsWith('//')) {
                                                 src = 'https:' + src;
                                             }
                                             
-                                            // oliveyoung 이미지만
                                             if (!src.includes('oliveyoung.co.kr')) return;
                                             
-                                            // ✅ 제외할 이미지 패턴
-                                            if (src.includes('/gdasEditor/')) return;   // 상세 설명 이미지
-                                            if (src.includes('/display/')) return;       // 디스플레이 배너
+                                            if (src.includes('/gdasEditor/')) return;
+                                            if (src.includes('/display/')) return;
                                             if (src.includes('/icon/')) return;
                                             if (src.includes('/badge/')) return;
                                             if (src.includes('/banner/')) return;
@@ -1025,18 +1099,12 @@ async function main() {
                                             if (src.includes('/point/')) return;
                                             if (src.includes('/coupon/')) return;
                                             
-                                            // ✅ v2.4: URL 변환 제거! 썸네일 URL 그대로 사용
-                                            // 올리브영은 /thumbnails/ 경로가 실제 이미지 URL
-                                            // (변환하면 404 에러 발생)
-                                            
-                                            // 중복 제거
                                             if (seenUrls.has(src)) return;
                                             
                                             seenUrls.add(src);
                                             mainGalleryImages.push(src);
                                         });
                                         
-                                        // ✅ 메인 갤러리에서 이미지를 찾았으면 중단
                                         if (mainGalleryImages.length > 0) {
                                             break;
                                         }
@@ -1044,11 +1112,9 @@ async function main() {
                                 } catch (e) {}
                             }
                             
-                            // ✅ 3. 메인 갤러리에서 못 찾은 경우 fallback
                             if (mainGalleryImages.length === 0) {
                                 foundMethod = 'fallback: large images';
                                 
-                                // data-swiper-slide-index 속성이 있는 모든 슬라이드에서 이미지 추출
                                 const allSlides = document.querySelectorAll('[data-swiper-slide-index]');
                                 
                                 allSlides.forEach(slide => {
@@ -1065,12 +1131,9 @@ async function main() {
                                         src = 'https:' + src;
                                     }
                                     
-                                    // 제외 패턴
                                     if (src.includes('/gdasEditor/')) return;
                                     if (src.includes('/display/')) return;
                                     if (src.includes('/banner/')) return;
-                                    
-                                    // ✅ v2.4: URL 변환 제거 (원본 그대로 사용)
                                     
                                     if (seenUrls.has(src)) return;
                                     seenUrls.add(src);
@@ -1078,7 +1141,6 @@ async function main() {
                                 });
                             }
                             
-                            // ✅ 4. 여전히 못 찾으면 큰 이미지 수집
                             if (mainGalleryImages.length === 0) {
                                 foundMethod = 'fallback: all large oliveyoung images';
                                 
@@ -1095,7 +1157,6 @@ async function main() {
                                         src = 'https:' + src;
                                     }
                                     
-                                    // 제외 패턴
                                     if (src.includes('/gdasEditor/')) return;
                                     if (src.includes('/display/')) return;
                                     if (src.includes('/icon/')) return;
@@ -1103,12 +1164,10 @@ async function main() {
                                     if (src.includes('/banner/')) return;
                                     if (src.includes('/review/')) return;
                                     
-                                    // 이미지 크기 체크
                                     const width = img.naturalWidth || img.width;
                                     const height = img.naturalHeight || img.height;
                                     
                                     if (width >= 400 && height >= 400) {
-                                        // ✅ v2.4: URL 변환 제거 (원본 그대로 사용)
                                         seenUrls.add(src);
                                         mainGalleryImages.push(src);
                                     }
@@ -1116,9 +1175,9 @@ async function main() {
                             }
                             
                             result.debugInfo = `Method: ${foundMethod}, Found: ${mainGalleryImages.length}`;
-                            result.imageUrls = mainGalleryImages.slice(0, 10);  // 최대 10개
+                            result.imageUrls = mainGalleryImages.slice(0, 10);
                             
-                            // ===== 상품정보 제공고시 추출 (v2.5 개선) =====
+                            // ===== 상품정보 제공고시 추출 =====
                             const EXCLUDE_KEYWORDS = [
                                 '제조업자', '수입업자', '판매업자', '책임판매업자',
                                 '맞춤형화장품판매업자', '품질보증', '소비자상담', 
@@ -1237,7 +1296,7 @@ async function main() {
                             hasUpdates = true;
                             stats.titleKrFilled++;
                             
-                            log(`📝 타이틀 클리닝 (v2.6):`);
+                            log(`📝 타이틀 클리닝 (v2.7):`);
                             log(`   원본: "${productData.rawTitle.substring(0, 60)}"`);
                             log(`   정제: "${cleanedTitle}"`);
                             
@@ -1400,6 +1459,8 @@ async function main() {
         log(`   - images: ${stats.imagesFilled}개 채움, ${stats.imagesSkipped}개 스킵`);
         log(`   - images 404: ${stats.images404Skipped}개 스킵`);
         log(`   - images 다운로드 실패: ${stats.imagesDownloadFailed}개`);
+        log(`   - 세트 감지: ${stats.setDetected}개`);
+        log(`   - 증정품 제거: ${stats.promotionalRemoved}개`);
         
         logMemoryUsage('최종');
         

@@ -1,14 +1,14 @@
 {
   "categories": [
     {
-      "id": "0b5bd651-b9d3-4c45-a288-8f47b64e2a4c",
-      "url": "https://www.oliveyoung.co.kr/store/display/getMCategoryList.do?dispCatNo=100000100110006&isLoginCnt=0&aShowCnt=0&bShowCnt=0&cShowCnt=0&gateCd=Drawer&trackingCd=Cat100000100110006_MID&trackingCd=Cat100000100110006_MID&t_page=%EB%93%9C%EB%A1%9C%EC%9A%B0_%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC&t_click=%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC%ED%83%AD_%EC%A4%91%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC&t_1st_category_type=%EB%8C%80_%EC%84%A0%EC%BC%80%EC%96%B4&t_2nd_category_type=%EC%A4%91_%EC%84%A0%ED%81%AC%EB%A6%BC",
+      "id": "23fe1fce-d5d9-4de7-ae21-a7dbf4e3f66f",
+      "url": "https://www.oliveyoung.co.kr/store/display/getMCategoryList.do?dispCatNo=100000100110006&fltDispCatNo=&prdSort=01&pageIdx=1&rowsPerPage=24&searchTypeSort=btn_thumb&plusButtonFlag=N&isLoginCnt=1&aShowCnt=0&bShowCnt=0&cShowCnt=0&trackingCd=Cat100000100110006_MID&amplitudePageGubun=&t_page=%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC%EA%B4%80&t_click=%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC%EC%83%81%EC%84%B8_%EC%86%8C%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC&midCategory=%EC%84%A0%ED%81%AC%EB%A6%BC&smallCategory=%EC%A0%84%EC%B2%B4&checkBrnds=&lastChkBrnd=&t_1st_category_type=%EB%8C%80_%EC%84%A0%EC%BC%80%EC%96%B4&t_2nd_category_type=%EC%A4%91_%EC%84%A0%ED%81%AC%EB%A6%BC&t_3rd_category_type=%EC%86%8C_%EC%A0%84%EC%B2%B4",
       "name": "선크림",
-      "maxProducts": 2,
+      "maxProducts": 3,
       "maxPages": 1,
       "status": "completed",
-      "createdAt": "2026-01-20T04:05:12.351Z",
-      "completedAt": "2026-01-20T04:06:51.746Z"
+      "createdAt": "2026-01-20T05:55:13.732Z",
+      "completedAt": "2026-01-20T05:56:38.092Z"
     }
   ],
   "products": []
