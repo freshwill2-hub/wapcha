@@ -360,43 +360,15 @@
             return 'log-info';
         }
         
-        // 로그 복사 - HTTP 환경에서도 작동하도록 수정
-        async function copyLogs() {
+        // 로그 복사
+        function copyLogs() {
             if (!currentLogContent) {
                 alert('복사할 로그가 없습니다');
                 return;
             }
-
-            try {
-                // 방법 1: 클립보드 API 시도 (HTTPS/localhost에서 작동)
-                if (navigator.clipboard && window.isSecureContext) {
-                    await navigator.clipboard.writeText(currentLogContent);
-                    alert('✅ 로그가 클립보드에 복사되었습니다!');
-                    return;
-                }
-
-                // 방법 2: fallback - textarea 사용 (HTTP에서도 작동)
-                const textArea = document.createElement('textarea');
-                textArea.value = currentLogContent;
-                textArea.style.position = 'fixed';
-                textArea.style.left = '-999999px';
-                textArea.style.top = '-999999px';
-                document.body.appendChild(textArea);
-                textArea.focus();
-                textArea.select();
-
-                const success = document.execCommand('copy');
-                document.body.removeChild(textArea);
-
-                if (success) {
-                    alert('✅ 로그가 클립보드에 복사되었습니다!');
-                } else {
-                    throw new Error('복사 실패');
-                }
-            } catch (err) {
-                console.error('복사 오류:', err);
-                alert('❌ 복사 실패: 브라우저에서 수동으로 복사해주세요');
-            }
+            navigator.clipboard.writeText(currentLogContent).then(() => {
+                alert('로그가 클립보드에 복사되었습니다!');
+            });
         }
         
         // 전체 새로고침
