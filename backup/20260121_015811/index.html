@@ -1458,22 +1458,7 @@
             document.getElementById('monitorFailed').textContent = currentState.stats?.failedCount || 0;
             document.getElementById('monitorApiCalls').textContent = currentState.stats?.apiCalls || 0;
             document.getElementById('monitorCost').textContent = `$${(currentState.stats?.estimatedCost || 0).toFixed(4)}`;
-
-            // ✅ 상태에 따른 진행 상황 텍스트 업데이트
-            if (currentState.status === 'idle') {
-                if (currentState.stats?.totalProcessed > 0 || currentState.stats?.successCount > 0) {
-                    document.getElementById('progressText').textContent = `✅ 완료 (${currentState.stats?.successCount || 0}개 성공, ${currentState.stats?.failedCount || 0}개 실패)`;
-                    document.getElementById('progressPercent').textContent = '100%';
-                    document.getElementById('progressFill').style.width = '100%';
-                } else {
-                    document.getElementById('progressText').textContent = '대기 중';
-                    document.getElementById('progressPercent').textContent = '0%';
-                    document.getElementById('progressFill').style.width = '0%';
-                }
-            } else if (currentState.status === 'error') {
-                document.getElementById('progressText').textContent = '❌ 오류 발생';
-            }
-
+            
             const phases = ['phase0', 'phase1', 'phase2', 'phase3', 'phase4', 'phase5'];
             phases.forEach(phase => {
                 const el = document.getElementById(`phase-${phase}`);
