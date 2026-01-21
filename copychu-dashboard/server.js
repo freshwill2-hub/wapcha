@@ -342,9 +342,46 @@ async function processUrlQueue() {
     return { success: true, totalCollected };
 }
 
+// ==================== 통합 로그 시스템 ====================
+function getSydneyTimeForFile() {
+    const now = new Date();
+    const sydneyDate = new Date(now.toLocaleString('en-US', { timeZone: 'Australia/Sydney' }));
+    const year = sydneyDate.getFullYear();
+    const month = String(sydneyDate.getMonth() + 1).padStart(2, '0');
+    const day = String(sydneyDate.getDate()).padStart(2, '0');
+    const hour = String(sydneyDate.getHours()).padStart(2, '0');
+    const min = String(sydneyDate.getMinutes()).padStart(2, '0');
+    const sec = String(sydneyDate.getSeconds()).padStart(2, '0');
+    return `${year}${month}${day}_${hour}${min}${sec}`;
+}
+
+function createUnifiedLogPath() {
+    const logsDir = path.join(SCRIPTS_DIR, 'logs');
+    if (!fs.existsSync(logsDir)) {
+        fs.mkdirSync(logsDir, { recursive: true });
+    }
+    const filename = `pipeline_${getSydneyTimeForFile()}.log`;
+    return path.join(logsDir, filename);
+}
+
+function writeUnifiedLog(logPath, message) {
+    if (!logPath) return;
+    const timestamp = new Date().toLocaleString('en-AU', {
+        timeZone: 'Australia/Sydney',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+    });
+    fs.appendFileSync(logPath, `[${timestamp}] ${message}\n`);
+}
+
 // ==================== 파이프라인 실행 ====================
 // ✅ 수정: categoryUrl 옵션 추가
-async function runPhase(phase, productLimit, categoryUrl = null, maxProducts = null, maxPages = null) {
+async function runPhase(phase, productLimit, categoryUrl = null, maxProducts = null, maxPages = null, unifiedLogPath = null) {
     return new Promise((resolve, reject) => {
         const scriptPath = path.join(SCRIPTS_DIR, phase.script);
         
@@ -362,7 +399,12 @@ async function runPhase(phase, productLimit, categoryUrl = null, maxProducts = n
             PRODUCT_LIMIT: productLimit.toString(),
             MAX_VOLUME_LIMIT: (config.maxVolumeLimit || 0).toString()  // ✅ v2.9: 용량 제한 전달
         };
-        
+
+        // ✅ 통합 로그 경로 전달
+        if (unifiedLogPath) {
+            env.UNIFIED_LOG_PATH = unifiedLogPath;
+        }
+
         // ✅ Phase 0인 경우 URL 관련 환경변수 추가
         if (phase.id === 'phase0' && categoryUrl) {
             env.CATEGORY_URL = categoryUrl;
@@ -448,19 +490,27 @@ async function runPhase(phase, productLimit, categoryUrl = null, maxProducts = n
     });
 }
 
-// ✅ 수정: categoryUrl 옵션 추가
+// ✅ 수정: categoryUrl 옵션 추가 + 통합 로그 지원
 async function runPipeline(options = {}) {
-    const { 
-        productLimit = config.productLimit, 
+    const {
+        productLimit = config.productLimit,
         phases = config.phases,
         categoryUrl = null,    // ✅ NEW
         maxProducts = null,    // ✅ NEW
         maxPages = null        // ✅ NEW
     } = options;
-    
+
     const executionId = uuidv4();
     const startTime = new Date();
-    
+
+    // ✅ 통합 로그 파일 생성
+    const unifiedLogPath = createUnifiedLogPath();
+    writeUnifiedLog(unifiedLogPath, '═══════════════════════════════════════════════════════════════════════');
+    writeUnifiedLog(unifiedLogPath, '🎬 파이프라인 실행 시작');
+    writeUnifiedLog(unifiedLogPath, `📋 제품 수: ${productLimit}개`);
+    writeUnifiedLog(unifiedLogPath, `📁 통합 로그: ${path.basename(unifiedLogPath)}`);
+    writeUnifiedLog(unifiedLogPath, '═══════════════════════════════════════════════════════════════════════');
+
     systemState = {
         status: 'running',
         currentPhase: null,
@@ -475,9 +525,10 @@ async function runPipeline(options = {}) {
             failedCount: 0,
             apiCalls: 0,
             estimatedCost: 0
-        }
+        },
+        unifiedLogPath: unifiedLogPath  // ✅ 통합 로그 경로 저장
     };
-    
+
     io.emit('state', systemState);
     addLog('info', `🎬 파이프라인 시작 (${productLimit}개 제품)`);
     
@@ -530,9 +581,13 @@ async function runPipeline(options = {}) {
             
             systemState.currentPhase = phase.id;
             io.emit('state', systemState);
-            
-            await runPhase(phase, productLimit);
-            
+
+            // ✅ 통합 로그에 Phase 시작 기록
+            writeUnifiedLog(unifiedLogPath, '');
+            writeUnifiedLog(unifiedLogPath, `═══ ${phase.name.toUpperCase()} 시작 ═══`);
+
+            await runPhase(phase, productLimit, null, null, null, unifiedLogPath);
+
             await new Promise(resolve => setTimeout(resolve, 2000));
         }
         
@@ -545,7 +600,16 @@ async function runPipeline(options = {}) {
         io.emit('state', systemState);
         
         addLog('success', `🎉 파이프라인 완료! (소요 시간: ${Math.floor(duration / 60)}분 ${duration % 60}초)`);
-        
+
+        // ✅ 통합 로그에 완료 기록
+        writeUnifiedLog(unifiedLogPath, '');
+        writeUnifiedLog(unifiedLogPath, '═══════════════════════════════════════════════════════════════════════');
+        writeUnifiedLog(unifiedLogPath, '🎉 파이프라인 완료!');
+        writeUnifiedLog(unifiedLogPath, `⏱️  소요 시간: ${Math.floor(duration / 60)}분 ${duration % 60}초`);
+        writeUnifiedLog(unifiedLogPath, `✅ 성공: ${systemState.stats.successCount}개`);
+        writeUnifiedLog(unifiedLogPath, `❌ 실패: ${systemState.stats.failedCount}개`);
+        writeUnifiedLog(unifiedLogPath, '═══════════════════════════════════════════════════════════════════════');
+
         addExecutionHistory({
             id: executionId,
             startTime: startTime.toISOString(),
@@ -1284,8 +1348,9 @@ app.get('/api/logs/files', (req, res) => {
             })
             .sort((a, b) => new Date(b.modifiedAt) - new Date(a.modifiedAt));
         
-        // Phase별로 그룹화
+        // Phase별로 그룹화 (+ pipeline 통합 로그 추가)
         const grouped = {
+            pipeline: [],  // ✅ 통합 로그 그룹 추가
             phase0: [],
             phase1: [],
             phase2: [],
@@ -1293,13 +1358,18 @@ app.get('/api/logs/files', (req, res) => {
             phase4: [],
             phase5: []
         };
-        
+
         allFiles.forEach(file => {
-            const match = file.name.match(/^phase(\d)/);
-            if (match) {
-                const phase = `phase${match[1]}`;
-                if (grouped[phase]) {
-                    grouped[phase].push(file);
+            // ✅ pipeline 로그 먼저 체크
+            if (file.name.startsWith('pipeline_')) {
+                grouped.pipeline.push(file);
+            } else {
+                const match = file.name.match(/^phase(\d)/);
+                if (match) {
+                    const phase = `phase${match[1]}`;
+                    if (grouped[phase]) {
+                        grouped[phase].push(file);
+                    }
                 }
             }
         });
@@ -1376,10 +1446,11 @@ app.get('/api/logs/summary', (req, res) => {
         if (!fs.existsSync(LOGS_DIR)) {
             return res.json({ phases: {} });
         }
-        
-        const phases = ['phase0', 'phase1', 'phase2', 'phase3', 'phase4', 'phase5'];
+
+        // ✅ pipeline 통합 로그 그룹 추가
+        const phases = ['pipeline', 'phase0', 'phase1', 'phase2', 'phase3', 'phase4', 'phase5'];
         const result = {};
-        
+
         phases.forEach(phase => {
             const phaseFiles = fs.readdirSync(LOGS_DIR)
                 .filter(f => f.startsWith(phase) && f.endsWith('.log'))
@@ -1457,8 +1528,9 @@ app.get('/api/logs/summary', (req, res) => {
 app.get('/api/logs/summary/:phase', (req, res) => {
     try {
         const { phase } = req.params;
-        
-        if (!['phase0', 'phase1', 'phase2', 'phase3', 'phase4', 'phase5'].includes(phase)) {
+
+        // ✅ pipeline 그룹 추가
+        if (!['pipeline', 'phase0', 'phase1', 'phase2', 'phase3', 'phase4', 'phase5'].includes(phase)) {
             return res.status(400).json({ error: '유효하지 않은 Phase' });
         }
         

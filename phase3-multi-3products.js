@@ -69,6 +69,10 @@ function cleanupOldLogs() {
 }
 
 const deletedLogs = cleanupOldLogs();
+
+// ✅ 통합 로그 경로 (파이프라인 실행 시 설정됨)
+const UNIFIED_LOG_PATH = process.env.UNIFIED_LOG_PATH || null;
+
 const LOG_FILENAME = `phase3_${getSydneyTimeForFile()}.log`;
 const LOG_PATH = path.join(LOG_DIR, LOG_FILENAME);
 const logStream = fs.createWriteStream(LOG_PATH, { flags: 'a' });
@@ -78,6 +82,25 @@ function log(...args) {
     const message = args.join(' ');
     console.log(timestamp, message);
     logStream.write(`${timestamp} ${message}\n`);
+
+    // ✅ 통합 로그에도 기록
+    if (UNIFIED_LOG_PATH) {
+        try {
+            fs.appendFileSync(UNIFIED_LOG_PATH, `${timestamp} ${message}\n`);
+        } catch (e) {
+            // 통합 로그 기록 실패 시 무시
+        }
+    }
+}
+
+// ✅ 통합 로그에 Phase 시작 구분선 추가
+if (UNIFIED_LOG_PATH) {
+    const separator = '═══ PHASE 3: AI 크롭 시작 ═══';
+    try {
+        fs.appendFileSync(UNIFIED_LOG_PATH, `\n${separator}\n`);
+    } catch (e) {
+        // 무시
+    }
 }
 
 // ==================== 환경 변수 ====================

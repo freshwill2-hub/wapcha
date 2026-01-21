@@ -105,6 +105,7 @@
                 <!-- Phase 탭 -->
                 <div class="flex flex-wrap gap-1 mb-3">
                     <button onclick="filterPhase('all')" class="phase-tab px-2 py-1 rounded text-xs active" data-phase="all">전체</button>
+                    <button onclick="filterPhase('pipeline')" class="phase-tab px-2 py-1 rounded text-xs bg-purple-900/50" data-phase="pipeline">📦통합</button>
                     <button onclick="filterPhase('phase0')" class="phase-tab px-2 py-1 rounded text-xs" data-phase="phase0">P0</button>
                     <button onclick="filterPhase('phase1')" class="phase-tab px-2 py-1 rounded text-xs" data-phase="phase1">P1</button>
                     <button onclick="filterPhase('phase2')" class="phase-tab px-2 py-1 rounded text-xs" data-phase="phase2">P2</button>
@@ -172,6 +173,7 @@
                 let totalSuccess = 0, totalErrors = 0, totalWarnings = 0;
                 
                 const phaseNames = {
+                    pipeline: '📦 통합 파이프라인',
                     phase0: 'Phase 0: URL 수집',
                     phase1: 'Phase 1: 스크래핑',
                     phase2: 'Phase 2: 배경 제거',
@@ -249,15 +251,18 @@
         function renderFileList() {
             const container = document.getElementById('file-list');
             let html = '';
-            
-            const phases = currentPhaseFilter === 'all' 
-                ? ['phase0', 'phase1', 'phase2', 'phase3', 'phase4', 'phase5']
+
+            // ✅ pipeline 그룹 추가
+            const phases = currentPhaseFilter === 'all'
+                ? ['pipeline', 'phase0', 'phase1', 'phase2', 'phase3', 'phase4', 'phase5']
                 : [currentPhaseFilter];
-            
+
             phases.forEach(phase => {
                 const files = allFiles[phase] || [];
                 if (files.length > 0) {
-                    html += `<div class="text-xs text-cyan-400 font-medium mt-2 mb-1">${phase.toUpperCase()}</div>`;
+                    const label = phase === 'pipeline' ? '📦 PIPELINE' : phase.toUpperCase();
+                    const colorClass = phase === 'pipeline' ? 'text-purple-400' : 'text-cyan-400';
+                    html += `<div class="text-xs ${colorClass} font-medium mt-2 mb-1">${label}</div>`;
                     files.slice(0, 5).forEach(file => {
                         const isActive = currentFile === file.name;
                         html += `
