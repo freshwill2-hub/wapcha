@@ -111,7 +111,7 @@ const MEMORY_CHECK_INTERVAL = 5;
 
 const openai = OPENAI_API_KEY ? new OpenAI({ apiKey: OPENAI_API_KEY }) : null;
 
-log('🚀 Phase 1: 제품 상세 스크래핑 (v2.10 - 빈 title_kr만 조회 + 용량 초과 표시)');
+log('🚀 Phase 1: 제품 상세 스크래핑 (v2.9 - 용량 제한 기능 추가)');
 log('='.repeat(70));
 log('🔧 설정 확인:');
 log(`- NocoDB URL: ${NOCODB_API_URL}`);
@@ -124,10 +124,10 @@ if (deletedLogs.length > 0) {
     log(`🧹 오래된 로그 ${deletedLogs.length}개 삭제됨 (${LOG_RETENTION_DAYS}일 이상)`);
 }
 log('');
-log('🆕 v2.10 수정 사항:');
-log('   ✅ title_kr이 비어있는 제품만 조회 (용량 초과 제외)');
-log('   ✅ 용량 초과 시 title_kr에 "용량 초과" 표시');
-log('   ✅ 용량 제한 기능 유지 (v2.9에서 계승)');
+log('🆕 v2.9 수정 사항:');
+log('   ✅ 용량 제한 기능 추가 (MAX_VOLUME_LIMIT 환경변수)');
+log('   ✅ 타이틀에서 총 용량 계산 (ml, g 단위)');
+log('   ✅ 용량 초과 제품 자동 스킵');
 log('   ✅ 세트 감지 로직 유지 (v2.7에서 계승)');
 log('   ✅ 가격 셀렉터 분리 유지 (v2.8에서 계승)');
 log('');
@@ -612,17 +612,15 @@ Output ONLY the translated text, no explanations.`
 // ==================== NocoDB: 제품 가져오기 ====================
 async function getOliveyoungProducts(limit = 100, offset = 0) {
     try {
-        log(`📥 NocoDB에서 제품 가져오는 중 (title_kr이 비어있는 제품만, limit: ${limit})...`);
-
-        // ✅ v2.10: title_kr이 비어있거나 null인 제품만 가져오기 (용량 초과 제외)
+        log(`📥 NocoDB에서 제품 가져오는 중 (offset: ${offset}, limit: ${limit})...`);
+        
         const response = await axios.get(
             `${NOCODB_API_URL}/api/v2/tables/${OLIVEYOUNG_TABLE_ID}/records`,
             {
                 headers: { 'xc-token': NOCODB_TOKEN },
                 params: {
                     offset: offset,
-                    limit: limit,
-                    where: '((title_kr,is,null)~or(title_kr,eq,))~and~not(title_kr,like,%용량 초과%)'
+                    limit: limit
                 }
             }
         );
@@ -862,7 +860,7 @@ async function processProductImages(product, imageUrls) {
 
 // ==================== 메인 ====================
 async function main() {
-    log('🚀 Phase 1: 메인 갤러리 이미지 + 타이틀/가격/설명 추출 (v2.10)');
+    log('🚀 Phase 1: 메인 갤러리 이미지 + 타이틀/가격/설명 추출 (v2.9)');
     log('='.repeat(70));
     log('');
     
@@ -1376,15 +1374,10 @@ async function main() {
                                     stats.volumeExceededSkipped++;
                                     skippedCount++;
                                     processedCount++;
-
-                                    // ✅ v2.10: title_kr에 "용량 초과"로 표시하여 다음 실행 시 스킵
-                                    await updateProduct(product.Id, { title_kr: '용량 초과' });
-                                    log(`   📝 title_kr을 "용량 초과"로 설정함`);
-
                                     return;  // 다음 제품으로
                                 }
                             }
-
+                            
                             // ✅ v2.10: 용량 제한 체크 (상세설명 용량 포함)
                             if (MAX_VOLUME_LIMIT > 0) {
                                 let totalVolume = calculateTotalVolume(cleanedTitle);
@@ -1415,11 +1408,6 @@ async function main() {
                                     stats.volumeExceededSkipped++;
                                     skippedCount++;
                                     processedCount++;
-
-                                    // ✅ v2.10: title_kr에 "용량 초과"로 표시하여 다음 실행 시 스킵
-                                    await updateProduct(product.Id, { title_kr: '용량 초과' });
-                                    log(`   📝 title_kr을 "용량 초과"로 설정함`);
-
                                     return;  // 다음 제품으로
                                 }
                             }
@@ -1447,15 +1435,10 @@ async function main() {
                                     stats.volumeExceededSkipped++;
                                     skippedCount++;
                                     processedCount++;
-
-                                    // ✅ v2.10: title_kr에 "용량 초과"로 표시하여 다음 실행 시 스킵
-                                    await updateProduct(product.Id, { title_kr: '용량 초과' });
-                                    log(`   📝 title_kr을 "용량 초과"로 설정함`);
-
                                     return;  // 다음 제품으로
                                 }
                             }
-
+                            
                             if (missingFields.needsTitleEn && product.title_kr) {
                                 const englishTitle = await translateToEnglish(product.title_kr);
                                 if (englishTitle) {
