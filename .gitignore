@@ -3,6 +3,10 @@ rembg-env/
 complete-backup-20260111_070224/
 models/
 .env
+.env.*
+.env\ *
+*.env
+*env*backup*
 *.log
 tmp/
 .DS_Store
