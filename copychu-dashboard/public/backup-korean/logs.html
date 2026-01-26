@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📜 Log Viewer - Copychu</title>
+    <title>📜 로그 뷰어 - Copychu</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -34,78 +34,78 @@
 </head>
 <body class="text-gray-100 min-h-screen p-6">
     <div class="max-w-7xl mx-auto">
-        <!-- Header -->
+        <!-- 헤더 -->
         <div class="flex justify-between items-center mb-6">
             <div>
                 <h1 class="text-2xl font-bold flex items-center gap-2">
-                    <span>📜</span> Log Viewer
+                    <span>📜</span> 로그 뷰어
                 </h1>
-                <p class="text-gray-400 text-sm mt-1">View execution logs by phase and summary</p>
+                <p class="text-gray-400 text-sm mt-1">Phase별 실행 로그 확인 및 요약</p>
             </div>
             <div class="flex gap-3">
                 <a href="/" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm">
-                    ← Dashboard
+                    ← 대시보드
                 </a>
                 <button onclick="refreshAll()" class="btn-primary px-4 py-2 rounded-lg text-sm font-medium text-slate-900">
-                    🔄 Refresh
+                    🔄 새로고침
                 </button>
             </div>
         </div>
 
-        <!-- Stats Cards -->
+        <!-- 통계 카드 -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <div class="card p-4 flex items-center gap-3">
                 <span class="text-3xl">📁</span>
                 <div>
-                    <p class="text-xs text-gray-400">Total Log Files</p>
+                    <p class="text-xs text-gray-400">총 로그 파일</p>
                     <p class="text-xl font-bold" id="stat-total-files">-</p>
                 </div>
             </div>
             <div class="card p-4 flex items-center gap-3">
                 <span class="text-3xl">✅</span>
                 <div>
-                    <p class="text-xs text-gray-400">Success</p>
+                    <p class="text-xs text-gray-400">성공</p>
                     <p class="text-xl font-bold text-green-400" id="stat-success">-</p>
                 </div>
             </div>
             <div class="card p-4 flex items-center gap-3">
                 <span class="text-3xl">❌</span>
                 <div>
-                    <p class="text-xs text-gray-400">Errors</p>
+                    <p class="text-xs text-gray-400">오류</p>
                     <p class="text-xl font-bold text-red-400" id="stat-errors">-</p>
                 </div>
             </div>
             <div class="card p-4 flex items-center gap-3">
                 <span class="text-3xl">⚠️</span>
                 <div>
-                    <p class="text-xs text-gray-400">Warnings</p>
+                    <p class="text-xs text-gray-400">경고</p>
                     <p class="text-xl font-bold text-yellow-400" id="stat-warnings">-</p>
                 </div>
             </div>
         </div>
 
-        <!-- Overall Summary -->
+        <!-- 전체 요약 -->
         <div class="card p-4 mb-6">
             <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
-                <span>📊</span> Latest Execution Summary by Phase
+                <span>📊</span> Phase별 최신 실행 요약
             </h2>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="phase-summary">
-                <p class="text-gray-500 col-span-full text-center py-4">Loading...</p>
+                <p class="text-gray-500 col-span-full text-center py-4">로딩 중...</p>
             </div>
         </div>
 
-        <!-- Log File Selection and Viewer -->
+        <!-- 로그 파일 선택 및 뷰어 -->
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            <!-- File List -->
+            <!-- 파일 목록 -->
             <div class="card p-4">
                 <h3 class="font-semibold mb-3 flex items-center gap-2">
-                    <span>📂</span> Log Files
+                    <span>📂</span> 로그 파일
                 </h3>
                 
-                <!-- Phase Tabs -->
+                <!-- Phase 탭 -->
                 <div class="flex flex-wrap gap-1 mb-3">
-                    <button onclick="filterPhase('all')" class="phase-tab px-2 py-1 rounded text-xs active" data-phase="all">All</button>
-                    <button onclick="filterPhase('pipeline')" class="phase-tab px-2 py-1 rounded text-xs bg-purple-900/50" data-phase="pipeline">📦Pipeline</button>
+                    <button onclick="filterPhase('all')" class="phase-tab px-2 py-1 rounded text-xs active" data-phase="all">전체</button>
+                    <button onclick="filterPhase('pipeline')" class="phase-tab px-2 py-1 rounded text-xs bg-purple-900/50" data-phase="pipeline">📦통합</button>
                     <button onclick="filterPhase('phase0')" class="phase-tab px-2 py-1 rounded text-xs" data-phase="phase0">P0</button>
                     <button onclick="filterPhase('phase1')" class="phase-tab px-2 py-1 rounded text-xs" data-phase="phase1">P1</button>
                     <button onclick="filterPhase('phase2')" class="phase-tab px-2 py-1 rounded text-xs" data-phase="phase2">P2</button>
@@ -115,31 +115,31 @@
                 </div>
                 
                 <div class="space-y-1 max-h-96 overflow-y-auto" id="file-list">
-                    <p class="text-gray-500 text-sm text-center py-4">Loading...</p>
+                    <p class="text-gray-500 text-sm text-center py-4">로딩 중...</p>
                 </div>
             </div>
             
-            <!-- Log Content -->
+            <!-- 로그 내용 -->
             <div class="lg:col-span-3 card p-4">
                 <div class="flex justify-between items-center mb-3">
                     <h3 class="font-semibold flex items-center gap-2">
                         <span>📜</span> 
-                        <span id="current-file-name">Select a file</span>
+                        <span id="current-file-name">파일을 선택하세요</span>
                     </h3>
                     <div class="flex gap-2">
                         <select id="filter-type" class="bg-slate-700 border border-slate-600 rounded px-2 py-1 text-xs" onchange="loadSelectedFile()">
-                            <option value="all">All Logs</option>
-                            <option value="summary">Summary Only</option>
-                            <option value="errors">Errors Only</option>
+                            <option value="all">전체 로그</option>
+                            <option value="summary">요약만</option>
+                            <option value="errors">오류만</option>
                         </select>
                         <button onclick="copyLogs()" class="px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded text-xs">
-                            📋 Copy
+                            📋 복사
                         </button>
                     </div>
                 </div>
                 
                 <div class="log-container bg-slate-900 rounded-lg p-3" id="log-content">
-                    <p class="text-gray-500 text-center py-8">← Select a log file on the left</p>
+                    <p class="text-gray-500 text-center py-8">← 왼쪽에서 로그 파일을 선택하세요</p>
                 </div>
                 
                 <div class="flex justify-between items-center mt-3 text-xs text-gray-500">
@@ -156,13 +156,13 @@
         let currentFile = null;
         let currentLogContent = '';
         
-        // Initialize
+        // 초기화
         document.addEventListener('DOMContentLoaded', () => {
             loadSummary();
             loadFileList();
         });
         
-        // Load Overall Summary
+        // 전체 요약 로드
         async function loadSummary() {
             try {
                 const response = await fetch('/api/logs/summary');
@@ -173,12 +173,12 @@
                 let totalSuccess = 0, totalErrors = 0, totalWarnings = 0;
                 
                 const phaseNames = {
-                    pipeline: '📦 Pipeline',
-                    phase0: 'Phase 0: URL Collection',
-                    phase1: 'Phase 1: Scraping',
-                    phase2: 'Phase 2: BG Removal',
-                    phase3: 'Phase 3: AI Crop',
-                    phase4: 'Phase 4: Image Selection',
+                    pipeline: '📦 통합 파이프라인',
+                    phase0: 'Phase 0: URL 수집',
+                    phase1: 'Phase 1: 스크래핑',
+                    phase2: 'Phase 2: 배경 제거',
+                    phase3: 'Phase 3: AI 크롭',
+                    phase4: 'Phase 4: 이미지 선별',
                     phase5: 'Phase 5: Shopify'
                 };
                 
@@ -189,11 +189,11 @@
                         else if (info.hasWarnings) statusClass = 'summary-warning';
                         else if (info.latestFile) statusClass = 'summary-success';
                         
-                        // Count stats
+                        // 통계 카운트
                         info.summary.forEach(line => {
-                            if (line.includes('✅') || line.includes('success') || line.includes('Success')) totalSuccess++;
-                            if (line.includes('❌') || line.includes('fail') || line.includes('Fail')) totalErrors++;
-                            if (line.includes('⚠️') || line.includes('warn') || line.includes('Warn')) totalWarnings++;
+                            if (line.includes('✅') || line.includes('성공')) totalSuccess++;
+                            if (line.includes('❌') || line.includes('실패')) totalErrors++;
+                            if (line.includes('⚠️') || line.includes('경고')) totalWarnings++;
                         });
                         
                         html += `
@@ -202,10 +202,10 @@
                                 <div class="flex justify-between items-start mb-2">
                                     <h4 class="font-medium text-sm">${phaseNames[phase] || phase}</h4>
                                     <span class="text-xs px-2 py-0.5 rounded ${info.hasErrors ? 'bg-red-500/20 text-red-400' : info.hasWarnings ? 'bg-yellow-500/20 text-yellow-400' : 'bg-green-500/20 text-green-400'}">
-                                        ${info.hasErrors ? 'Error' : info.hasWarnings ? 'Warning' : 'OK'}
+                                        ${info.hasErrors ? '오류' : info.hasWarnings ? '경고' : '정상'}
                                     </span>
                                 </div>
-                                <p class="text-xs text-gray-500 mb-2">${info.latestFile || 'No logs'}</p>
+                                <p class="text-xs text-gray-500 mb-2">${info.latestFile || '로그 없음'}</p>
                                 <div class="text-xs space-y-1 max-h-24 overflow-hidden">
                                     ${info.summary.slice(0, 5).map(line => `
                                         <div class="log-line ${getLogClass(line)} truncate">${escapeHtml(line)}</div>
@@ -216,20 +216,20 @@
                     });
                 }
                 
-                container.innerHTML = html || '<p class="text-gray-500 col-span-full text-center py-4">No summary data</p>';
+                container.innerHTML = html || '<p class="text-gray-500 col-span-full text-center py-4">요약 데이터 없음</p>';
                 
-                // Update stats
+                // 통계 업데이트
                 document.getElementById('stat-success').textContent = totalSuccess;
                 document.getElementById('stat-errors').textContent = totalErrors;
                 document.getElementById('stat-warnings').textContent = totalWarnings;
                 
             } catch (error) {
-                console.error('Failed to load summary:', error);
-                document.getElementById('phase-summary').innerHTML = '<p class="text-red-400 col-span-full text-center py-4">Load failed</p>';
+                console.error('요약 로드 실패:', error);
+                document.getElementById('phase-summary').innerHTML = '<p class="text-red-400 col-span-full text-center py-4">로드 실패</p>';
             }
         }
         
-        // Load File List
+        // 파일 목록 로드
         async function loadFileList() {
             try {
                 const response = await fetch('/api/logs/files');
@@ -242,17 +242,17 @@
                 renderFileList();
                 
             } catch (error) {
-                console.error('Failed to load file list:', error);
-                document.getElementById('file-list').innerHTML = '<p class="text-red-400 text-sm text-center py-4">Load failed</p>';
+                console.error('파일 목록 로드 실패:', error);
+                document.getElementById('file-list').innerHTML = '<p class="text-red-400 text-sm text-center py-4">로드 실패</p>';
             }
         }
         
-        // Render File List
+        // 파일 목록 렌더링
         function renderFileList() {
             const container = document.getElementById('file-list');
             let html = '';
 
-            // Add pipeline group
+            // ✅ pipeline 그룹 추가
             const phases = currentPhaseFilter === 'all'
                 ? ['pipeline', 'phase0', 'phase1', 'phase2', 'phase3', 'phase4', 'phase5']
                 : [currentPhaseFilter];
@@ -276,10 +276,10 @@
                 }
             });
             
-            container.innerHTML = html || '<p class="text-gray-500 text-sm text-center py-4">No log files</p>';
+            container.innerHTML = html || '<p class="text-gray-500 text-sm text-center py-4">로그 파일 없음</p>';
         }
         
-        // Phase Filter
+        // Phase 필터
         function filterPhase(phase) {
             currentPhaseFilter = phase;
             
@@ -290,7 +290,7 @@
             renderFileList();
         }
         
-        // Select Phase Card - Load Latest File
+        // Phase 카드 클릭 시 해당 Phase 최신 파일 선택
         function selectPhaseFile(phase) {
             if (allFiles[phase] && allFiles[phase].length > 0) {
                 filterPhase(phase);
@@ -298,19 +298,19 @@
             }
         }
         
-        // Select File
+        // 파일 선택
         async function selectFile(filename) {
             currentFile = filename;
             renderFileList();
             await loadSelectedFile();
         }
         
-        // Load Selected File
+        // 선택된 파일 로드
         async function loadSelectedFile() {
             if (!currentFile) return;
             
             document.getElementById('current-file-name').textContent = currentFile;
-            document.getElementById('log-content').innerHTML = '<p class="text-gray-500 text-center py-8">Loading...</p>';
+            document.getElementById('log-content').innerHTML = '<p class="text-gray-500 text-center py-8">로딩 중...</p>';
             
             try {
                 const filter = document.getElementById('filter-type').value;
@@ -322,63 +322,91 @@
                 displayLog(data.lines || []);
                 
                 document.getElementById('log-info').textContent = `${data.size || 0} bytes · ${data.modifiedAt || ''}`;
-                document.getElementById('log-count').textContent = `${data.lines?.length || 0} lines`;
+                document.getElementById('log-count').textContent = `${data.lines?.length || 0}줄`;
                 
             } catch (error) {
-                console.error('Failed to load file:', error);
-                document.getElementById('log-content').innerHTML = '<p class="text-red-400 text-center py-8">Load failed</p>';
+                console.error('파일 로드 실패:', error);
+                document.getElementById('log-content').innerHTML = '<p class="text-red-400 text-center py-8">로드 실패</p>';
             }
         }
         
-        // Display Log
+        // 로그 표시
         function displayLog(lines) {
             const container = document.getElementById('log-content');
             
             if (lines.length === 0) {
-                container.innerHTML = '<p class="text-gray-500 text-center py-8">No logs to display</p>';
+                container.innerHTML = '<p class="text-gray-500 text-center py-8">표시할 로그가 없습니다</p>';
                 return;
             }
             
             let html = '';
             lines.forEach(line => {
                 const logClass = getLogClass(line);
-                const isHighlight = line.includes('🎉') || line.includes('Result') || line.includes('Complete!') || line.includes('Done!');
+                const isHighlight = line.includes('🎉') || line.includes('결과') || line.includes('완료!');
                 html += `<div class="log-line ${logClass} ${isHighlight ? 'log-highlight' : ''}">${escapeHtml(line)}</div>`;
             });
             
             container.innerHTML = html;
             
-            // Auto scroll
+            // 자동 스크롤
             container.scrollTop = container.scrollHeight;
         }
         
-        // Determine Log Class
+        // 로그 클래스 결정
         function getLogClass(line) {
-            if (line.includes('✅') || line.includes('success') || line.includes('Success') || line.includes('complete') || line.includes('Complete')) return 'log-success';
-            if (line.includes('❌') || line.includes('fail') || line.includes('Fail') || line.includes('error') || line.includes('Error')) return 'log-error';
-            if (line.includes('⚠️') || line.includes('warn') || line.includes('Warn') || line.includes('skip') || line.includes('Skip')) return 'log-warning';
+            if (line.includes('✅') || line.includes('성공') || line.includes('완료')) return 'log-success';
+            if (line.includes('❌') || line.includes('실패') || line.includes('오류') || line.includes('Error')) return 'log-error';
+            if (line.includes('⚠️') || line.includes('경고') || line.includes('스킵')) return 'log-warning';
             return 'log-info';
         }
         
-        // Copy Logs
-        function copyLogs() {
+        // 로그 복사 - HTTP 환경에서도 작동하도록 수정
+        async function copyLogs() {
             if (!currentLogContent) {
-                alert('No logs to copy');
+                alert('복사할 로그가 없습니다');
                 return;
             }
-            navigator.clipboard.writeText(currentLogContent).then(() => {
-                alert('Logs copied to clipboard!');
-            });
+
+            try {
+                // 방법 1: 클립보드 API 시도 (HTTPS/localhost에서 작동)
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(currentLogContent);
+                    alert('✅ 로그가 클립보드에 복사되었습니다!');
+                    return;
+                }
+
+                // 방법 2: fallback - textarea 사용 (HTTP에서도 작동)
+                const textArea = document.createElement('textarea');
+                textArea.value = currentLogContent;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                textArea.style.top = '-999999px';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+
+                const success = document.execCommand('copy');
+                document.body.removeChild(textArea);
+
+                if (success) {
+                    alert('✅ 로그가 클립보드에 복사되었습니다!');
+                } else {
+                    throw new Error('복사 실패');
+                }
+            } catch (err) {
+                console.error('복사 오류:', err);
+                alert('❌ 복사 실패: 브라우저에서 수동으로 복사해주세요');
+            }
         }
         
-        // Refresh All
+        // 전체 새로고침
         function refreshAll() {
             loadSummary();
             loadFileList();
             if (currentFile) loadSelectedFile();
         }
         
-        // Escape HTML
+        // HTML 이스케이프
         function escapeHtml(text) {
             const div = document.createElement('div');
             div.textContent = text;
