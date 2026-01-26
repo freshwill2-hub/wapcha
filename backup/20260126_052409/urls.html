@@ -4,16 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>URL Manager - Copychu Dashboard</title>
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="/socket.io/socket.io.js"></script>
     <style>
-        body {
-            background-color: #0f172a;
-            font-family: 'Noto Sans KR', sans-serif;
-        }
+        body { background-color: #0f172a; }
         .card { background-color: #1e293b; border-radius: 12px; }
         .input-field { 
             background-color: #334155; 
@@ -122,131 +116,53 @@
             0%, 100% { opacity: 1; }
             50% { opacity: 0.4; }
         }
-
-        /* ✅ 사이드바 스타일 - index.html과 동일하게 */
-        .sidebar {
-            width: 224px;
-            background: #0f172a;
-            border-right: 1px solid #475569;
-            display: flex;
-            flex-direction: column;
-            position: fixed;
-            height: 100vh;
-            z-index: 100;
-        }
-
-        .sidebar .logo {
-            padding: 20px;
-            border-bottom: 1px solid #475569;
-        }
-
-        .sidebar .logo h1 {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 20px;
-            font-weight: 700;
-            color: #22d3ee;
-            letter-spacing: -0.5px;
-        }
-
-        .sidebar .logo span {
-            font-size: 11px;
-            color: #64748b;
-            font-weight: 400;
-            display: block;
-            margin-top: 4px;
-        }
-
-        .sidebar nav {
-            flex: 1;
-            padding: 12px;
-        }
-
-        .sidebar .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 16px;
-            color: #94a3b8;
-            text-decoration: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s;
-            margin-bottom: 4px;
-            font-size: 14px;
-            border-left: 3px solid transparent;
-        }
-
-        .sidebar .nav-item:hover {
-            background: #1e293b;
-            color: #f1f5f9;
-        }
-
-        .sidebar .nav-item.nav-active {
-            background: rgba(34, 211, 238, 0.15);
-            color: #22d3ee;
-            border-left-color: #22d3ee;
-        }
-
-        .sidebar .nav-icon {
-            width: 18px;
-            height: 18px;
-            flex-shrink: 0;
-        }
     </style>
 </head>
 <body class="text-gray-100 min-h-screen">
-    <!-- 사이드바 -->
-    <aside class="sidebar">
-        <div class="logo">
-            <h1>COPYCHU</h1>
-            <span>Automation Dashboard</span>
+    <!-- Sidebar -->
+    <div class="fixed left-0 top-0 h-full w-56 bg-slate-900 border-r border-slate-700">
+        <div class="p-5 border-b border-slate-700">
+            <h1 class="text-xl font-bold text-cyan-400">COPYCHU</h1>
+            <p class="text-xs text-gray-500 mt-1">Automation Dashboard</p>
         </div>
-
-        <nav>
-            <a class="nav-item" href="/">
-                <span class="nav-icon">📊</span>
-                <span>Dashboard</span>
+        
+        <nav class="p-3 space-y-1">
+            <a href="/" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-slate-800 hover:text-white transition-colors">
+                <span>📊</span> Dashboard
             </a>
-            <a class="nav-item" href="/#pipeline">
-                <span class="nav-icon">▶️</span>
-                <span>Pipeline</span>
+            <a href="/#pipeline" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-slate-800 hover:text-white transition-colors">
+                <span>▶️</span> Pipeline
             </a>
-            <a class="nav-item nav-active" href="/urls.html">
-                <span class="nav-icon">🔗</span>
-                <span>URL Manager</span>
+            <a href="/urls.html" class="flex items-center gap-3 px-4 py-3 rounded-lg nav-active">
+                <span>🔗</span> URL Manager
             </a>
-            <a class="nav-item" href="/#monitor">
-                <span class="nav-icon">📺</span>
-                <span>Monitor</span>
+            <a href="/#monitor" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-slate-800 hover:text-white transition-colors">
+                <span>📺</span> Monitor
             </a>
-            <a class="nav-item" href="/logs.html">
-                <span class="nav-icon">📜</span>
-                <span>Log Viewer</span>
+            <a href="/logs.html" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-slate-800 hover:text-white transition-colors">
+                <span>📜</span> Log Viewer
             </a>
-            <a class="nav-item" href="/#gallery">
-                <span class="nav-icon">🖼️</span>
-                <span>Gallery</span>
+            <a href="/#gallery" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-slate-800 hover:text-white transition-colors">
+                <span>🖼️</span> Gallery
             </a>
-            <a class="nav-item" href="/#stats">
-                <span class="nav-icon">📈</span>
-                <span>Statistics</span>
+            <a href="/#stats" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-slate-800 hover:text-white transition-colors">
+                <span>📈</span> Statistics
             </a>
-            <a class="nav-item" href="/#settings">
-                <span class="nav-icon">⚙️</span>
-                <span>Settings</span>
+            <a href="/#settings" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-slate-800 hover:text-white transition-colors">
+                <span>⚙️</span> Settings
             </a>
         </nav>
-
-        <div class="status-indicator" style="padding: 16px 20px; border-top: 1px solid #475569;">
+        
+        <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-700">
             <div class="status-badge idle" id="status-badge">
                 <div class="status-dot"></div>
                 <span id="status-text">Idle</span>
             </div>
         </div>
-    </aside>
+    </div>
 
     <!-- Main Content -->
-    <div style="margin-left: 224px; padding: 32px;">
+    <div class="ml-56 p-8">
         <!-- Header -->
         <div class="mb-8">
             <h2 class="text-2xl font-bold">URL Manager</h2>
