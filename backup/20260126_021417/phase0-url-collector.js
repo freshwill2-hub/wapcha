@@ -206,26 +206,6 @@ async function getShopifyExistingSkus() {
     }
 }
 
-// ==================== ✅ NEW: URL에서 카테고리 추출 ====================
-function extractCategoryFromUrl(url) {
-    try {
-        const urlObj = new URL(url);
-        const midCategory = urlObj.searchParams.get('midCategory');
-        if (midCategory) {
-            return decodeURIComponent(midCategory);
-        }
-        const t2ndCategory = urlObj.searchParams.get('t_2nd_category_type');
-        if (t2ndCategory) {
-            const decoded = decodeURIComponent(t2ndCategory);
-            const match = decoded.match(/[중소]_(.+)/);
-            return match ? match[1] : decoded;
-        }
-        return null;
-    } catch (e) {
-        return null;
-    }
-}
-
 // ==================== NocoDB: 기존 SKU 확인 ====================
 async function getExistingSkus() {
     try {
@@ -508,13 +488,9 @@ async function collectUrls() {
         for (let i = 0; i < collectedProducts.length; i++) {
             const product = collectedProducts[i];
             
-            // ✅ 카테고리 정보 추가
-            const category = extractCategoryFromUrl(CATEGORY_URL);
-
             const productData = {
                 sku: product.sku,
-                product_url: product.url,
-                category: category || ''
+                product_url: product.url
             };
             
             const saved = await saveProductUrl(productData);

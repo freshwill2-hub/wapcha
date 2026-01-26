@@ -158,11 +158,6 @@ const stats = {
     volumeExceededSkipped: 0
 };
 
-// ✅ v2.11: 용량 체크 제외 카테고리 (액체가 아닌 제품들)
-const VOLUME_CHECK_EXCLUDED_CATEGORIES = [
-    '티슈/패드', '티슈', '패드', '화장솜', '면봉', '마스크', '시트마스크'
-];
-
 // ==================== 메모리 관리 함수 ====================
 function getMemoryUsage() {
     const used = process.memoryUsage();
@@ -209,42 +204,44 @@ function checkMissingFields(product) {
     return missing;
 }
 
-// ==================== ✅ v2.11: 용량 총합 계산 함수 (쉼표 처리 개선) ====================
+// ==================== ✅ v2.9: 용량 총합 계산 함수 ====================
 function calculateTotalVolume(title) {
     if (!title) return 0;
-
+    
     let totalVolume = 0;
-
+    
     // 1. 개수 정보 추출 (예: "2개", "3입")
-    const countMatch = title.match(/(\d+)\s*(개|입|pcs)/i);
+    const countMatch = title.match(/(\d+)\s*(개|입|매|pcs)/i);
     const productCount = countMatch ? parseInt(countMatch[1]) : 1;
-
+    
     // 2. 모든 용량 추출 (ml, g 단위)
-    // ✅ v2.11: 천 단위 구분자 쉼표 처리 (예: 1,112ml → 1112ml)
-    const volumePattern = /(\d{1,3}(?:,\d{3})*|\d+)\s*(ml|mL|ML|g|G)/gi;
+    const volumePattern = /(\d+)\s*(ml|mL|ML|g|G)/gi;
     const volumes = [];
     let match;
-
+    
     while ((match = volumePattern.exec(title)) !== null) {
-        // ✅ 쉼표 제거 후 숫자로 변환
-        const value = parseInt(match[1].replace(/,/g, ''));
+        const value = parseInt(match[1]);
         const unit = match[2].toLowerCase();
+        // g를 ml로 대략 변환 (밀도 ~1 가정, 화장품은 대체로 비슷)
         const mlValue = unit === 'g' ? value : value;
         volumes.push(mlValue);
     }
-
+    
     // 3. 용량 합계 계산
     if (volumes.length === 0) {
-        return 0;
+        return 0;  // 용량 정보 없음
     } else if (volumes.length === 1) {
+        // 단일 용량 × 개수
         totalVolume = volumes[0] * productCount;
     } else {
+        // 여러 용량이 있으면 합산 (세트 제품)
         totalVolume = volumes.reduce((sum, v) => sum + v, 0);
+        // 개수가 명시되어 있고 용량이 하나만 반복된 것 같으면 곱하기
         if (productCount > 1 && volumes.every(v => v === volumes[0])) {
             totalVolume = volumes[0] * productCount;
         }
     }
-
+    
     return totalVolume;
 }
 
@@ -1387,50 +1384,51 @@ async function main() {
                             log(`   원본: "${productData.rawTitle.substring(0, 60)}"`);
                             log(`   정제: "${cleanedTitle}"`);
                             
-                            // ✅ v2.11: 용량 제한 체크 (카테고리 제외 + 쉼표 처리)
+                            // ✅ v2.9: 용량 제한 체크
                             if (MAX_VOLUME_LIMIT > 0) {
-                                // ✅ 카테고리 기반 용량 체크 제외
-                                const productCategory = product.category || '';
-                                const isExcludedCategory = VOLUME_CHECK_EXCLUDED_CATEGORIES.some(cat =>
-                                    productCategory.includes(cat) ||
-                                    cleanedTitle.includes('티슈') ||
-                                    cleanedTitle.includes('패드') ||
-                                    cleanedTitle.includes('마스크')
-                                );
-
-                                if (isExcludedCategory) {
-                                    log(`   📦 용량 체크 제외 (카테고리: ${productCategory || '타이틀에서 감지'})`);
-                                } else {
-                                    let totalVolume = calculateTotalVolume(cleanedTitle);
-                                    let volumeSource = '타이틀';
-
-                                    // 타이틀에 용량이 없으면 상세설명에서 가져오기
-                                    if (totalVolume === 0 && productData.infoTable.volume) {
-                                        totalVolume = calculateTotalVolume(productData.infoTable.volume);
-                                        volumeSource = '상세설명';
-
-                                        // 용량이 제한 이하이고 타이틀에 용량이 없으면 추가
-                                        if (totalVolume > 0 && totalVolume <= MAX_VOLUME_LIMIT) {
-                                            const volumeMatch = productData.infoTable.volume.match(/(\d{1,3}(?:,\d{3})*|\d+)\s*(ml|mL|ML|g|G)/i);
-                                            if (volumeMatch) {
-                                                const volumeNum = volumeMatch[1].replace(/,/g, '');
-                                                const volumeStr = `${volumeNum}${volumeMatch[2].toLowerCase()}`;
-                                                cleanedTitle = `${cleanedTitle} ${volumeStr}`;
-                                                updateData.title_kr = cleanedTitle;
-                                                log(`   ✅ 타이틀에 용량 추가: "${cleanedTitle}"`);
-                                            }
+                                const totalVolume = calculateTotalVolume(cleanedTitle);
+                                log(`   📦 용량 계산: ${totalVolume}ml (제한: ${MAX_VOLUME_LIMIT}ml)`);
+                                
+                                if (totalVolume > MAX_VOLUME_LIMIT) {
+                                    log(`   ⚠️  용량 초과! ${totalVolume}ml > ${MAX_VOLUME_LIMIT}ml → 스킵`);
+                                    stats.volumeExceededSkipped++;
+                                    skippedCount++;
+                                    processedCount++;
+                                    return;  // 다음 제품으로
+                                }
+                            }
+                            
+                            // ✅ v2.10: 용량 제한 체크 (상세설명 용량 포함)
+                            if (MAX_VOLUME_LIMIT > 0) {
+                                let totalVolume = calculateTotalVolume(cleanedTitle);
+                                let volumeSource = '타이틀';
+                                
+                                // 타이틀에 용량이 없으면 상세설명에서 가져오기
+                                if (totalVolume === 0 && productData.infoTable.volume) {
+                                    totalVolume = calculateTotalVolume(productData.infoTable.volume);
+                                    volumeSource = '상세설명';
+                                    
+                                    // 용량이 제한 이하이고 타이틀에 용량이 없으면 추가
+                                    if (totalVolume > 0 && totalVolume <= MAX_VOLUME_LIMIT) {
+                                        // 상세설명에서 첫 번째 용량 추출
+                                        const volumeMatch = productData.infoTable.volume.match(/(\d+)\s*(ml|mL|ML|g|G)/i);
+                                        if (volumeMatch) {
+                                            const volumeStr = `${volumeMatch[1]}${volumeMatch[2].toLowerCase()}`;
+                                            cleanedTitle = `${cleanedTitle} ${volumeStr}`;
+                                            updateData.title_kr = cleanedTitle;
+                                            log(`   ✅ 타이틀에 용량 추가: "${cleanedTitle}"`);
                                         }
                                     }
-
-                                    log(`   📦 용량 계산 (${volumeSource}): ${totalVolume}ml (제한: ${MAX_VOLUME_LIMIT}ml)`);
-
-                                    if (totalVolume > MAX_VOLUME_LIMIT) {
-                                        log(`   ⚠️  용량 초과! ${totalVolume}ml > ${MAX_VOLUME_LIMIT}ml → 스킵`);
-                                        stats.volumeExceededSkipped++;
-                                        skippedCount++;
-                                        processedCount++;
-                                        return;
-                                    }
+                                }
+                                
+                                log(`   📦 용량 계산 (${volumeSource}): ${totalVolume}ml (제한: ${MAX_VOLUME_LIMIT}ml)`);
+                                
+                                if (totalVolume > MAX_VOLUME_LIMIT) {
+                                    log(`   ⚠️  용량 초과! ${totalVolume}ml > ${MAX_VOLUME_LIMIT}ml → 스킵`);
+                                    stats.volumeExceededSkipped++;
+                                    skippedCount++;
+                                    processedCount++;
+                                    return;  // 다음 제품으로
                                 }
                             }
 
