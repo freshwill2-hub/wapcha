@@ -396,26 +396,6 @@ function cleanProductTitle(rawTitle) {
     cleaned = cleaned.replace(/^\s*\[[^\]]*\]\s*/g, '');
     cleaned = cleaned.replace(/\[[^\]]*\]/g, '');
     
-    // ==================== STEP 5.5: ✅ v2.9.1 용량×수량 괄호 패턴 보존 ====================
-    // (46매X3), (100mlX2), (50gx3) 같은 중요한 제품 정보 보존
-    const volumeCountParenMatch = cleaned.match(/\(([0-9]+)(매|ml|mL|ML|g|G)\s*[×xX]\s*([0-9]+)\)/i);
-    if (volumeCountParenMatch) {
-        const volume = volumeCountParenMatch[1];
-        const unit = volumeCountParenMatch[2];
-        const count = parseInt(volumeCountParenMatch[3]);
-        
-        if (setInfo) {
-            setInfo.volume = `${volume}${unit}`;
-            setInfo.count = count;
-            log(`   ✅ 용량×수량 패턴으로 업데이트: ${volume}${unit} × ${count}개`);
-        } else {
-            setInfo = { volume: `${volume}${unit}`, count: count, type: 'volume_count_paren' };
-            log(`   ✅ 용량×수량 패턴 감지: ${volume}${unit} × ${count}개`);
-            stats.setDetected++;
-        }
-        cleaned = cleaned.replace(volumeCountParenMatch[0], '');
-    }
-
     // ==================== STEP 6: 소괄호 제거 (증정품 정보) ====================
     cleaned = cleaned.replace(/\([^)]*\)/g, '');
     
