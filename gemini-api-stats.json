@@ -1,522 +1,64 @@
 {
-  "date": "2026-01-22",
-  "dailyCalls": 310,
+  "date": "2026-01-26",
+  "dailyCalls": 10,
   "dailyLimit": 1500,
-  "remaining": 1190,
-  "sessionCalls": 156,
+  "remaining": 1490,
+  "sessionCalls": 10,
   "byFunction": {
-    "analyzeImage": 55,
-    "getBadgeCropCoordinates": 23,
-    "detectMultipleProducts": 42,
-    "detectPackagingBox": 45,
-    "calculateCompletenessScore": 45,
-    "calculateTitleMatchScore": 45,
-    "calculateQualityScore": 45,
-    "getCropCoordinates_Naver": 2,
-    "getSingleProductCropCoordinates": 5,
-    "calculateSetCompositionScore": 3
+    "analyzeImage": 8,
+    "getSingleProductCropCoordinates": 2
   },
   "callHistory": [
     {
-      "function": "detectMultipleProducts",
-      "time": "2026-01-22T06:03:44.031Z",
-      "dailyTotal": 211
+      "function": "analyzeImage",
+      "time": "2026-01-26T09:57:46.956Z",
+      "dailyTotal": 1
     },
     {
-      "function": "detectPackagingBox",
-      "time": "2026-01-22T06:03:45.605Z",
-      "dailyTotal": 212
+      "function": "analyzeImage",
+      "time": "2026-01-26T09:58:02.718Z",
+      "dailyTotal": 2
     },
     {
-      "function": "calculateCompletenessScore",
-      "time": "2026-01-22T06:03:46.963Z",
-      "dailyTotal": 213
+      "function": "analyzeImage",
+      "time": "2026-01-26T09:58:12.426Z",
+      "dailyTotal": 3
     },
     {
-      "function": "calculateTitleMatchScore",
-      "time": "2026-01-22T06:03:48.211Z",
-      "dailyTotal": 214
+      "function": "analyzeImage",
+      "time": "2026-01-26T09:58:28.110Z",
+      "dailyTotal": 4
     },
     {
-      "function": "calculateQualityScore",
-      "time": "2026-01-22T06:03:49.619Z",
-      "dailyTotal": 215
+      "function": "analyzeImage",
+      "time": "2026-01-26T09:58:50.420Z",
+      "dailyTotal": 5
     },
     {
-      "function": "detectMultipleProducts",
-      "time": "2026-01-22T06:04:01.402Z",
-      "dailyTotal": 216
+      "function": "getSingleProductCropCoordinates",
+      "time": "2026-01-26T09:58:52.769Z",
+      "dailyTotal": 6
     },
     {
-      "function": "detectPackagingBox",
-      "time": "2026-01-22T06:04:03.093Z",
-      "dailyTotal": 217
+      "function": "analyzeImage",
+      "time": "2026-01-26T09:59:08.778Z",
+      "dailyTotal": 7
     },
     {
-      "function": "calculateCompletenessScore",
-      "time": "2026-01-22T06:04:04.380Z",
-      "dailyTotal": 218
+      "function": "analyzeImage",
+      "time": "2026-01-26T09:59:24.922Z",
+      "dailyTotal": 8
     },
     {
-      "function": "calculateTitleMatchScore",
-      "time": "2026-01-22T06:04:05.583Z",
-      "dailyTotal": 219
+      "function": "getSingleProductCropCoordinates",
+      "time": "2026-01-26T09:59:26.934Z",
+      "dailyTotal": 9
     },
     {
-      "function": "calculateQualityScore",
-      "time": "2026-01-22T06:04:06.934Z",
-      "dailyTotal": 220
-    },
-    {
-      "function": "detectMultipleProducts",
-      "time": "2026-01-22T06:04:29.442Z",
-      "dailyTotal": 221
-    },
-    {
-      "function": "detectPackagingBox",
-      "time": "2026-01-22T06:04:30.787Z",
-      "dailyTotal": 222
-    },
-    {
-      "function": "calculateCompletenessScore",
-      "time": "2026-01-22T06:04:31.945Z",
-      "dailyTotal": 223
-    },
-    {
-      "function": "calculateTitleMatchScore",
-      "time": "2026-01-22T06:04:33.115Z",
-      "dailyTotal": 224
-    },
-    {
-      "function": "calculateQualityScore",
-      "time": "2026-01-22T06:04:34.428Z",
-      "dailyTotal": 225
-    },
-    {
-      "function": "detectMultipleProducts",
-      "time": "2026-01-22T06:04:57.260Z",
-      "dailyTotal": 226
-    },
-    {
-      "function": "detectPackagingBox",
-      "time": "2026-01-22T06:04:58.997Z",
-      "dailyTotal": 227
-    },
-    {
-      "function": "calculateCompletenessScore",
-      "time": "2026-01-22T06:05:00.933Z",
-      "dailyTotal": 228
-    },
-    {
-      "function": "calculateTitleMatchScore",
-      "time": "2026-01-22T06:05:02.660Z",
-      "dailyTotal": 229
-    },
-    {
-      "function": "calculateQualityScore",
-      "time": "2026-01-22T06:05:04.561Z",
-      "dailyTotal": 230
-    },
-    {
-      "function": "detectMultipleProducts",
-      "time": "2026-01-22T06:05:16.081Z",
-      "dailyTotal": 231
-    },
-    {
-      "function": "detectPackagingBox",
-      "time": "2026-01-22T06:05:17.208Z",
-      "dailyTotal": 232
-    },
-    {
-      "function": "calculateCompletenessScore",
-      "time": "2026-01-22T06:05:18.542Z",
-      "dailyTotal": 233
-    },
-    {
-      "function": "calculateTitleMatchScore",
-      "time": "2026-01-22T06:05:19.631Z",
-      "dailyTotal": 234
-    },
-    {
-      "function": "calculateQualityScore",
-      "time": "2026-01-22T06:05:20.884Z",
-      "dailyTotal": 235
-    },
-    {
-      "function": "detectMultipleProducts",
-      "time": "2026-01-22T06:05:32.772Z",
-      "dailyTotal": 236
-    },
-    {
-      "function": "detectPackagingBox",
-      "time": "2026-01-22T06:05:34.321Z",
-      "dailyTotal": 237
-    },
-    {
-      "function": "calculateCompletenessScore",
-      "time": "2026-01-22T06:05:35.894Z",
-      "dailyTotal": 238
-    },
-    {
-      "function": "calculateTitleMatchScore",
-      "time": "2026-01-22T06:05:37.564Z",
-      "dailyTotal": 239
-    },
-    {
-      "function": "calculateQualityScore",
-      "time": "2026-01-22T06:05:38.989Z",
-      "dailyTotal": 240
-    },
-    {
-      "function": "detectMultipleProducts",
-      "time": "2026-01-22T06:06:01.974Z",
-      "dailyTotal": 241
-    },
-    {
-      "function": "detectPackagingBox",
-      "time": "2026-01-22T06:06:03.333Z",
-      "dailyTotal": 242
-    },
-    {
-      "function": "calculateCompletenessScore",
-      "time": "2026-01-22T06:06:04.731Z",
-      "dailyTotal": 243
-    },
-    {
-      "function": "calculateTitleMatchScore",
-      "time": "2026-01-22T06:06:06.142Z",
-      "dailyTotal": 244
-    },
-    {
-      "function": "calculateQualityScore",
-      "time": "2026-01-22T06:06:07.455Z",
-      "dailyTotal": 245
-    },
-    {
-      "function": "detectMultipleProducts",
-      "time": "2026-01-22T06:06:18.973Z",
-      "dailyTotal": 246
-    },
-    {
-      "function": "detectPackagingBox",
-      "time": "2026-01-22T06:06:20.291Z",
-      "dailyTotal": 247
-    },
-    {
-      "function": "calculateCompletenessScore",
-      "time": "2026-01-22T06:06:21.475Z",
-      "dailyTotal": 248
-    },
-    {
-      "function": "calculateTitleMatchScore",
-      "time": "2026-01-22T06:06:22.711Z",
-      "dailyTotal": 249
-    },
-    {
-      "function": "calculateQualityScore",
-      "time": "2026-01-22T06:06:23.922Z",
-      "dailyTotal": 250
-    },
-    {
-      "function": "detectMultipleProducts",
-      "time": "2026-01-22T06:06:46.569Z",
-      "dailyTotal": 251
-    },
-    {
-      "function": "detectPackagingBox",
-      "time": "2026-01-22T06:06:48.140Z",
-      "dailyTotal": 252
-    },
-    {
-      "function": "calculateCompletenessScore",
-      "time": "2026-01-22T06:06:49.392Z",
-      "dailyTotal": 253
-    },
-    {
-      "function": "calculateTitleMatchScore",
-      "time": "2026-01-22T06:06:50.576Z",
-      "dailyTotal": 254
-    },
-    {
-      "function": "calculateQualityScore",
-      "time": "2026-01-22T06:06:51.885Z",
-      "dailyTotal": 255
-    },
-    {
-      "function": "detectMultipleProducts",
-      "time": "2026-01-22T06:07:03.390Z",
-      "dailyTotal": 256
-    },
-    {
-      "function": "detectPackagingBox",
-      "time": "2026-01-22T06:07:04.676Z",
-      "dailyTotal": 257
-    },
-    {
-      "function": "calculateCompletenessScore",
-      "time": "2026-01-22T06:07:06.066Z",
-      "dailyTotal": 258
-    },
-    {
-      "function": "calculateTitleMatchScore",
-      "time": "2026-01-22T06:07:07.151Z",
-      "dailyTotal": 259
-    },
-    {
-      "function": "calculateQualityScore",
-      "time": "2026-01-22T06:07:08.208Z",
-      "dailyTotal": 260
-    },
-    {
-      "function": "detectMultipleProducts",
-      "time": "2026-01-22T06:07:31.029Z",
-      "dailyTotal": 261
-    },
-    {
-      "function": "detectPackagingBox",
-      "time": "2026-01-22T06:07:32.694Z",
-      "dailyTotal": 262
-    },
-    {
-      "function": "calculateCompletenessScore",
-      "time": "2026-01-22T06:07:34.198Z",
-      "dailyTotal": 263
-    },
-    {
-      "function": "calculateTitleMatchScore",
-      "time": "2026-01-22T06:07:35.792Z",
-      "dailyTotal": 264
-    },
-    {
-      "function": "calculateQualityScore",
-      "time": "2026-01-22T06:07:37.184Z",
-      "dailyTotal": 265
-    },
-    {
-      "function": "detectMultipleProducts",
-      "time": "2026-01-22T06:07:49.202Z",
-      "dailyTotal": 266
-    },
-    {
-      "function": "detectPackagingBox",
-      "time": "2026-01-22T06:07:50.590Z",
-      "dailyTotal": 267
-    },
-    {
-      "function": "calculateCompletenessScore",
-      "time": "2026-01-22T06:07:52.168Z",
-      "dailyTotal": 268
-    },
-    {
-      "function": "calculateTitleMatchScore",
-      "time": "2026-01-22T06:07:53.600Z",
-      "dailyTotal": 269
-    },
-    {
-      "function": "calculateQualityScore",
-      "time": "2026-01-22T06:07:55.000Z",
-      "dailyTotal": 270
-    },
-    {
-      "function": "detectPackagingBox",
-      "time": "2026-01-22T06:08:17.426Z",
-      "dailyTotal": 271
-    },
-    {
-      "function": "calculateCompletenessScore",
-      "time": "2026-01-22T06:08:18.543Z",
-      "dailyTotal": 272
-    },
-    {
-      "function": "calculateTitleMatchScore",
-      "time": "2026-01-22T06:08:19.960Z",
-      "dailyTotal": 273
-    },
-    {
-      "function": "calculateSetCompositionScore",
-      "time": "2026-01-22T06:08:21.007Z",
-      "dailyTotal": 274
-    },
-    {
-      "function": "calculateQualityScore",
-      "time": "2026-01-22T06:08:22.328Z",
-      "dailyTotal": 275
-    },
-    {
-      "function": "detectMultipleProducts",
-      "time": "2026-01-22T06:08:44.697Z",
-      "dailyTotal": 276
-    },
-    {
-      "function": "detectPackagingBox",
-      "time": "2026-01-22T06:08:46.280Z",
-      "dailyTotal": 277
-    },
-    {
-      "function": "calculateCompletenessScore",
-      "time": "2026-01-22T06:08:47.586Z",
-      "dailyTotal": 278
-    },
-    {
-      "function": "calculateTitleMatchScore",
-      "time": "2026-01-22T06:08:48.944Z",
-      "dailyTotal": 279
-    },
-    {
-      "function": "calculateQualityScore",
-      "time": "2026-01-22T06:08:50.107Z",
-      "dailyTotal": 280
-    },
-    {
-      "function": "detectMultipleProducts",
-      "time": "2026-01-22T06:09:01.648Z",
-      "dailyTotal": 281
-    },
-    {
-      "function": "detectPackagingBox",
-      "time": "2026-01-22T06:09:03.220Z",
-      "dailyTotal": 282
-    },
-    {
-      "function": "calculateCompletenessScore",
-      "time": "2026-01-22T06:09:04.598Z",
-      "dailyTotal": 283
-    },
-    {
-      "function": "calculateTitleMatchScore",
-      "time": "2026-01-22T06:09:05.980Z",
-      "dailyTotal": 284
-    },
-    {
-      "function": "calculateQualityScore",
-      "time": "2026-01-22T06:09:07.166Z",
-      "dailyTotal": 285
-    },
-    {
-      "function": "detectMultipleProducts",
-      "time": "2026-01-22T06:09:29.484Z",
-      "dailyTotal": 286
-    },
-    {
-      "function": "detectPackagingBox",
-      "time": "2026-01-22T06:09:31.142Z",
-      "dailyTotal": 287
-    },
-    {
-      "function": "calculateCompletenessScore",
-      "time": "2026-01-22T06:09:32.512Z",
-      "dailyTotal": 288
-    },
-    {
-      "function": "calculateTitleMatchScore",
-      "time": "2026-01-22T06:09:33.755Z",
-      "dailyTotal": 289
-    },
-    {
-      "function": "calculateQualityScore",
-      "time": "2026-01-22T06:09:35.014Z",
-      "dailyTotal": 290
-    },
-    {
-      "function": "detectMultipleProducts",
-      "time": "2026-01-22T06:09:57.441Z",
-      "dailyTotal": 291
-    },
-    {
-      "function": "detectPackagingBox",
-      "time": "2026-01-22T06:09:59.326Z",
-      "dailyTotal": 292
-    },
-    {
-      "function": "calculateCompletenessScore",
-      "time": "2026-01-22T06:10:00.960Z",
-      "dailyTotal": 293
-    },
-    {
-      "function": "calculateTitleMatchScore",
-      "time": "2026-01-22T06:10:02.368Z",
-      "dailyTotal": 294
-    },
-    {
-      "function": "calculateQualityScore",
-      "time": "2026-01-22T06:10:03.543Z",
-      "dailyTotal": 295
-    },
-    {
-      "function": "detectMultipleProducts",
-      "time": "2026-01-22T06:10:15.334Z",
-      "dailyTotal": 296
-    },
-    {
-      "function": "detectPackagingBox",
-      "time": "2026-01-22T06:10:16.886Z",
-      "dailyTotal": 297
-    },
-    {
-      "function": "calculateCompletenessScore",
-      "time": "2026-01-22T06:10:18.145Z",
-      "dailyTotal": 298
-    },
-    {
-      "function": "calculateTitleMatchScore",
-      "time": "2026-01-22T06:10:19.645Z",
-      "dailyTotal": 299
-    },
-    {
-      "function": "calculateQualityScore",
-      "time": "2026-01-22T06:10:21.277Z",
-      "dailyTotal": 300
-    },
-    {
-      "function": "detectMultipleProducts",
-      "time": "2026-01-22T06:10:43.727Z",
-      "dailyTotal": 301
-    },
-    {
-      "function": "detectPackagingBox",
-      "time": "2026-01-22T06:10:45.034Z",
-      "dailyTotal": 302
-    },
-    {
-      "function": "calculateCompletenessScore",
-      "time": "2026-01-22T06:10:46.305Z",
-      "dailyTotal": 303
-    },
-    {
-      "function": "calculateTitleMatchScore",
-      "time": "2026-01-22T06:10:47.544Z",
-      "dailyTotal": 304
-    },
-    {
-      "function": "calculateQualityScore",
-      "time": "2026-01-22T06:10:48.951Z",
-      "dailyTotal": 305
-    },
-    {
-      "function": "detectMultipleProducts",
-      "time": "2026-01-22T06:11:00.630Z",
-      "dailyTotal": 306
-    },
-    {
-      "function": "detectPackagingBox",
-      "time": "2026-01-22T06:11:02.054Z",
-      "dailyTotal": 307
-    },
-    {
-      "function": "calculateCompletenessScore",
-      "time": "2026-01-22T06:11:03.593Z",
-      "dailyTotal": 308
-    },
-    {
-      "function": "calculateTitleMatchScore",
-      "time": "2026-01-22T06:11:04.783Z",
-      "dailyTotal": 309
-    },
-    {
-      "function": "calculateQualityScore",
-      "time": "2026-01-22T06:11:06.113Z",
-      "dailyTotal": 310
+      "function": "analyzeImage",
+      "time": "2026-01-26T09:59:42.625Z",
+      "dailyTotal": 10
     }
   ],
-  "lastUpdated": "2026-01-22T06:11:06.113Z"
+  "lastUpdated": "2026-01-26T09:59:42.625Z"
 }
