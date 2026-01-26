@@ -456,11 +456,7 @@ function cleanProductTitle(rawTitle) {
             cleaned = cleaned.replace(new RegExp(keyword, 'gi'), '');
         }
     }
-
-    // ==================== STEP 8.3: "기획" + 용량 패턴 제거 ====================
-    // "기획60ml", "기획 30g" 등 제거 (증정품 정보가 괄호 없이 붙은 경우)
-    cleaned = cleaned.replace(/기획\s*\d+\s*(ml|mL|ML|g|G)/gi, '');
-
+    
     // ==================== STEP 8.5: "외 N종" 패턴 제거 ====================
     // "외 2종", "외 3종", "외2종" 등 제거 (다른 제품 포함 세트 표시)
     cleaned = cleaned.replace(/외\s*\d+\s*종/gi, '');
