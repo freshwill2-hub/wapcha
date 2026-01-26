@@ -799,43 +799,43 @@
         <nav class="nav">
             <a class="nav-item active" data-page="dashboard" href="#dashboard">
                 <span class="nav-icon">📊</span>
-                <span>Dashboard</span>
+                <span>대시보드</span>
             </a>
             <a class="nav-item" data-page="pipeline" href="#pipeline">
                 <span class="nav-icon">▶️</span>
-                <span>Pipeline</span>
+                <span>파이프라인</span>
             </a>
-            <!-- URL Manager - separate page -->
+            <!-- URL 관리 - 별도 페이지로 이동 -->
             <a class="nav-item" href="/urls.html">
                 <span class="nav-icon">🔗</span>
-                <span>URL Manager</span>
+                <span>URL 관리</span>
             </a>
             <a class="nav-item" data-page="monitor" href="#monitor">
                 <span class="nav-icon">📺</span>
-                <span>Monitor</span>
+                <span>모니터링</span>
             </a>
             <a class="nav-item" href="/logs.html">
                 <span class="nav-icon">📜</span>
-                <span>Log Viewer</span>
+                <span>로그 뷰어</span>
             </a>
             <a class="nav-item" data-page="gallery" href="#gallery">
                 <span class="nav-icon">🖼️</span>
-                <span>Gallery</span>
+                <span>갤러리</span>
             </a>
             <a class="nav-item" data-page="stats" href="#stats">
                 <span class="nav-icon">📈</span>
-                <span>Statistics</span>
+                <span>통계</span>
             </a>
             <a class="nav-item" data-page="settings" href="#settings">
                 <span class="nav-icon">⚙️</span>
-                <span>Settings</span>
+                <span>설정</span>
             </a>
         </nav>
         
         <div class="status-indicator">
             <div class="status-badge idle" id="statusBadge">
                 <div class="status-dot"></div>
-                <span id="statusText">Idle</span>
+                <span id="statusText">대기중</span>
             </div>
         </div>
     </aside>
@@ -845,95 +845,95 @@
         <!-- Dashboard Page -->
         <div class="page active" id="page-dashboard">
             <header class="header">
-                <h2>📊 Dashboard</h2>
-                <p>Copychu Automation System Overview</p>
+                <h2>📊 대시보드</h2>
+                <p>Copychu 자동화 시스템 개요</p>
             </header>
             <div class="content">
                 <div class="stats-grid">
                     <div class="stat-card">
-                        <div class="stat-label">Total Products</div>
+                        <div class="stat-label">총 제품</div>
                         <div class="stat-value" id="statTotalProducts">0</div>
-                        <div class="stat-change">OliveYoung Table</div>
+                        <div class="stat-change">올리브영 테이블</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-label">Completed</div>
+                        <div class="stat-label">처리 완료</div>
                         <div class="stat-value" id="statCompleted">0</div>
-                        <div class="stat-change">Images Generated</div>
+                        <div class="stat-change">이미지 생성 완료</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-label">Today</div>
+                        <div class="stat-label">오늘 처리</div>
                         <div class="stat-value" id="statToday">0</div>
-                        <div class="stat-change">Products processed today</div>
+                        <div class="stat-change">오늘 처리된 제품</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-label">Est. Cost</div>
+                        <div class="stat-label">예상 비용</div>
                         <div class="stat-value small" id="statCost">$0.00</div>
-                        <div class="stat-change">Gemini API Cost</div>
+                        <div class="stat-change">Gemini API 비용</div>
                     </div>
                 </div>
                 
-                <!-- ✅ NEW: Quick Run with URL source option -->
+                <!-- ✅ NEW: 빠른 실행에 URL 소스 옵션 추가 -->
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title">🚀 Quick Run</h3>
+                        <h3 class="card-title">🚀 빠른 실행</h3>
                     </div>
-
-                    <!-- ✅ Data Source Selection -->
+                    
+                    <!-- ✅ 데이터 소스 선택 -->
                     <div class="data-source-selector">
-                        <label class="input-label">📦 Data Source</label>
+                        <label class="input-label">📦 데이터 소스 선택</label>
                         <div class="radio-group">
                             <label class="radio-item">
                                 <input type="radio" name="quickDataSource" value="existing" checked onchange="toggleQuickUrlInput()">
-                                <span>Existing Data (NocoDB)</span>
+                                <span>기존 데이터 (NocoDB)</span>
                             </label>
                             <label class="radio-item">
                                 <input type="radio" name="quickDataSource" value="newUrl" onchange="toggleQuickUrlInput()">
-                                <span>🆕 Collect from New URL</span>
+                                <span>🆕 새 URL에서 수집</span>
                             </label>
                         </div>
                         <div id="quickUrlInputWrapper" class="url-input-wrapper">
                             <div class="input-row">
                                 <input type="text" class="input" id="quickCategoryUrl" placeholder="https://www.oliveyoung.co.kr/store/main/getBestList.do?dispCatNo=...">
-                                <input type="number" class="input" id="quickMaxProducts" value="100" placeholder="Max Products" min="1" max="1000">
-                                <input type="number" class="input" id="quickMaxPages" value="0" placeholder="Pages (0=unlimited)" min="0" max="100">
+                                <input type="number" class="input" id="quickMaxProducts" value="100" placeholder="최대 개수" min="1" max="1000">
+                                <input type="number" class="input" id="quickMaxPages" value="0" placeholder="페이지 (0=무제한)" min="0" max="100">
                             </div>
-                            <p style="color: var(--text-muted); font-size: 12px; margin-top: 4px;">💡 Page 0 = Auto-collect until last page</p>
+                            <p style="color: var(--text-muted); font-size: 12px; margin-top: 4px;">💡 페이지 0 = 마지막 페이지까지 자동 수집</p>
                         </div>
                     </div>
-
+                    
                     <div class="quick-actions">
                         <div class="quick-action" onclick="quickRun(3)">
                             <div class="quick-action-icon">🧪</div>
-                            <div class="quick-action-title">Test (3)</div>
-                            <div class="quick-action-desc">Quick test run</div>
+                            <div class="quick-action-title">테스트 (3개)</div>
+                            <div class="quick-action-desc">빠른 테스트용 소량 처리</div>
                         </div>
                         <div class="quick-action" onclick="quickRun(10)">
                             <div class="quick-action-icon">📦</div>
-                            <div class="quick-action-title">Small (10)</div>
-                            <div class="quick-action-desc">~20 min</div>
+                            <div class="quick-action-title">소량 (10개)</div>
+                            <div class="quick-action-desc">약 20분 소요</div>
                         </div>
                         <div class="quick-action" onclick="quickRun(50)">
                             <div class="quick-action-icon">📦📦</div>
-                            <div class="quick-action-title">Medium (50)</div>
-                            <div class="quick-action-desc">~2 hours</div>
+                            <div class="quick-action-title">중량 (50개)</div>
+                            <div class="quick-action-desc">약 2시간 소요</div>
                         </div>
                         <div class="quick-action" onclick="quickRun(100)">
                             <div class="quick-action-icon">🏭</div>
-                            <div class="quick-action-title">Large (100)</div>
-                            <div class="quick-action-desc">~4 hours</div>
+                            <div class="quick-action-title">대량 (100개)</div>
+                            <div class="quick-action-desc">약 4시간 소요</div>
                         </div>
                     </div>
                 </div>
                 
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title">📷 Recent Products</h3>
-                        <button class="btn btn-secondary" onclick="loadRecentProducts()">🔄 Refresh</button>
+                        <h3 class="card-title">📷 최근 처리 제품</h3>
+                        <button class="btn btn-secondary" onclick="loadRecentProducts()">🔄 새로고침</button>
                     </div>
                     <div class="gallery-grid" id="recentGallery">
                         <div class="empty-state">
                             <div class="empty-state-icon">📷</div>
-                            <p>No products processed yet</p>
+                            <p>아직 처리된 제품이 없습니다</p>
                         </div>
                     </div>
                 </div>
@@ -943,45 +943,45 @@
         <!-- Pipeline Page -->
         <div class="page" id="page-pipeline">
             <header class="header">
-                <h2>▶️ Pipeline</h2>
-                <p>Run and manage automation pipeline</p>
+                <h2>▶️ 파이프라인</h2>
+                <p>자동화 파이프라인 실행 및 관리</p>
             </header>
             <div class="content">
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title">⚙️ Run Settings</h3>
+                        <h3 class="card-title">⚙️ 실행 설정</h3>
                     </div>
-
-                    <!-- ✅ NEW: Data Source Selection -->
+                    
+                    <!-- ✅ NEW: 데이터 소스 선택 -->
                     <div class="data-source-selector">
-                        <label class="input-label">📦 Data Source</label>
+                        <label class="input-label">📦 데이터 소스 선택</label>
                         <div class="radio-group">
                             <label class="radio-item">
                                 <input type="radio" name="pipelineDataSource" value="existing" checked onchange="togglePipelineUrlInput()">
-                                <span>Existing Data (NocoDB)</span>
+                                <span>기존 데이터 (NocoDB)</span>
                             </label>
                             <label class="radio-item">
                                 <input type="radio" name="pipelineDataSource" value="newUrl" onchange="togglePipelineUrlInput()">
-                                <span>🆕 Collect from New URL (includes Phase 0)</span>
+                                <span>🆕 새 URL에서 수집 (Phase 0 포함)</span>
                             </label>
                         </div>
                         <div id="pipelineUrlInputWrapper" class="url-input-wrapper">
                             <div class="input-row">
                                 <input type="text" class="input" id="pipelineCategoryUrl" placeholder="https://www.oliveyoung.co.kr/store/main/getBestList.do?dispCatNo=...">
-                                <input type="number" class="input" id="pipelineMaxProducts" value="100" placeholder="Max Products" min="1" max="1000">
-                                <input type="number" class="input" id="pipelineMaxPages" value="0" placeholder="Pages (0=unlimited)" min="0" max="100">
+                                <input type="number" class="input" id="pipelineMaxProducts" value="100" placeholder="최대 개수" min="1" max="1000">
+                                <input type="number" class="input" id="pipelineMaxPages" value="0" placeholder="페이지 (0=무제한)" min="0" max="100">
                             </div>
-                            <p style="color: var(--text-muted); font-size: 12px; margin-top: 4px;">💡 Phase 0 collects URLs first, then runs selected phases</p>
+                            <p style="color: var(--text-muted); font-size: 12px; margin-top: 4px;">💡 Phase 0에서 URL을 먼저 수집한 후 선택된 Phase를 실행합니다</p>
                         </div>
                     </div>
-
+                    
                     <div class="input-group">
-                        <label class="input-label">Max Products</label>
+                        <label class="input-label">처리할 제품 수</label>
                         <input type="number" class="input" id="productLimit" value="3" min="1" max="1000" style="max-width: 200px;">
                     </div>
-
+                    
                     <div class="input-group">
-                        <label class="input-label">Phase to Run</label>
+                        <label class="input-label">실행할 Phase 선택</label>
                         <div class="checkbox-group">
                             <label class="checkbox-item">
                                 <div class="checkbox checked" data-phase="phase0">
@@ -1036,24 +1036,24 @@
                     
                     <div class="btn-group">
                         <button class="btn btn-primary" id="btnStart" onclick="startPipeline()">
-                            ▶️ Run
+                            ▶️ 전체 실행
                         </button>
                         <button class="btn btn-warning" id="btnPause" onclick="pausePipeline()" disabled>
-                            ⏸️ Pause
+                            ⏸️ 일시정지
                         </button>
                         <button class="btn btn-danger" id="btnStop" onclick="stopPipeline()" disabled>
-                            ⏹️ Stop
+                            ⏹️ 중지
                         </button>
                     </div>
                 </div>
                 
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title">📊 Progress</h3>
+                        <h3 class="card-title">📊 진행 상황</h3>
                     </div>
                     <div class="progress-section">
                         <div class="progress-header">
-                            <span id="progressText">Idle</span>
+                            <span id="progressText">대기 중</span>
                             <span id="progressPercent">0%</span>
                         </div>
                         <div class="progress-bar">
@@ -1063,55 +1063,55 @@
                     <div class="phases-progress">
                         <div class="phase-item" id="phase-phase0">
                             <div class="phase-icon">0</div>
-                            <div class="phase-name">URL Collect</div>
+                            <div class="phase-name">URL 수집</div>
                         </div>
                         <div class="phase-item" id="phase-phase1">
                             <div class="phase-icon">1</div>
-                            <div class="phase-name">Scraping</div>
+                            <div class="phase-name">스크래핑</div>
                         </div>
                         <div class="phase-item" id="phase-phase2">
                             <div class="phase-icon">2</div>
-                            <div class="phase-name">BG Remove</div>
+                            <div class="phase-name">배경 제거</div>
                         </div>
                         <div class="phase-item" id="phase-phase3">
                             <div class="phase-icon">3</div>
-                            <div class="phase-name">AI Crop</div>
+                            <div class="phase-name">AI 크롭</div>
                         </div>
                         <div class="phase-item" id="phase-phase4">
                             <div class="phase-icon">4</div>
-                            <div class="phase-name">Final Image</div>
+                            <div class="phase-name">최종 이미지</div>
                         </div>
                         <div class="phase-item" id="phase-phase5">
                             <div class="phase-icon">5</div>
-                            <div class="phase-name">Shopify Upload</div>
+                            <div class="phase-name">Shopify 업로드</div>
                         </div>
                     </div>
                 </div>
                 
-                <!-- ✅ Single Phase Run (with URL input option) -->
+                <!-- ✅ 단일 Phase 실행 (URL 입력 옵션 추가) -->
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title">🔧 Single Phase Run</h3>
+                        <h3 class="card-title">🔧 단일 Phase 실행</h3>
                     </div>
-
-                    <!-- ✅ URL input for single Phase (Phase 0 only) -->
+                    
+                    <!-- ✅ 단일 Phase용 URL 입력 (Phase 0 전용) -->
                     <div class="data-source-selector" id="singlePhaseUrlSection">
-                        <label class="input-label">📦 URL Settings for Phase 0</label>
+                        <label class="input-label">📦 Phase 0 실행 시 URL 설정</label>
                         <div class="input-row">
                             <input type="text" class="input" id="singlePhaseCategoryUrl" placeholder="https://www.oliveyoung.co.kr/store/main/getBestList.do?dispCatNo=...">
-                            <input type="number" class="input" id="singlePhaseMaxProducts" value="100" placeholder="Max Products" min="1" max="1000">
-                            <input type="number" class="input" id="singlePhaseMaxPages" value="0" placeholder="Pages (0=unlimited)" min="0" max="100">
+                            <input type="number" class="input" id="singlePhaseMaxProducts" value="100" placeholder="최대 개수" min="1" max="1000">
+                            <input type="number" class="input" id="singlePhaseMaxPages" value="0" placeholder="페이지 (0=무제한)" min="0" max="100">
                         </div>
-                        <p style="color: var(--text-muted); font-size: 12px; margin-top: 4px;">💡 When running Phase 0 only, products are collected from this URL</p>
+                        <p style="color: var(--text-muted); font-size: 12px; margin-top: 4px;">💡 Phase 0만 실행할 때 이 URL에서 제품을 수집합니다</p>
                     </div>
-
+                    
                     <div class="btn-group">
-                        <button class="btn btn-secondary" onclick="runSinglePhase('phase0')">Run Phase 0 Only</button>
-                        <button class="btn btn-secondary" onclick="runSinglePhase('phase1')">Run Phase 1 Only</button>
-                        <button class="btn btn-secondary" onclick="runSinglePhase('phase2')">Run Phase 2 Only</button>
-                        <button class="btn btn-secondary" onclick="runSinglePhase('phase3')">Run Phase 3 Only</button>
-                        <button class="btn btn-secondary" onclick="runSinglePhase('phase4')">Run Phase 4 Only</button>
-                        <button class="btn btn-secondary" onclick="runSinglePhase('phase5')">Run Phase 5 Only</button>
+                        <button class="btn btn-secondary" onclick="runSinglePhase('phase0')">Phase 0만 실행하기</button>
+                        <button class="btn btn-secondary" onclick="runSinglePhase('phase1')">Phase 1만 실행하기</button>
+                        <button class="btn btn-secondary" onclick="runSinglePhase('phase2')">Phase 2만 실행하기</button>
+                        <button class="btn btn-secondary" onclick="runSinglePhase('phase3')">Phase 3만 실행하기</button>
+                        <button class="btn btn-secondary" onclick="runSinglePhase('phase4')">Phase 4만 실행하기</button>
+                        <button class="btn btn-secondary" onclick="runSinglePhase('phase5')">Phase 5만 실행하기</button>
                     </div>
                 </div>
             </div>
@@ -1120,40 +1120,40 @@
         <!-- Monitor Page -->
         <div class="page" id="page-monitor">
             <header class="header">
-                <h2>📺 Monitor</h2>
-                <p>Pipeline execution logs and progress</p>
+                <h2>📺 실시간 모니터링</h2>
+                <p>파이프라인 실행 로그 및 진행 상황</p>
             </header>
             <div class="content">
                 <div class="stats-grid">
                     <div class="stat-card">
-                        <div class="stat-label">Success</div>
+                        <div class="stat-label">성공</div>
                         <div class="stat-value" id="monitorSuccess" style="color: var(--success)">0</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-label">Failed</div>
+                        <div class="stat-label">실패</div>
                         <div class="stat-value" id="monitorFailed" style="color: var(--error)">0</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-label">API Calls</div>
+                        <div class="stat-label">API 호출</div>
                         <div class="stat-value" id="monitorApiCalls">0</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-label">Est. Cost</div>
+                        <div class="stat-label">예상 비용</div>
                         <div class="stat-value small" id="monitorCost">$0.00</div>
                     </div>
                 </div>
-
+                
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title">📜 Real-time Logs</h3>
+                        <h3 class="card-title">📜 실시간 로그</h3>
                         <div class="btn-group">
                             <select class="input" style="width: auto" id="logFilter">
-                                <option value="">All</option>
-                                <option value="success">Success</option>
-                                <option value="error">Error</option>
-                                <option value="warning">Warning</option>
+                                <option value="">전체</option>
+                                <option value="success">성공</option>
+                                <option value="error">오류</option>
+                                <option value="warning">경고</option>
                             </select>
-                            <button class="btn btn-secondary" onclick="clearLogs()">🗑️ Clear</button>
+                            <button class="btn btn-secondary" onclick="clearLogs()">🗑️ 로그 지우기</button>
                         </div>
                     </div>
                     <div class="log-viewer" id="logViewer"></div>
@@ -1164,32 +1164,32 @@
         <!-- Gallery Page -->
         <div class="page" id="page-gallery">
             <header class="header">
-                <h2>🖼️ Gallery</h2>
-                <p>Preview processed product images</p>
+                <h2>🖼️ 이미지 갤러리</h2>
+                <p>처리된 제품 이미지 미리보기</p>
             </header>
             <div class="content">
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title">✅ Completed Products</h3>
-                        <button class="btn btn-secondary" onclick="loadGallery()">🔄 Refresh</button>
+                        <h3 class="card-title">✅ 처리 완료 제품</h3>
+                        <button class="btn btn-secondary" onclick="loadGallery()">🔄 새로고침</button>
                     </div>
                     <div class="gallery-grid" id="fullGallery">
                         <div class="empty-state">
                             <div class="empty-state-icon">📷</div>
-                            <p>Loading...</p>
+                            <p>로딩 중...</p>
                         </div>
                     </div>
                 </div>
-
+                
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title">❌ Failed Products</h3>
-                        <button class="btn btn-secondary" onclick="loadFailedProducts()">🔄 Refresh</button>
+                        <h3 class="card-title">❌ 실패한 제품</h3>
+                        <button class="btn btn-secondary" onclick="loadFailedProducts()">🔄 새로고침</button>
                     </div>
                     <div id="failedProducts">
                         <div class="empty-state">
                             <div class="empty-state-icon">✅</div>
-                            <p>No failed products</p>
+                            <p>실패한 제품이 없습니다</p>
                         </div>
                     </div>
                 </div>
@@ -1199,50 +1199,50 @@
         <!-- Stats Page -->
         <div class="page" id="page-stats">
             <header class="header">
-                <h2>📈 Statistics</h2>
-                <p>Throughput statistics and API cost tracking</p>
+                <h2>📈 통계 및 비용</h2>
+                <p>처리량 통계 및 API 비용 추적</p>
             </header>
             <div class="content">
                 <div class="stats-grid">
                     <div class="stat-card">
-                        <div class="stat-label">Total Executions</div>
+                        <div class="stat-label">총 실행 횟수</div>
                         <div class="stat-value" id="statExecutions">0</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-label">Success Rate</div>
+                        <div class="stat-label">성공률</div>
                         <div class="stat-value" id="statSuccessRate">0%</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-label">Total API Calls</div>
+                        <div class="stat-label">총 API 호출</div>
                         <div class="stat-value" id="statTotalApiCalls">0</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-label">Total Cost</div>
+                        <div class="stat-label">총 비용</div>
                         <div class="stat-value small" id="statTotalCost">$0.00</div>
                     </div>
                 </div>
-
+                
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title">💰 Cost Calculator</h3>
+                        <h3 class="card-title">💰 비용 계산기</h3>
                     </div>
                     <div style="font-family: 'JetBrains Mono', monospace;">
-                        <p style="margin-bottom: 16px; color: var(--text-secondary)">Gemini 2.0 Flash: $0.0001 per image</p>
-                        <p style="margin-bottom: 8px">1 product (avg. 10 API calls):</p>
-                        <p style="font-size: 32px; font-weight: 700; color: var(--success);">$0.001 <span style="font-size: 16px; color: var(--text-secondary)">/ product</span></p>
-                        <p style="margin-top: 16px; margin-bottom: 8px">1,000 products:</p>
-                        <p style="font-size: 32px; font-weight: 700; color: var(--success);">$1.00 <span style="font-size: 16px; color: var(--text-secondary)">estimated</span></p>
+                        <p style="margin-bottom: 16px; color: var(--text-secondary)">Gemini 2.0 Flash: 이미지당 $0.0001</p>
+                        <p style="margin-bottom: 8px">1개 제품 처리 (평균 10개 API 호출):</p>
+                        <p style="font-size: 32px; font-weight: 700; color: var(--success);">$0.001 <span style="font-size: 16px; color: var(--text-secondary)">/ 제품</span></p>
+                        <p style="margin-top: 16px; margin-bottom: 8px">1,000개 제품 처리:</p>
+                        <p style="font-size: 32px; font-weight: 700; color: var(--success);">$1.00 <span style="font-size: 16px; color: var(--text-secondary)">예상</span></p>
                     </div>
                 </div>
-
+                
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title">📋 Execution History</h3>
+                        <h3 class="card-title">📋 실행 이력</h3>
                     </div>
                     <div id="executionHistory">
                         <div class="empty-state">
                             <div class="empty-state-icon">📊</div>
-                            <p>No execution history</p>
+                            <p>실행 이력이 없습니다</p>
                         </div>
                     </div>
                 </div>
@@ -1252,40 +1252,40 @@
         <!-- Settings Page -->
         <div class="page" id="page-settings">
             <header class="header">
-                <h2>⚙️ Settings</h2>
-                <p>System settings and schedule management</p>
+                <h2>⚙️ 설정</h2>
+                <p>시스템 설정 및 스케줄 관리</p>
             </header>
             <div class="content">
                 <div class="settings-grid">
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title">🔧 General Settings</h3>
+                            <h3 class="card-title">🔧 기본 설정</h3>
                         </div>
-
+                        
                         <div class="input-group">
-                            <label class="input-label">Default Product Count</label>
+                            <label class="input-label">기본 제품 수량</label>
                             <input type="number" class="input" id="settingProductLimit" value="3">
                         </div>
-
+                        
                         <div class="input-group">
-                            <label class="input-label">Gallery Min Score</label>
+                            <label class="input-label">Gallery 최소 점수</label>
                             <input type="number" class="input" id="settingMinScore" value="70" min="0" max="125">
                         </div>
-
+                        
                         <div class="input-group">
-                            <label class="input-label">Final Image Size (px)</label>
+                            <label class="input-label">최종 이미지 크기 (px)</label>
                             <input type="number" class="input" id="settingImageSize" value="1200">
                         </div>
-
+                        
                         <div class="input-group">
-                            <label class="input-label">📦 Volume Limit (ml) - 0 for unlimited</label>
+                            <label class="input-label">📦 제품 용량 제한 (ml) - 0이면 무제한</label>
                             <input type="number" class="input" id="settingMaxVolume" value="700" min="0" max="10000">
                             <p style="color: var(--text-secondary); font-size: 12px; margin-top: 4px;">
-                                Products exceeding volume limit will be auto-skipped in Phase 1.
+                                설정된 용량을 초과하는 제품은 Phase 1에서 자동 스킵됩니다.
                             </p>
                         </div>
-
-                        <button class="btn btn-primary" onclick="saveSettings()">💾 Save Settings</button>
+                        
+                        <button class="btn btn-primary" onclick="saveSettings()">💾 설정 저장</button>
                     </div>
                     
                     <div class="card">
@@ -1431,12 +1431,12 @@
             badge.className = `status-badge ${currentState.status}`;
             
             const statusTexts = {
-                idle: 'Idle',
-                running: 'Running',
-                paused: 'Paused',
-                error: 'Error'
+                idle: '대기중',
+                running: '실행중',
+                paused: '일시정지',
+                error: '오류'
             };
-            statusText.textContent = statusTexts[currentState.status] || 'Idle';
+            statusText.textContent = statusTexts[currentState.status] || '대기중';
             
             const btnStart = document.getElementById('btnStart');
             const btnPause = document.getElementById('btnPause');
@@ -1447,10 +1447,10 @@
             btnStop.disabled = currentState.status === 'idle';
             
             if (currentState.status === 'paused') {
-                btnPause.textContent = '▶ Resume';
+                btnPause.textContent = '▶ 재개';
                 btnPause.onclick = resumePipeline;
             } else {
-                btnPause.innerHTML = '⏸️ Pause';
+                btnPause.innerHTML = '⏸️ 일시정지';
                 btnPause.onclick = pausePipeline;
             }
             
@@ -1459,19 +1459,19 @@
             document.getElementById('monitorApiCalls').textContent = currentState.stats?.apiCalls || 0;
             document.getElementById('monitorCost').textContent = `$${(currentState.stats?.estimatedCost || 0).toFixed(4)}`;
 
-            // ✅ Progress text update based on status
+            // ✅ 상태에 따른 진행 상황 텍스트 업데이트
             if (currentState.status === 'idle') {
                 if (currentState.stats?.totalProcessed > 0 || currentState.stats?.successCount > 0) {
-                    document.getElementById('progressText').textContent = `✅ Completed (${currentState.stats?.successCount || 0} success, ${currentState.stats?.failedCount || 0} failed)`;
+                    document.getElementById('progressText').textContent = `✅ 완료 (${currentState.stats?.successCount || 0}개 성공, ${currentState.stats?.failedCount || 0}개 실패)`;
                     document.getElementById('progressPercent').textContent = '100%';
                     document.getElementById('progressFill').style.width = '100%';
                 } else {
-                    document.getElementById('progressText').textContent = 'Idle';
+                    document.getElementById('progressText').textContent = '대기 중';
                     document.getElementById('progressPercent').textContent = '0%';
                     document.getElementById('progressFill').style.width = '0%';
                 }
             } else if (currentState.status === 'error') {
-                document.getElementById('progressText').textContent = '❌ Error occurred';
+                document.getElementById('progressText').textContent = '❌ 오류 발생';
             }
 
             const phases = ['phase0', 'phase1', 'phase2', 'phase3', 'phase4', 'phase5'];
@@ -1488,8 +1488,8 @@
         
         function updateProgress(progress) {
             const percent = progress.total > 0 ? Math.round((progress.current / progress.total) * 100) : 0;
-
-            document.getElementById('progressText').textContent = `${progress.current} / ${progress.total} products processing`;
+            
+            document.getElementById('progressText').textContent = `${progress.current} / ${progress.total} 제품 처리 중`;
             document.getElementById('progressPercent').textContent = `${percent}%`;
             document.getElementById('progressFill').style.width = `${percent}%`;
         }
@@ -1559,14 +1559,14 @@
             // ✅ URL 설정 가져오기
             const urlSettings = getPipelineUrlSettings();
             
-            // URL validation
+            // URL 유효성 검사
             if (urlSettings.useNewUrl && !urlSettings.categoryUrl) {
-                alert('⚠️ New URL option selected but URL not entered.');
+                alert('⚠️ 새 URL에서 수집 옵션을 선택했지만 URL이 입력되지 않았습니다.');
                 return;
             }
-
+            
             if (urlSettings.useNewUrl && !urlSettings.categoryUrl.includes('oliveyoung.co.kr')) {
-                alert('⚠️ Not an Oliveyoung URL.');
+                alert('⚠️ 올리브영 카테고리 URL이 아닙니다.');
                 return;
             }
             
@@ -1588,23 +1588,23 @@
                 
                 const data = await response.json();
                 if (!data.success) {
-                    alert(data.error || 'Execution failed');
+                    alert(data.error || '실행 실패');
                 }
             } catch (error) {
-                alert('Server connection failed: ' + error.message);
+                alert('서버 연결 실패: ' + error.message);
             }
         }
-
+        
         async function pausePipeline() {
             await fetch('/api/pipeline/pause', { method: 'POST' });
         }
-
+        
         async function resumePipeline() {
             await fetch('/api/pipeline/resume', { method: 'POST' });
         }
-
+        
         async function stopPipeline() {
-            if (confirm('Are you sure you want to stop?')) {
+            if (confirm('파이프라인을 중지하시겠습니까?')) {
                 await fetch('/api/pipeline/stop', { method: 'POST' });
             }
         }
@@ -1612,18 +1612,18 @@
         async function runSinglePhase(phaseId) {
             const productLimit = parseInt(document.getElementById('productLimit').value);
             
-            // ✅ Get URL settings for Phase 0
+            // ✅ Phase 0인 경우 URL 설정 가져오기
             let urlSettings = {};
             if (phaseId === 'phase0') {
                 urlSettings = getSinglePhaseUrlSettings();
-
+                
                 if (!urlSettings.categoryUrl) {
-                    alert('⚠️ Category URL required for Phase 0.');
+                    alert('⚠️ Phase 0 실행에는 카테고리 URL이 필요합니다.');
                     return;
                 }
-
+                
                 if (!urlSettings.categoryUrl.includes('oliveyoung.co.kr')) {
-                    alert('⚠️ Not an Oliveyoung URL.');
+                    alert('⚠️ 올리브영 카테고리 URL이 아닙니다.');
                     return;
                 }
             }
@@ -1646,42 +1646,42 @@
                 
                 const data = await response.json();
                 if (!data.success) {
-                    alert(data.error || 'Execution failed');
+                    alert(data.error || '실행 실패');
                 }
             } catch (error) {
-                alert('Server connection failed: ' + error.message);
+                alert('서버 연결 실패: ' + error.message);
             }
         }
-
-        // ✅ Modified quickRun function
+        
+        // ✅ 수정된 quickRun 함수
         function quickRun(count) {
             const urlSettings = getQuickUrlSettings();
-
-            // URL validation
+            
+            // URL 유효성 검사
             if (urlSettings.useNewUrl) {
                 if (!urlSettings.categoryUrl) {
-                    alert('⚠️ New URL option selected but URL not entered.');
+                    alert('⚠️ 새 URL에서 수집 옵션을 선택했지만 URL이 입력되지 않았습니다.');
                     return;
                 }
-
+                
                 if (!urlSettings.categoryUrl.includes('oliveyoung.co.kr')) {
-                    alert('⚠️ Not an Oliveyoung URL.');
+                    alert('⚠️ 올리브영 카테고리 URL이 아닙니다.');
                     return;
                 }
-
-                // Navigate to pipeline tab and copy settings
+                
+                // 파이프라인 탭으로 이동하고 설정 복사
                 document.getElementById('productLimit').value = count;
                 document.getElementById('pipelineCategoryUrl').value = urlSettings.categoryUrl;
                 document.getElementById('pipelineMaxProducts').value = urlSettings.maxProducts;
                 document.getElementById('pipelineMaxPages').value = urlSettings.maxPages;
-
-                // Select new URL option
+                
+                // 새 URL 옵션 선택
                 document.querySelector('input[name="pipelineDataSource"][value="newUrl"]').checked = true;
                 togglePipelineUrlInput();
             } else {
                 document.getElementById('productLimit').value = count;
-
-                // Select existing data option
+                
+                // 기존 데이터 옵션 선택
                 document.querySelector('input[name="pipelineDataSource"][value="existing"]').checked = true;
                 togglePipelineUrlInput();
             }
@@ -1735,69 +1735,69 @@
                 document.getElementById('statCompleted').textContent = data.database?.completedProducts || 0;
                 document.getElementById('statCost').textContent = `$${(data.history?.totalCost || 0).toFixed(4)}`;
             } catch (error) {
-                console.error('Stats load failed:', error);
+                console.error('통계 로드 실패:', error);
             }
         }
-
+        
         async function loadRecentProducts() {
             try {
                 const response = await fetch('/api/products/recent?limit=8');
                 const products = await response.json();
-
+                
                 const gallery = document.getElementById('recentGallery');
-
+                
                 if (!products || products.length === 0) {
                     gallery.innerHTML = `
                         <div class="empty-state">
                             <div class="empty-state-icon">📷</div>
-                            <p>No products processed yet</p>
+                            <p>아직 처리된 제품이 없습니다</p>
                         </div>
                     `;
                     return;
                 }
-
+                
                 gallery.innerHTML = products.map(p => `
                     <div class="gallery-item">
                         <img class="gallery-image" src="${p.mainImage || ''}" alt="${p.title || ''}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23f0f0f0%22 width=%22100%22 height=%22100%22/><text x=%2250%22 y=%2250%22 text-anchor=%22middle%22 dy=%220.3em%22 fill=%22%23999%22 font-size=%2212%22>No Image</text></svg>'">
                         <div class="gallery-info">
                             <div class="gallery-title">${p.title || 'Unknown'}</div>
-                            <div class="gallery-meta">$${p.priceAud || 0} • ${p.galleryImages || 0} images</div>
+                            <div class="gallery-meta">$${p.priceAud || 0} • ${p.galleryImages || 0}개 이미지</div>
                         </div>
                     </div>
                 `).join('');
             } catch (error) {
-                console.error('Recent products load failed:', error);
+                console.error('최근 제품 로드 실패:', error);
             }
         }
-
+        
         async function loadGallery() {
             try {
                 const response = await fetch('/api/products/recent?limit=50');
                 const products = await response.json();
-
+                
                 const gallery = document.getElementById('fullGallery');
-
+                
                 if (!products || products.length === 0) {
                     gallery.innerHTML = `
                         <div class="empty-state">
                             <div class="empty-state-icon">📷</div>
-                            <p>No products processed</p>
+                            <p>처리된 제품이 없습니다</p>
                         </div>
                     `;
                     return;
                 }
-
+                
                 gallery.innerHTML = products.map(p => `
                     <div class="gallery-item">
                         <img class="gallery-image" src="${p.mainImage || ''}" alt="${p.title || ''}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23f0f0f0%22 width=%22100%22 height=%22100%22/><text x=%2250%22 y=%2250%22 text-anchor=%22middle%22 dy=%220.3em%22 fill=%22%23999%22 font-size=%2212%22>No Image</text></svg>'">
                         <div class="gallery-info">
                             <div class="gallery-title">${p.title || 'Unknown'}</div>
-                            <div class="gallery-meta">ID: ${p.id} • ${p.galleryImages || 0} images</div>
+                            <div class="gallery-meta">ID: ${p.id} • ${p.galleryImages || 0}개 이미지</div>
                         </div>
                     </div>
                 `).join('');
             } catch (error) {
-                console.error('Gallery load failed:', error);
+                console.error('갤러리 로드 실패:', error);
             }
         }
         
@@ -1805,30 +1805,30 @@
             try {
                 const response = await fetch('/api/products/failed');
                 const products = await response.json();
-
+                
                 const container = document.getElementById('failedProducts');
-
+                
                 if (!products || products.length === 0) {
                     container.innerHTML = `
                         <div class="empty-state">
                             <div class="empty-state-icon">✅</div>
-                            <p>No failed products</p>
+                            <p>실패한 제품이 없습니다</p>
                         </div>
                     `;
                     return;
                 }
-
+                
                 container.innerHTML = products.map(p => `
                     <div class="schedule-item">
                         <div class="schedule-info">
-                            <div class="schedule-name">${p.title || `Product #${p.id}`}</div>
-                            <div class="schedule-cron">ID: ${p.id} • validated_images: ${p.validatedImages || 0}</div>
+                            <div class="schedule-name">${p.title || `제품 #${p.id}`}</div>
+                            <div class="schedule-cron">ID: ${p.id} • validated_images: ${p.validatedImages || 0}개</div>
                         </div>
-                        <button class="btn btn-secondary" onclick="retryProduct(${p.id})">🔄 Retry</button>
+                        <button class="btn btn-secondary" onclick="retryProduct(${p.id})">🔄 재처리</button>
                     </div>
                 `).join('');
             } catch (error) {
-                console.error('Failed products load failed:', error);
+                console.error('실패 제품 로드 실패:', error);
             }
         }
         
@@ -1855,23 +1855,23 @@
                     container.innerHTML = `
                         <div class="empty-state">
                             <div class="empty-state-icon">📊</div>
-                            <p>No execution history</p>
+                            <p>실행 이력이 없습니다</p>
                         </div>
                     `;
                     return;
                 }
-
+                
                 container.innerHTML = history.slice(0, 10).map(h => `
                     <div class="schedule-item">
                         <div class="schedule-info">
-                            <div class="schedule-name">${new Date(h.startTime).toLocaleString('en-AU')}</div>
-                            <div class="schedule-cron">${h.productLimit || 0} products • ${Math.floor((h.duration || 0) / 60)}m ${(h.duration || 0) % 60}s • ${h.status === 'completed' ? '✅ Done' : '❌ Failed'}</div>
+                            <div class="schedule-name">${new Date(h.startTime).toLocaleString('ko-KR')}</div>
+                            <div class="schedule-cron">${h.productLimit || 0}개 제품 • ${Math.floor((h.duration || 0) / 60)}분 ${(h.duration || 0) % 60}초 • ${h.status === 'completed' ? '✅ 완료' : '❌ 실패'}</div>
                         </div>
                         <span style="color: var(--text-secondary)">$${(h.stats?.estimatedCost || 0).toFixed(4)}</span>
                     </div>
                 `).join('');
             } catch (error) {
-                console.error('Stats load failed:', error);
+                console.error('통계 로드 실패:', error);
             }
         }
         
@@ -1888,10 +1888,10 @@
                 
                 loadSchedules();
             } catch (error) {
-                console.error('Settings load failed:', error);
+                console.error('설정 로드 실패:', error);
             }
         }
-
+        
         async function saveSettings() {
             const config = {
                 productLimit: parseInt(document.getElementById('settingProductLimit').value),
@@ -1899,19 +1899,19 @@
                 targetImageSize: parseInt(document.getElementById('settingImageSize').value),
                 maxVolumeLimit: parseInt(document.getElementById('settingMaxVolume').value) || 0
             };
-
+            
             try {
                 const response = await fetch('/api/config', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(config)
                 });
-
+                
                 if (response.ok) {
-                    alert('✅ Settings saved.');
+                    alert('✅ 설정이 저장되었습니다.');
                 }
             } catch (error) {
-                alert('❌ Settings save failed: ' + error.message);
+                alert('❌ 설정 저장 실패: ' + error.message);
             }
         }
         
@@ -1927,42 +1927,42 @@
                     container.innerHTML = `
                         <div class="empty-state">
                             <div class="empty-state-icon">📅</div>
-                            <p>No schedules registered</p>
+                            <p>등록된 스케줄이 없습니다</p>
                         </div>
                     `;
                     return;
                 }
-
+                
                 container.innerHTML = schedules.map(s => `
                     <div class="schedule-item">
                         <div class="schedule-info">
                             <div class="schedule-name">${s.name}</div>
-                            <div class="schedule-cron">${s.cron} • ${s.productLimit} products</div>
+                            <div class="schedule-cron">${s.cron} • ${s.productLimit}개 제품</div>
                         </div>
                         <div style="display: flex; gap: 12px; align-items: center;">
                             <div class="toggle ${s.enabled ? 'active' : ''}" onclick="toggleSchedule('${s.id}')"></div>
-                            <button class="btn btn-danger" onclick="deleteSchedule('${s.id}')">Delete</button>
+                            <button class="btn btn-danger" onclick="deleteSchedule('${s.id}')">삭제</button>
                         </div>
                     </div>
                 `).join('');
             } catch (error) {
-                console.error('Schedule load failed:', error);
+                console.error('스케줄 로드 실패:', error);
             }
         }
-
+        
         function openScheduleModal() {
-            const name = prompt('Schedule name:');
+            const name = prompt('스케줄 이름:');
             if (!name) return;
-
-            const cron = prompt('Cron expression (e.g., 0 9 * * *):');
+            
+            const cron = prompt('Cron 표현식 (예: 0 9 * * *):');
             if (!cron) return;
-
-            const productLimit = prompt('Products to process:', '50');
+            
+            const productLimit = prompt('처리할 제품 수:', '50');
             if (!productLimit) return;
-
+            
             addSchedule(name, cron, parseInt(productLimit));
         }
-
+        
         async function addSchedule(name, cron, productLimit) {
             try {
                 const response = await fetch('/api/schedules', {
@@ -1970,29 +1970,29 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name, cron, productLimit, enabled: true })
                 });
-
+                
                 if (response.ok) {
                     loadSchedules();
                 }
             } catch (error) {
-                alert('Schedule add failed: ' + error.message);
+                alert('스케줄 추가 실패: ' + error.message);
             }
         }
-
+        
         async function toggleSchedule(id) {
             await fetch(`/api/schedules/${id}/toggle`, { method: 'PATCH' });
             loadSchedules();
         }
-
+        
         async function deleteSchedule(id) {
-            if (confirm('Delete this schedule?')) {
+            if (confirm('이 스케줄을 삭제하시겠습니까?')) {
                 await fetch(`/api/schedules/${id}`, { method: 'DELETE' });
                 loadSchedules();
             }
         }
-
+        
         async function retryProduct(productId) {
-            alert(`Product #${productId} retry feature coming soon.`);
+            alert(`제품 #${productId} 재처리 기능은 준비 중입니다.`);
         }
         
         // ==================== 초기 로드 ====================

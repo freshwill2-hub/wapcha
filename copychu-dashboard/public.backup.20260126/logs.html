@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📜 Log Viewer - Copychu</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Noto Sans KR', sans-serif; }
+        body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); }
+        .card { background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(148, 163, 184, 0.1); border-radius: 12px; }
+        .log-line { font-family: 'Monaco', 'Menlo', 'Consolas', monospace; font-size: 12px; line-height: 1.8; padding: 2px 8px; border-radius: 4px; margin: 1px 0; }
+        .log-success { color: #4ade80; background: rgba(74, 222, 128, 0.1); }
+        .log-error { color: #f87171; background: rgba(248, 113, 113, 0.1); }
+        .log-warning { color: #fbbf24; background: rgba(251, 191, 36, 0.1); }
+        .log-info { color: #94a3b8; }
+        .log-highlight { background: rgba(6, 182, 212, 0.2) !important; border-left: 3px solid #06b6d4; }
+        .btn-primary { background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); }
+        .btn-primary:hover { background: linear-gradient(135deg, #22d3ee 0%, #06b6d4 100%); }
+        .log-container { max-height: 60vh; overflow-y: auto; }
+        .log-container::-webkit-scrollbar { width: 8px; }
+        .log-container::-webkit-scrollbar-track { background: #1e293b; }
+        .log-container::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+        .phase-tab { transition: all 0.2s; cursor: pointer; }
+        .phase-tab:hover { background: #334155; }
+        .phase-tab.active { background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); color: white; }
+        .summary-card { border-left: 4px solid; }
+        .summary-success { border-color: #4ade80; }
+        .summary-error { border-color: #f87171; }
+        .summary-warning { border-color: #fbbf24; }
+        .summary-idle { border-color: #64748b; }
+    </style>
+</head>
+<body class="text-gray-100 min-h-screen p-6">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h1 class="text-2xl font-bold flex items-center gap-2">
+                    <span>📜</span> Log Viewer
+                </h1>
+                <p class="text-gray-400 text-sm mt-1">View execution logs by phase and summary</p>
+            </div>
+            <div class="flex gap-3">
+                <a href="/" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm">
+                    ← Dashboard
+                </a>
+                <button onclick="refreshAll()" class="btn-primary px-4 py-2 rounded-lg text-sm font-medium text-slate-900">
+                    🔄 Refresh
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="card p-4 flex items-center gap-3">
+                <span class="text-3xl">📁</span>
+                <div>
+                    <p class="text-xs text-gray-400">Total Log Files</p>
+                    <p class="text-xl font-bold" id="stat-total-files">-</p>
+                </div>
+            </div>
+            <div class="card p-4 flex items-center gap-3">
+                <span class="text-3xl">✅</span>
+                <div>
+                    <p class="text-xs text-gray-400">Success</p>
+                    <p class="text-xl font-bold text-green-400" id="stat-success">-</p>
+                </div>
+            </div>
+            <div class="card p-4 flex items-center gap-3">
+                <span class="text-3xl">❌</span>
+                <div>
+                    <p class="text-xs text-gray-400">Errors</p>
+                    <p class="text-xl font-bold text-red-400" id="stat-errors">-</p>
+                </div>
+            </div>
+            <div class="card p-4 flex items-center gap-3">
+                <span class="text-3xl">⚠️</span>
+                <div>
+                    <p class="text-xs text-gray-400">Warnings</p>
+                    <p class="text-xl font-bold text-yellow-400" id="stat-warnings">-</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Overall Summary -->
+        <div class="card p-4 mb-6">
+            <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                <span>📊</span> Latest Execution Summary by Phase
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="phase-summary">
+                <p class="text-gray-500 col-span-full text-center py-4">Loading...</p>
+            </div>
+        </div>
+
+        <!-- Log File Selection and Viewer -->
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <!-- File List -->
+            <div class="card p-4">
+                <h3 class="font-semibold mb-3 flex items-center gap-2">
+                    <span>📂</span> Log Files
+                </h3>
+                
+                <!-- Phase Tabs -->
+                <div class="flex flex-wrap gap-1 mb-3">
+                    <button onclick="filterPhase('all')" class="phase-tab px-2 py-1 rounded text-xs active" data-phase="all">All</button>
+                    <button onclick="filterPhase('pipeline')" class="phase-tab px-2 py-1 rounded text-xs bg-purple-900/50" data-phase="pipeline">📦Pipeline</button>
+                    <button onclick="filterPhase('phase0')" class="phase-tab px-2 py-1 rounded text-xs" data-phase="phase0">P0</button>
+                    <button onclick="filterPhase('phase1')" class="phase-tab px-2 py-1 rounded text-xs" data-phase="phase1">P1</button>
+                    <button onclick="filterPhase('phase2')" class="phase-tab px-2 py-1 rounded text-xs" data-phase="phase2">P2</button>
+                    <button onclick="filterPhase('phase3')" class="phase-tab px-2 py-1 rounded text-xs" data-phase="phase3">P3</button>
+                    <button onclick="filterPhase('phase4')" class="phase-tab px-2 py-1 rounded text-xs" data-phase="phase4">P4</button>
+                    <button onclick="filterPhase('phase5')" class="phase-tab px-2 py-1 rounded text-xs" data-phase="phase5">P5</button>
+                </div>
+                
+                <div class="space-y-1 max-h-96 overflow-y-auto" id="file-list">
+                    <p class="text-gray-500 text-sm text-center py-4">Loading...</p>
+                </div>
+            </div>
+            
+            <!-- Log Content -->
+            <div class="lg:col-span-3 card p-4">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="font-semibold flex items-center gap-2">
+                        <span>📜</span> 
+                        <span id="current-file-name">Select a file</span>
+                    </h3>
+                    <div class="flex gap-2">
+                        <select id="filter-type" class="bg-slate-700 border border-slate-600 rounded px-2 py-1 text-xs" onchange="loadSelectedFile()">
+                            <option value="all">All Logs</option>
+                            <option value="summary">Summary Only</option>
+                            <option value="errors">Errors Only</option>
+                        </select>
+                        <button onclick="copyLogs()" class="px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded text-xs">
+                            📋 Copy
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="log-container bg-slate-900 rounded-lg p-3" id="log-content">
+                    <p class="text-gray-500 text-center py-8">← Select a log file on the left</p>
+                </div>
+                
+                <div class="flex justify-between items-center mt-3 text-xs text-gray-500">
+                    <span id="log-info">-</span>
+                    <span id="log-count">-</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allFiles = {};
+        let currentPhaseFilter = 'all';
+        let currentFile = null;
+        let currentLogContent = '';
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSummary();
+            loadFileList();
+        });
+        
+        // Load Overall Summary
+        async function loadSummary() {
+            try {
+                const response = await fetch('/api/logs/summary');
+                const data = await response.json();
+                
+                const container = document.getElementById('phase-summary');
+                let html = '';
+                let totalSuccess = 0, totalErrors = 0, totalWarnings = 0;
+                
+                const phaseNames = {
+                    pipeline: '📦 Pipeline',
+                    phase0: 'Phase 0: URL Collection',
+                    phase1: 'Phase 1: Scraping',
+                    phase2: 'Phase 2: BG Removal',
+                    phase3: 'Phase 3: AI Crop',
+                    phase4: 'Phase 4: Image Selection',
+                    phase5: 'Phase 5: Shopify'
+                };
+                
+                if (data.phases) {
+                    Object.entries(data.phases).forEach(([phase, info]) => {
+                        let statusClass = 'summary-idle';
+                        if (info.hasErrors) statusClass = 'summary-error';
+                        else if (info.hasWarnings) statusClass = 'summary-warning';
+                        else if (info.latestFile) statusClass = 'summary-success';
+                        
+                        // Count stats
+                        info.summary.forEach(line => {
+                            if (line.includes('✅') || line.includes('success') || line.includes('Success')) totalSuccess++;
+                            if (line.includes('❌') || line.includes('fail') || line.includes('Fail')) totalErrors++;
+                            if (line.includes('⚠️') || line.includes('warn') || line.includes('Warn')) totalWarnings++;
+                        });
+                        
+                        html += `
+                            <div class="summary-card ${statusClass} bg-slate-800 rounded-lg p-3 cursor-pointer hover:bg-slate-700" 
+                                 onclick="selectPhaseFile('${phase}')">
+                                <div class="flex justify-between items-start mb-2">
+                                    <h4 class="font-medium text-sm">${phaseNames[phase] || phase}</h4>
+                                    <span class="text-xs px-2 py-0.5 rounded ${info.hasErrors ? 'bg-red-500/20 text-red-400' : info.hasWarnings ? 'bg-yellow-500/20 text-yellow-400' : 'bg-green-500/20 text-green-400'}">
+                                        ${info.hasErrors ? 'Error' : info.hasWarnings ? 'Warning' : 'OK'}
+                                    </span>
+                                </div>
+                                <p class="text-xs text-gray-500 mb-2">${info.latestFile || 'No logs'}</p>
+                                <div class="text-xs space-y-1 max-h-24 overflow-hidden">
+                                    ${info.summary.slice(0, 5).map(line => `
+                                        <div class="log-line ${getLogClass(line)} truncate">${escapeHtml(line)}</div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                
+                container.innerHTML = html || '<p class="text-gray-500 col-span-full text-center py-4">No summary data</p>';
+                
+                // Update stats
+                document.getElementById('stat-success').textContent = totalSuccess;
+                document.getElementById('stat-errors').textContent = totalErrors;
+                document.getElementById('stat-warnings').textContent = totalWarnings;
+                
+            } catch (error) {
+                console.error('Failed to load summary:', error);
+                document.getElementById('phase-summary').innerHTML = '<p class="text-red-400 col-span-full text-center py-4">Load failed</p>';
+            }
+        }
+        
+        // Load File List
+        async function loadFileList() {
+            try {
+                const response = await fetch('/api/logs/files');
+                const data = await response.json();
+                
+                allFiles = data.files || {};
+                
+                document.getElementById('stat-total-files').textContent = data.totalFiles || 0;
+                
+                renderFileList();
+                
+            } catch (error) {
+                console.error('Failed to load file list:', error);
+                document.getElementById('file-list').innerHTML = '<p class="text-red-400 text-sm text-center py-4">Load failed</p>';
+            }
+        }
+        
+        // Render File List
+        function renderFileList() {
+            const container = document.getElementById('file-list');
+            let html = '';
+
+            // Add pipeline group
+            const phases = currentPhaseFilter === 'all'
+                ? ['pipeline', 'phase0', 'phase1', 'phase2', 'phase3', 'phase4', 'phase5']
+                : [currentPhaseFilter];
+
+            phases.forEach(phase => {
+                const files = allFiles[phase] || [];
+                if (files.length > 0) {
+                    const label = phase === 'pipeline' ? '📦 PIPELINE' : phase.toUpperCase();
+                    const colorClass = phase === 'pipeline' ? 'text-purple-400' : 'text-cyan-400';
+                    html += `<div class="text-xs ${colorClass} font-medium mt-2 mb-1">${label}</div>`;
+                    files.slice(0, 5).forEach(file => {
+                        const isActive = currentFile === file.name;
+                        html += `
+                            <div onclick="selectFile('${file.name}')" 
+                                 class="p-2 rounded text-xs cursor-pointer hover:bg-slate-700 ${isActive ? 'bg-slate-700 border border-cyan-500/50' : ''}">
+                                <div class="truncate ${isActive ? 'text-cyan-400' : 'text-gray-300'}">${file.name}</div>
+                                <div class="text-gray-500 text-xs">${file.sizeFormatted} · ${file.modifiedAtFormatted}</div>
+                            </div>
+                        `;
+                    });
+                }
+            });
+            
+            container.innerHTML = html || '<p class="text-gray-500 text-sm text-center py-4">No log files</p>';
+        }
+        
+        // Phase Filter
+        function filterPhase(phase) {
+            currentPhaseFilter = phase;
+            
+            document.querySelectorAll('.phase-tab').forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.phase === phase);
+            });
+            
+            renderFileList();
+        }
+        
+        // Select Phase Card - Load Latest File
+        function selectPhaseFile(phase) {
+            if (allFiles[phase] && allFiles[phase].length > 0) {
+                filterPhase(phase);
+                selectFile(allFiles[phase][0].name);
+            }
+        }
+        
+        // Select File
+        async function selectFile(filename) {
+            currentFile = filename;
+            renderFileList();
+            await loadSelectedFile();
+        }
+        
+        // Load Selected File
+        async function loadSelectedFile() {
+            if (!currentFile) return;
+            
+            document.getElementById('current-file-name').textContent = currentFile;
+            document.getElementById('log-content').innerHTML = '<p class="text-gray-500 text-center py-8">Loading...</p>';
+            
+            try {
+                const filter = document.getElementById('filter-type').value;
+                const response = await fetch(`/api/logs/file/${currentFile}?filter=${filter}`);
+                const data = await response.json();
+                
+                currentLogContent = data.content || '';
+                
+                displayLog(data.lines || []);
+                
+                document.getElementById('log-info').textContent = `${data.size || 0} bytes · ${data.modifiedAt || ''}`;
+                document.getElementById('log-count').textContent = `${data.lines?.length || 0} lines`;
+                
+            } catch (error) {
+                console.error('Failed to load file:', error);
+                document.getElementById('log-content').innerHTML = '<p class="text-red-400 text-center py-8">Load failed</p>';
+            }
+        }
+        
+        // Display Log
+        function displayLog(lines) {
+            const container = document.getElementById('log-content');
+            
+            if (lines.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-8">No logs to display</p>';
+                return;
+            }
+            
+            let html = '';
+            lines.forEach(line => {
+                const logClass = getLogClass(line);
+                const isHighlight = line.includes('🎉') || line.includes('Result') || line.includes('Complete!') || line.includes('Done!');
+                html += `<div class="log-line ${logClass} ${isHighlight ? 'log-highlight' : ''}">${escapeHtml(line)}</div>`;
+            });
+            
+            container.innerHTML = html;
+            
+            // Auto scroll
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        // Determine Log Class
+        function getLogClass(line) {
+            if (line.includes('✅') || line.includes('success') || line.includes('Success') || line.includes('complete') || line.includes('Complete')) return 'log-success';
+            if (line.includes('❌') || line.includes('fail') || line.includes('Fail') || line.includes('error') || line.includes('Error')) return 'log-error';
+            if (line.includes('⚠️') || line.includes('warn') || line.includes('Warn') || line.includes('skip') || line.includes('Skip')) return 'log-warning';
+            return 'log-info';
+        }
+        
+        // Copy Logs
+        function copyLogs() {
+            if (!currentLogContent) {
+                alert('No logs to copy');
+                return;
+            }
+            navigator.clipboard.writeText(currentLogContent).then(() => {
+                alert('Logs copied to clipboard!');
+            });
+        }
+        
+        // Refresh All
+        function refreshAll() {
+            loadSummary();
+            loadFileList();
+            if (currentFile) loadSelectedFile();
+        }
+        
+        // Escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

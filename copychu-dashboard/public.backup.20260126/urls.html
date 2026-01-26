@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Manager - Copychu Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        body { background-color: #0f172a; }
+        .card { background-color: #1e293b; border-radius: 12px; }
+        .input-field { 
+            background-color: #334155; 
+            border: 1px solid #475569;
+            color: white;
+        }
+        .input-field:focus {
+            border-color: #22d3ee;
+            outline: none;
+        }
+        .input-field:disabled {
+            background-color: #1e293b;
+            color: #64748b;
+            cursor: not-allowed;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #22d3ee, #0ea5e9);
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #06b6d4, #0284c7);
+            transform: translateY(-1px);
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+        }
+        .btn-success:hover {
+            background: linear-gradient(135deg, #16a34a, #15803d);
+            transform: translateY(-1px);
+        }
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+        }
+        /* Force Kill Button Style */
+        .btn-force-kill {
+            background: linear-gradient(135deg, #7f1d1d, #450a0a);
+            border: 2px solid #dc2626;
+            animation: pulse-danger 2s infinite;
+        }
+        .btn-force-kill:hover {
+            background: linear-gradient(135deg, #991b1b, #7f1d1d);
+            box-shadow: 0 0 15px rgba(220, 38, 38, 0.5);
+        }
+        @keyframes pulse-danger {
+            0%, 100% { box-shadow: 0 0 5px rgba(220, 38, 38, 0.3); }
+            50% { box-shadow: 0 0 15px rgba(220, 38, 38, 0.6); }
+        }
+        .status-pending { color: #fbbf24; }
+        .status-processing { color: #22d3ee; }
+        .status-completed { color: #22c55e; }
+        .status-error { color: #ef4444; }
+        .log-time { color: #64748b; font-size: 0.75rem; min-width: 70px; }
+        .log-info { color: #94a3b8; }
+        .log-success { color: #22c55e; }
+        .log-error { color: #ef4444; }
+        .log-warning { color: #fbbf24; }
+        .checkbox-custom {
+            width: 18px;
+            height: 18px;
+            accent-color: #22d3ee;
+        }
+        /* Sidebar active state */
+        .nav-active {
+            background-color: #1e293b;
+            color: #22d3ee !important;
+            border-left: 3px solid #22d3ee;
+        }
+        /* Progress bar */
+        .progress-bar {
+            height: 8px;
+            background: #334155;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #22d3ee, #06b6d4);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+        /* Status badge */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .status-badge.idle { background: #334155; color: #94a3b8; }
+        .status-badge.running { background: rgba(34, 211, 238, 0.15); color: #22d3ee; }
+        .status-badge.error { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+        .status-badge.running .status-dot {
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+    </style>
+</head>
+<body class="text-gray-100 min-h-screen">
+    <!-- Sidebar -->
+    <div class="fixed left-0 top-0 h-full w-56 bg-slate-900 border-r border-slate-700">
+        <div class="p-5 border-b border-slate-700">
+            <h1 class="text-xl font-bold text-cyan-400">COPYCHU</h1>
+            <p class="text-xs text-gray-500 mt-1">Automation Dashboard</p>
+        </div>
+        
+        <nav class="p-3 space-y-1">
+            <a href="/" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-slate-800 hover:text-white transition-colors">
+                <span>📊</span> Dashboard
+            </a>
+            <a href="/#pipeline" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-slate-800 hover:text-white transition-colors">
+                <span>▶️</span> Pipeline
+            </a>
+            <a href="/urls.html" class="flex items-center gap-3 px-4 py-3 rounded-lg nav-active">
+                <span>🔗</span> URL Manager
+            </a>
+            <a href="/#monitor" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-slate-800 hover:text-white transition-colors">
+                <span>📺</span> Monitoring
+            </a>
+            <a href="/logs.html" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-slate-800 hover:text-white transition-colors">
+                <span>📜</span> Log Viewer
+            </a>
+            <a href="/#gallery" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-slate-800 hover:text-white transition-colors">
+                <span>🖼️</span> Gallery
+            </a>
+            <a href="/#settings" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-slate-800 hover:text-white transition-colors">
+                <span>⚙️</span> Settings
+            </a>
+        </nav>
+        
+        <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-700">
+            <div class="status-badge idle" id="status-badge">
+                <div class="status-dot"></div>
+                <span id="status-text">Idle</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="ml-56 p-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-bold">URL Manager</h2>
+            <p class="text-gray-400 mt-1">Collect products from category URLs and process automatically</p>
+        </div>
+
+        <!-- Progress Section -->
+        <div id="progress-section" class="card p-6 mb-6 hidden">
+            <div class="flex justify-between items-center mb-3">
+                <h3 class="font-semibold text-cyan-400">🔄 Processing</h3>
+                <span id="progress-phase" class="text-sm text-gray-400">Phase 0</span>
+            </div>
+            <div class="progress-bar mb-2">
+                <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
+            </div>
+            <div class="flex justify-between text-sm text-gray-400">
+                <span id="progress-current">0 processed</span>
+                <span id="progress-percent">0%</span>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="flex gap-2 mb-6 flex-wrap">
+            <button id="tab-category" class="px-5 py-2.5 rounded-lg bg-cyan-500 text-white font-medium transition-all" onclick="showTab('category')">
+                📂 Category Queue
+            </button>
+            <button id="tab-product" class="px-5 py-2.5 rounded-lg bg-slate-700 text-gray-300 hover:bg-slate-600 transition-all" onclick="showTab('product')">
+                📦 Add Single URL
+            </button>
+            <button id="tab-list" class="px-5 py-2.5 rounded-lg bg-slate-700 text-gray-300 hover:bg-slate-600 transition-all" onclick="showTab('list')">
+                📋 Product List
+            </button>
+            <button id="tab-logs" class="px-5 py-2.5 rounded-lg bg-slate-700 text-gray-300 hover:bg-slate-600 transition-all" onclick="showTab('logs')">
+                📜 Real-time Logs
+            </button>
+        </div>
+
+        <!-- ===================== Category Queue Tab ===================== -->
+        <div id="content-category" class="space-y-6">
+            <!-- Add Category URL -->
+            <div class="card p-6">
+                <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <span class="text-2xl">📂</span> Add Category URL
+                </h3>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">OliveYoung Category URL</label>
+                        <input type="text" id="category-url" class="input-field w-full px-4 py-3 rounded-lg" 
+                               placeholder="https://www.oliveyoung.co.kr/store/main/getBestList.do?dispCatNo=...">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">Category Name (optional)</label>
+                        <input type="text" id="category-name" class="input-field w-full px-4 py-3 rounded-lg" 
+                               placeholder="e.g., Skincare, Suncare">
+                    </div>
+                </div>
+                
+                <!-- Collection Settings -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">Max Products</label>
+                        <input type="number" id="category-max" class="input-field w-full px-4 py-3 rounded-lg" 
+                               value="100" min="1" max="1000">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">
+                            <input type="checkbox" id="limit-pages-checkbox" class="checkbox-custom mr-2" onchange="togglePageLimit()">
+                            Limit Pages
+                        </label>
+                        <div class="flex items-center gap-2">
+                            <input type="number" id="category-max-pages" class="input-field w-full px-4 py-3 rounded-lg" 
+                                   value="10" min="1" max="100" disabled>
+                            <span id="pages-label" class="text-cyan-400 text-sm whitespace-nowrap font-medium">Unlimited</span>
+                        </div>
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="addCategory()" class="btn-primary px-6 py-3 rounded-lg font-medium w-full text-slate-900">
+                            ➕ Add to Queue
+                        </button>
+                    </div>
+                </div>
+                
+                <p class="text-sm text-gray-500">
+                    💡 Unchecked = auto-collect until last page | Duplicate SKUs are auto-skipped
+                </p>
+            </div>
+
+            <!-- Category Queue List -->
+            <div class="card p-6">
+                <div class="flex flex-wrap justify-between items-center gap-4 mb-4">
+                    <h3 class="text-lg font-semibold flex items-center gap-2">
+                        <span class="text-2xl">📋</span> Category Queue
+                    </h3>
+                    <div class="flex flex-wrap gap-2">
+                        <!-- Two execution modes clearly separated -->
+                        <button onclick="processQueueUrlOnly()" id="btn-url-only" class="btn-primary px-4 py-2 rounded-lg text-sm font-medium text-slate-900">
+                            📥 Collect URLs Only
+                        </button>
+                        <button onclick="processQueueFull()" id="btn-full-pipeline" class="btn-success px-4 py-2 rounded-lg text-sm font-medium text-white">
+                            🚀 Full Pipeline
+                        </button>
+                        <button onclick="stopQueue()" id="btn-stop" class="btn-danger px-4 py-2 rounded-lg text-sm font-medium text-white">
+                            ⏹️ Stop
+                        </button>
+                        <button onclick="forceKill()" id="btn-force-kill" class="btn-force-kill px-4 py-2 rounded-lg text-sm font-bold text-white">
+                            🔴 Force Kill
+                        </button>
+                        <button onclick="clearCompleted()" class="px-4 py-2 rounded-lg text-sm bg-slate-700 hover:bg-slate-600 text-gray-300">
+                            🗑️ Clear Completed
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Execution Mode Description -->
+                <div class="bg-slate-800 rounded-lg p-4 mb-4 text-sm">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="flex items-start gap-3">
+                            <span class="text-cyan-400 text-lg">📥</span>
+                            <div>
+                                <p class="font-medium text-cyan-400">Collect URLs Only</p>
+                                <p class="text-gray-400">Phase 0 only → Save URLs and SKUs only</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="text-green-400 text-lg">🚀</span>
+                            <div>
+                                <p class="font-medium text-green-400">Full Pipeline</p>
+                                <p class="text-gray-400">Phase 0→1→2→3→4→5</p>
+                                <p class="text-gray-500 text-xs mt-1">Complete product data + Shopify upload</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="category-queue" class="space-y-3">
+                    <p class="text-gray-500 text-center py-8">No categories. Add one above.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================== Single URL Tab ===================== -->
+        <div id="content-product" class="hidden space-y-6">
+            <div class="card p-6">
+                <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <span class="text-2xl">📦</span> Add Single Product URL
+                </h3>
+                
+                <div class="flex gap-4 mb-4">
+                    <input type="text" id="product-url" class="input-field flex-1 px-4 py-3 rounded-lg" 
+                           placeholder="https://www.oliveyoung.co.kr/store/goods/getGoodsDetail.do?goodsNo=...">
+                    <button onclick="addProductUrl()" class="btn-primary px-6 py-3 rounded-lg font-medium text-slate-900">
+                        ➕ Add
+                    </button>
+                </div>
+                
+                <p class="text-sm text-gray-500 mb-6">
+                    💡 Enter OliveYoung product detail page URL (auto-skip if SKU exists)
+                </p>
+                
+                <!-- Bulk URL Add -->
+                <div class="border-t border-slate-700 pt-6">
+                    <h4 class="font-medium mb-3">📝 Add Multiple URLs</h4>
+                    <textarea id="product-urls-bulk" class="input-field w-full px-4 py-3 rounded-lg h-32" 
+                              placeholder="Enter one URL per line..."></textarea>
+                    <button onclick="addBulkUrls()" class="btn-primary px-6 py-3 rounded-lg font-medium mt-4 text-slate-900">
+                        ➕ Add All
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Recently Added URLs -->
+            <div class="card p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold">📋 Recently Added URLs</h3>
+                    <button onclick="loadRecentUrls()" class="px-4 py-2 rounded-lg text-sm bg-slate-700 hover:bg-slate-600">
+                        🔄 Refresh
+                    </button>
+                </div>
+                <div id="recent-urls" class="space-y-2">
+                    <p class="text-gray-500">Loading...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================== Product List Tab ===================== -->
+        <div id="content-list" class="hidden space-y-6">
+            <div class="card p-6">
+                <div class="flex flex-wrap justify-between items-center gap-4 mb-4">
+                    <h3 class="text-lg font-semibold">📋 Registered Products</h3>
+                    <div class="flex gap-2 items-center">
+                        <span id="product-count" class="text-sm text-gray-400 bg-slate-700 px-3 py-1 rounded-full">0 products</span>
+                        <button onclick="loadProducts()" class="px-4 py-2 rounded-lg text-sm bg-slate-700 hover:bg-slate-600">
+                            🔄 Refresh
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="text-left text-gray-400 text-sm border-b border-slate-700">
+                                <th class="pb-3 pl-4">ID</th>
+                                <th class="pb-3">SKU</th>
+                                <th class="pb-3">Product Name</th>
+                                <th class="pb-3">Price</th>
+                                <th class="pb-3">Collected</th>
+                                <th class="pb-3">Status</th>
+                                <th class="pb-3">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="product-list">
+                            <!-- Dynamically populated -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                <div class="flex justify-center gap-2 mt-4">
+                    <button onclick="prevPage()" class="px-4 py-2 rounded bg-slate-700 hover:bg-slate-600">◀ Prev</button>
+                    <span id="page-info" class="px-4 py-2 text-gray-400">1 / 1</span>
+                    <button onclick="nextPage()" class="px-4 py-2 rounded bg-slate-700 hover:bg-slate-600">Next ▶</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================== Logs Tab ===================== -->
+        <div id="content-logs" class="hidden space-y-6">
+            <div class="card p-6">
+                <div class="flex flex-wrap justify-between items-center gap-4 mb-4">
+                    <h3 class="text-lg font-semibold">📜 Real-time Logs</h3>
+                    <div class="flex gap-2 items-center">
+                        <button onclick="clearLogs()" class="px-4 py-2 rounded-lg text-sm bg-slate-700 hover:bg-slate-600">
+                            🗑️ Clear Logs
+                        </button>
+                        <label class="flex items-center gap-2 text-sm text-gray-400 cursor-pointer">
+                            <input type="checkbox" id="auto-scroll" checked class="checkbox-custom">
+                            Auto Scroll
+                        </label>
+                    </div>
+                </div>
+                
+                <div id="log-container" class="bg-slate-900 rounded-lg p-4 h-[500px] overflow-y-auto font-mono text-sm">
+                    <p class="text-gray-500">Logs will appear here...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        let currentPage = 0;
+        const pageSize = 50;
+        let totalProducts = 0;
+        let logMessages = [];
+        
+        // ==================== Page Limit Checkbox ====================
+        function togglePageLimit() {
+            const checkbox = document.getElementById('limit-pages-checkbox');
+            const input = document.getElementById('category-max-pages');
+            const label = document.getElementById('pages-label');
+            
+            if (checkbox.checked) {
+                input.disabled = false;
+                label.textContent = 'pages';
+                label.classList.remove('text-cyan-400');
+                label.classList.add('text-gray-400');
+            } else {
+                input.disabled = true;
+                label.textContent = 'Unlimited';
+                label.classList.remove('text-gray-400');
+                label.classList.add('text-cyan-400');
+            }
+        }
+        
+        // ==================== Tab Switch ====================
+        function showTab(tab) {
+            ['category', 'product', 'list', 'logs'].forEach(t => {
+                document.getElementById(`content-${t}`).classList.add('hidden');
+                document.getElementById(`tab-${t}`).classList.remove('bg-cyan-500', 'text-white');
+                document.getElementById(`tab-${t}`).classList.add('bg-slate-700', 'text-gray-300');
+            });
+            
+            document.getElementById(`content-${tab}`).classList.remove('hidden');
+            document.getElementById(`tab-${tab}`).classList.remove('bg-slate-700', 'text-gray-300');
+            document.getElementById(`tab-${tab}`).classList.add('bg-cyan-500', 'text-white');
+            
+            if (tab === 'list') loadProducts();
+            if (tab === 'product') loadRecentUrls();
+        }
+        
+        // ==================== Add Category ====================
+        async function addCategory() {
+            const url = document.getElementById('category-url').value.trim();
+            const name = document.getElementById('category-name').value.trim();
+            const maxProducts = parseInt(document.getElementById('category-max').value) || 100;
+            const limitPages = document.getElementById('limit-pages-checkbox').checked;
+            const maxPages = parseInt(document.getElementById('category-max-pages').value) || 10;
+            
+            if (!url) {
+                alert('Please enter a category URL');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/url-queue/category', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        url, 
+                        name, 
+                        maxProducts, 
+                        maxPages: limitPages ? maxPages : 0,
+                        limitPages 
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('category-url').value = '';
+                    document.getElementById('category-name').value = '';
+                    loadUrlQueue();
+                    addLogMessage({ type: 'success', message: `✅ Category added: ${name || url.substring(0, 50)}...`, timestamp: new Date().toISOString() });
+                } else {
+                    alert(data.error || 'Add failed');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+        
+        // ==================== Delete Category ====================
+        async function deleteCategory(id) {
+            if (!confirm('Delete this category?')) return;
+            
+            try {
+                await fetch(`/api/url-queue/category/${id}`, { method: 'DELETE' });
+                loadUrlQueue();
+            } catch (error) {
+                alert('Delete failed: ' + error.message);
+            }
+        }
+        
+        // ==================== URL Only Collection (Phase 0 only) ====================
+        async function processQueueUrlOnly() {
+            if (!confirm('Collect URLs only (Phase 0 only).\n\nProduct details (title, price, images) will NOT be collected.\nContinue?')) return;
+            
+            try {
+                addLogMessage({ type: 'info', message: '📥 Starting URL collection (Phase 0 only)', timestamp: new Date().toISOString() });
+                
+                const response = await fetch('/api/url-queue/process', { method: 'POST' });
+                const data = await response.json();
+                
+                if (!data.success) {
+                    alert(data.error || 'Execution failed');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+        
+        // ==================== Full Pipeline (Phase 0→5) ====================
+        async function processQueueFull() {
+            if (!confirm('🚀 Run full pipeline.\n\nPhase 0: URL Collection\nPhase 1: Product Scraping\nPhase 2: BG Removal\nPhase 2.5: AI Image Validation\nPhase 2.6: Image Selection\nPhase 4: Final Image Generation\nPhase 5: Shopify Upload\n\nThis may take a while. Continue?')) return;
+            
+            try {
+                addLogMessage({ type: 'info', message: '🚀 Starting full pipeline (Phase 0→1→2→3→4→5)', timestamp: new Date().toISOString() });
+                showProgress();
+                
+                const response = await fetch('/api/url-queue/process-full', { method: 'POST' });
+                const data = await response.json();
+                
+                if (!data.success) {
+                    alert(data.error || 'Execution failed');
+                    hideProgress();
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+                hideProgress();
+            }
+        }
+        
+        // ==================== Stop ====================
+        async function stopQueue() {
+            if (!confirm('Stop processing?')) return;
+            
+            try {
+                const response = await fetch('/api/pipeline/stop', { method: 'POST' });
+                const data = await response.json();
+                
+                if (data.success) {
+                    addLogMessage({ type: 'warning', message: '🛑 Pipeline stopped', timestamp: new Date().toISOString() });
+                    hideProgress();
+                    loadUrlQueue();
+                } else {
+                    alert(data.error || 'Stop failed');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+        
+        // ==================== Force Kill ====================
+        async function forceKill() {
+            if (!confirm('⚠️ Warning: Force Kill!\n\nThis will terminate all Phase processes and Chromium.\nAre you sure?')) return;
+            
+            try {
+                addLogMessage({ type: 'warning', message: '🔴 Force kill requested...', timestamp: new Date().toISOString() });
+                
+                const response = await fetch('/api/force-kill', { method: 'POST' });
+                const data = await response.json();
+                
+                if (data.success) {
+                    addLogMessage({ type: 'success', message: '✅ Force kill complete!', timestamp: new Date().toISOString() });
+                    hideProgress();
+                    loadUrlQueue();
+                } else {
+                    alert('❌ Force kill failed: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('❌ Error: ' + error.message);
+            }
+        }
+        
+        // ==================== Clear Completed ====================
+        async function clearCompleted() {
+            try {
+                const response = await fetch('/api/url-queue');
+                const queue = await response.json();
+                
+                let deleted = 0;
+                for (const cat of (queue.categories || [])) {
+                    if (cat.status === 'completed') {
+                        await fetch(`/api/url-queue/category/${cat.id}`, { method: 'DELETE' });
+                        deleted++;
+                    }
+                }
+                
+                if (deleted > 0) {
+                    addLogMessage({ type: 'info', message: `🗑️ ${deleted} completed items cleared`, timestamp: new Date().toISOString() });
+                }
+                
+                loadUrlQueue();
+            } catch (error) {
+                alert('Clear failed: ' + error.message);
+            }
+        }
+        
+        // ==================== Add Single Product URL ====================
+        async function addProductUrl() {
+            const url = document.getElementById('product-url').value.trim();
+            
+            if (!url) {
+                alert('Please enter a product URL');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/url-queue/product', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('product-url').value = '';
+                    addLogMessage({ type: 'success', message: `✅ URL added (SKU: ${data.sku})`, timestamp: new Date().toISOString() });
+                    loadRecentUrls();
+                } else {
+                    alert(data.error || 'Add failed');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+        
+        // ==================== Add Bulk URLs ====================
+        async function addBulkUrls() {
+            const text = document.getElementById('product-urls-bulk').value.trim();
+            const urls = text.split('\n').filter(u => u.trim());
+            
+            if (urls.length === 0) {
+                alert('Please enter URLs');
+                return;
+            }
+            
+            let success = 0, failed = 0, duplicates = 0;
+            
+            for (const url of urls) {
+                try {
+                    const response = await fetch('/api/url-queue/product', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ url: url.trim() })
+                    });
+                    
+                    const data = await response.json();
+                    if (data.success) success++;
+                    else if (data.error?.includes('already')) duplicates++;
+                    else failed++;
+                } catch {
+                    failed++;
+                }
+            }
+            
+            alert(`Complete:\n✅ Success: ${success}\n⚠️ Duplicates: ${duplicates}\n❌ Failed: ${failed}`);
+            document.getElementById('product-urls-bulk').value = '';
+            loadRecentUrls();
+        }
+        
+        // ==================== Load URL Queue ====================
+        async function loadUrlQueue() {
+            try {
+                const response = await fetch('/api/url-queue');
+                const queue = await response.json();
+                
+                const container = document.getElementById('category-queue');
+                
+                if (!queue.categories || queue.categories.length === 0) {
+                    container.innerHTML = '<p class="text-gray-500 text-center py-8">No categories. Add one above.</p>';
+                    return;
+                }
+                
+                container.innerHTML = queue.categories.map((cat, index) => {
+                    const pagesText = cat.maxPages === 0 ? 'Unlimited' : `${cat.maxPages} pages`;
+                    const pagesClass = cat.maxPages === 0 ? 'text-cyan-400' : 'text-yellow-400';
+                    
+                    return `
+                    <div class="flex items-center gap-4 p-4 bg-slate-800 rounded-lg hover:bg-slate-750 transition-colors">
+                        <span class="text-gray-500 cursor-move">☰</span>
+                        <span class="w-8 h-8 flex items-center justify-center bg-slate-700 rounded-full text-sm font-medium">${index + 1}</span>
+                        <div class="flex-1 min-w-0">
+                            <p class="font-medium truncate">${cat.name || 'Unnamed'}</p>
+                            <p class="text-sm text-gray-400 truncate">${cat.url.substring(0, 60)}...</p>
+                        </div>
+                        <span class="text-sm text-cyan-400 whitespace-nowrap">Max ${cat.maxProducts}</span>
+                        <span class="text-sm ${pagesClass} whitespace-nowrap">${pagesText}</span>
+                        <span class="status-${cat.status} text-sm whitespace-nowrap">${getStatusText(cat.status)}</span>
+                        <button onclick="deleteCategory('${cat.id}')" class="text-red-400 hover:text-red-300 px-2 hover:bg-red-900/30 rounded transition-colors">🗑️</button>
+                    </div>
+                `;
+                }).join('');
+                
+            } catch (error) {
+                console.error('Failed to load URL queue:', error);
+            }
+        }
+        
+        function getStatusText(status) {
+            const texts = {
+                'pending': '⏳ Pending',
+                'processing': '🔄 Processing',
+                'completed': '✅ Done',
+                'error': '❌ Error'
+            };
+            return texts[status] || status;
+        }
+        
+        // ==================== Load Recent URLs ====================
+        async function loadRecentUrls() {
+            try {
+                const response = await fetch('/api/oliveyoung/products?limit=10');
+                const data = await response.json();
+                
+                const container = document.getElementById('recent-urls');
+                
+                if (!data.list || data.list.length === 0) {
+                    container.innerHTML = '<p class="text-gray-500">No registered URLs</p>';
+                    return;
+                }
+                
+                container.innerHTML = data.list.map(p => `
+                    <div class="flex items-center gap-4 p-3 bg-slate-800 rounded-lg">
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-medium truncate">${p.title_kr || p.sku || 'No title'}</p>
+                            <p class="text-xs text-gray-500">SKU: ${p.sku || '-'}</p>
+                        </div>
+                        <span class="text-xs text-gray-400 whitespace-nowrap">${p.collected_at ? new Date(p.collected_at).toLocaleDateString('en-AU') : '-'}</span>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                console.error('Failed to load recent URLs:', error);
+            }
+        }
+        
+        // ==================== Load Products ====================
+        async function loadProducts() {
+            try {
+                const response = await fetch(`/api/oliveyoung/products?limit=${pageSize}&offset=${currentPage * pageSize}`);
+                const data = await response.json();
+                
+                totalProducts = data.total || data.list?.length || 0;
+                document.getElementById('product-count').textContent = `${totalProducts} products`;
+                
+                const totalPages = Math.ceil(totalProducts / pageSize) || 1;
+                document.getElementById('page-info').textContent = `${currentPage + 1} / ${totalPages}`;
+                
+                const tbody = document.getElementById('product-list');
+                
+                if (!data.list || data.list.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-8 text-gray-500">No registered products</td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = data.list.map(p => `
+                    <tr class="border-b border-slate-700 hover:bg-slate-800 transition-colors">
+                        <td class="py-3 pl-4">${p.Id}</td>
+                        <td class="py-3 text-sm text-cyan-400 font-mono">${p.sku || '-'}</td>
+                        <td class="py-3">
+                            <span title="${p.title_kr || ''}">${(p.title_kr || '').substring(0, 25)}${(p.title_kr || '').length > 25 ? '...' : ''}</span>
+                        </td>
+                        <td class="py-3">${p.price_current ? '₩' + p.price_current.toLocaleString() : '-'}</td>
+                        <td class="py-3 text-sm text-gray-400">${p.collected_at ? new Date(p.collected_at).toLocaleDateString('en-AU') : '-'}</td>
+                        <td class="py-3">
+                            ${p.product_images ? '<span class="text-green-400">✅ Done</span>' : '<span class="text-yellow-400">⏳ Pending</span>'}
+                        </td>
+                        <td class="py-3">
+                            <button onclick="deleteProduct(${p.Id})" class="text-red-400 hover:text-red-300 text-sm hover:underline">Delete</button>
+                        </td>
+                    </tr>
+                `).join('');
+                
+            } catch (error) {
+                console.error('Failed to load products:', error);
+            }
+        }
+        
+        // ==================== Delete Product ====================
+        async function deleteProduct(id) {
+            if (!confirm('Delete this product?')) return;
+            
+            try {
+                await fetch(`/api/oliveyoung/products/${id}`, { method: 'DELETE' });
+                loadProducts();
+            } catch (error) {
+                alert('Delete failed: ' + error.message);
+            }
+        }
+        
+        // ==================== Pagination ====================
+        function prevPage() {
+            if (currentPage > 0) {
+                currentPage--;
+                loadProducts();
+            }
+        }
+        
+        function nextPage() {
+            const totalPages = Math.ceil(totalProducts / pageSize);
+            if (currentPage < totalPages - 1) {
+                currentPage++;
+                loadProducts();
+            }
+        }
+        
+        // ==================== Progress Display ====================
+        function showProgress() {
+            document.getElementById('progress-section').classList.remove('hidden');
+        }
+        
+        function hideProgress() {
+            document.getElementById('progress-section').classList.add('hidden');
+        }
+        
+        function updateProgress(progress) {
+            const percent = progress.total > 0 ? Math.round((progress.current / progress.total) * 100) : 0;
+            
+            document.getElementById('progress-fill').style.width = `${percent}%`;
+            document.getElementById('progress-current').textContent = `${progress.current} processed`;
+            document.getElementById('progress-percent').textContent = `${percent}%`;
+            document.getElementById('progress-phase').textContent = progress.phase || '';
+        }
+        
+        // ==================== Logs ====================
+        function addLogMessage(log) {
+            const container = document.getElementById('log-container');
+            
+            if (logMessages.length === 0) {
+                container.innerHTML = '';
+            }
+            
+            logMessages.push(log);
+            
+            if (logMessages.length > 500) {
+                logMessages.shift();
+                if (container.firstChild) container.removeChild(container.firstChild);
+            }
+            
+            const logDiv = document.createElement('div');
+            logDiv.className = 'flex gap-2 py-1 border-b border-slate-800';
+            
+            const time = log.timeFormatted || new Date(log.timestamp).toLocaleTimeString('en-AU', {hour: '2-digit', minute: '2-digit', second: '2-digit'});
+            
+            logDiv.innerHTML = `
+                <span class="log-time">[${time}]</span>
+                <span class="log-${log.type || 'info'}">${log.message}</span>
+            `;
+            
+            container.appendChild(logDiv);
+            
+            if (document.getElementById('auto-scroll').checked) {
+                container.scrollTop = container.scrollHeight;
+            }
+        }
+        
+        function clearLogs() {
+            logMessages = [];
+            document.getElementById('log-container').innerHTML = '<p class="text-gray-500">Logs will appear here...</p>';
+        }
+        
+        // ==================== Socket.io Events ====================
+        socket.on('state', (state) => {
+            const badge = document.getElementById('status-badge');
+            const text = document.getElementById('status-text');
+            
+            badge.className = 'status-badge ' + (state.status || 'idle');
+            
+            const statusTexts = {
+                idle: 'Idle',
+                running: 'Running',
+                paused: 'Paused',
+                error: 'Error'
+            };
+            text.textContent = state.currentPhase || statusTexts[state.status] || 'Idle';
+            
+            if (state.status === 'running') {
+                showProgress();
+            } else if (state.status === 'idle') {
+                hideProgress();
+            }
+        });
+        
+        socket.on('urlQueue', () => {
+            loadUrlQueue();
+        });
+        
+        socket.on('log', (log) => {
+            addLogMessage(log);
+        });
+        
+        socket.on('logs', (existingLogs) => {
+            existingLogs.forEach(log => addLogMessage(log));
+        });
+        
+        socket.on('progress', (progress) => {
+            updateProgress(progress);
+        });
+        
+        // ==================== Initial Load ====================
+        loadUrlQueue();
+        loadRecentUrls();
+    </script>
+</body>
+</html>
