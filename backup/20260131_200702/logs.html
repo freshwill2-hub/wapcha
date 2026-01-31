@@ -360,58 +360,15 @@
             return 'log-info';
         }
         
-        // ✅ 수정된 로그 복사 함수 - HTTP 환경에서도 작동하는 fallback 추가
+        // Copy Logs
         function copyLogs() {
             if (!currentLogContent) {
-                alert('복사할 로그가 없습니다');
+                alert('No logs to copy');
                 return;
             }
-
-            // 방법 1: 최신 Clipboard API 시도 (HTTPS/localhost에서만 작동)
-            if (navigator.clipboard && window.isSecureContext) {
-                navigator.clipboard.writeText(currentLogContent)
-                    .then(() => {
-                        alert('✅ 로그가 클립보드에 복사되었습니다!');
-                    })
-                    .catch(err => {
-                        console.error('Clipboard API 실패:', err);
-                        // fallback 시도
-                        copyUsingFallback();
-                    });
-            } else {
-                // 방법 2: HTTP 환경용 fallback (execCommand)
-                copyUsingFallback();
-            }
-        }
-
-        // ✅ HTTP 환경에서 작동하는 fallback 복사 함수
-        function copyUsingFallback() {
-            try {
-                // 임시 textarea 생성
-                const textarea = document.createElement('textarea');
-                textarea.value = currentLogContent;
-                textarea.style.position = 'fixed';
-                textarea.style.left = '-9999px';
-                textarea.style.top = '0';
-                textarea.setAttribute('readonly', '');
-                document.body.appendChild(textarea);
-
-                // 선택 및 복사
-                textarea.select();
-                textarea.setSelectionRange(0, textarea.value.length);
-
-                const success = document.execCommand('copy');
-                document.body.removeChild(textarea);
-
-                if (success) {
-                    alert('✅ 로그가 클립보드에 복사되었습니다!');
-                } else {
-                    alert('❌ 복사 실패. 수동으로 복사해주세요.');
-                }
-            } catch (err) {
-                console.error('Fallback 복사 실패:', err);
-                alert('❌ 복사 실패. 수동으로 복사해주세요.');
-            }
+            navigator.clipboard.writeText(currentLogContent).then(() => {
+                alert('Logs copied to clipboard!');
+            });
         }
         
         // Refresh All
