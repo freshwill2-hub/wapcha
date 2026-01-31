@@ -1,0 +1,40 @@
+{
+  "requestsFinished": 14,
+  "requestsFailed": 0,
+  "requestsRetries": 0,
+  "requestsFailedPerMinute": 0,
+  "requestsFinishedPerMinute": 2,
+  "requestMinDurationMillis": 19594,
+  "requestMaxDurationMillis": 36472,
+  "requestTotalFailedDurationMillis": 0,
+  "requestTotalFinishedDurationMillis": 398840,
+  "crawlerStartedAt": "2026-01-31T22:52:05.940Z",
+  "crawlerFinishedAt": null,
+  "statsPersistedAt": "2026-01-31T22:59:05.955Z",
+  "crawlerRuntimeMillis": 420214,
+  "crawlerLastStartTimestamp": 1769899925741,
+  "requestRetryHistogram": [
+    14
+  ],
+  "statsId": 0,
+  "requestAvgFailedDurationMillis": null,
+  "requestAvgFinishedDurationMillis": 28489,
+  "requestTotalDurationMillis": 398840,
+  "requestsTotal": 14,
+  "requestsWithStatusCode": {
+    "200": 15,
+    "403": 3
+  },
+  "errors": {},
+  "retryErrors": {
+    "/root/copychu-scraper/node_modules/@crawlee/basic/internals/basic-crawler.js:903:19": {
+      "missing error code": {
+        "Error": {
+          "Request blocked - received 403 status code.": {
+            "count": 3
+          }
+        }
+      }
+    }
+  }
+}
