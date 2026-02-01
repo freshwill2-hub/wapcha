@@ -1,14 +1,14 @@
 {
   "categories": [
     {
-      "id": "e0eefc91-6e18-43a7-9ce8-ea5a7031d57d",
+      "id": "e7aba692-03ed-4f81-b0df-eb7727dfd217",
       "url": "https://www.oliveyoung.co.kr/store/display/getMCategoryList.do?dispCatNo=100000100010015&isLoginCnt=0&aShowCnt=0&bShowCnt=0&cShowCnt=0",
-      "name": "이름 없음",
-      "maxProducts": 5,
-      "maxPages": 0,
+      "name": "크림",
+      "maxProducts": 60,
+      "maxPages": 3,
       "status": "completed",
-      "createdAt": "2026-02-01T02:50:50.602Z",
-      "completedAt": "2026-02-01T02:51:04.953Z"
+      "createdAt": "2026-02-01T03:42:06.142Z",
+      "completedAt": "2026-02-01T03:44:13.615Z"
     }
   ],
   "products": []
