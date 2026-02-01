@@ -1382,84 +1382,68 @@ app.post('/api/url-queue/process-full', async (req, res) => {
     }
 });
 
-// ✅ 개별 제품 URL 추가 - 에러 핸들링 개선
+// 개별 제품 URL 추가
 app.post('/api/url-queue/product', async (req, res) => {
     const { url } = req.body;
-
+    
     if (!url) {
         return res.status(400).json({ error: 'URL이 필요합니다' });
     }
-
+    
     if (!url.includes('oliveyoung.co.kr') || !url.includes('goodsNo=')) {
         return res.status(400).json({ error: '올리브영 제품 URL이 아닙니다' });
     }
-
-    if (!NOCODB_API_TOKEN) {
-        console.error('❌ 환경 변수 누락: NOCODB_API_TOKEN');
-        return res.status(500).json({ error: 'NocoDB API 토큰이 설정되지 않았습니다.' });
-    }
-
-    if (!OLIVEYOUNG_TABLE_ID) {
-        console.error('❌ 환경 변수 누락: OLIVEYOUNG_TABLE_ID');
-        return res.status(500).json({ error: 'OLIVEYOUNG_TABLE_ID가 설정되지 않았습니다.' });
-    }
-
-    const goodsNoMatch = url.match(/goodsNo=([A-Z0-9]+)/i);
+    
+    const goodsNoMatch = url.match(/goodsNo=([A-Z0-9]+)/);
     if (!goodsNoMatch) {
         return res.status(400).json({ error: '유효하지 않은 제품 URL입니다' });
     }
-
+    
     const goodsNo = goodsNoMatch[1];
     const cleanUrl = `https://www.oliveyoung.co.kr/store/goods/getGoodsDetail.do?goodsNo=${goodsNo}`;
-
-    console.log(`📦 제품 URL 추가 시도: ${goodsNo}`);
-
+    
     try {
+        // ✅ SKU 중복 체크
         const existingCheck = await axios.get(
             `${NOCODB_API_URL}/api/v2/tables/${OLIVEYOUNG_TABLE_ID}/records`,
             {
                 headers: { 'xc-token': NOCODB_API_TOKEN },
-                params: { where: `(sku,eq,${goodsNo})`, limit: 1 }
+                params: {
+                    where: `(sku,eq,${goodsNo})`,
+                    limit: 1
+                }
             }
         );
-
-        if (existingCheck.data.list && existingCheck.data.list.length > 0) {
+        
+        if (existingCheck.data.list.length > 0) {
             return res.status(400).json({ error: `이미 등록된 SKU입니다: ${goodsNo}` });
         }
-
+        
         const productData = {
             sku: goodsNo,
             product_url: cleanUrl,
             collected_at: new Date().toISOString()
         };
-
+        
         const response = await axios.post(
             `${NOCODB_API_URL}/api/v2/tables/${OLIVEYOUNG_TABLE_ID}/records`,
             productData,
-            { headers: { 'xc-token': NOCODB_API_TOKEN, 'Content-Type': 'application/json' } }
+            {
+                headers: { 
+                    'xc-token': NOCODB_API_TOKEN,
+                    'Content-Type': 'application/json'
+                }
+            }
         );
-
-        console.log(`✅ 제품 URL 추가 성공: ${goodsNo}`);
+        
         addLog('success', `📦 제품 URL 추가됨: ${goodsNo}`);
         res.json({ success: true, productId: response.data.Id, sku: goodsNo });
-
+        
     } catch (error) {
-        console.error('❌ 제품 URL 추가 오류:', error.response?.status, error.message);
-
-        if (error.response?.status === 404) {
-            return res.status(500).json({ error: `NocoDB 테이블을 찾을 수 없습니다. OLIVEYOUNG_TABLE_ID를 확인하세요.` });
-        }
         if (error.response?.status === 422) {
             return res.status(400).json({ error: '이미 등록된 URL입니다' });
         }
-        if (error.response?.status === 401 || error.response?.status === 403) {
-            return res.status(500).json({ error: 'NocoDB 인증 실패. API 토큰을 확인하세요.' });
-        }
-        if (error.code === 'ECONNREFUSED') {
-            return res.status(500).json({ error: 'NocoDB 서버 연결 실패.' });
-        }
-
-        res.status(500).json({ error: `서버 오류: ${error.message}` });
+        res.status(500).json({ error: error.message });
     }
 });
 
