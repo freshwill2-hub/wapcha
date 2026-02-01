@@ -1,0 +1,9 @@
+{
+	"id": "8GxXKTGqLNa3LNn",
+	"json": "{\"id\":\"8GxXKTGqLNa3LNn\",\"url\":\"https://search.naver.com/search.naver?ssc=tab.image.all&where=image&sm=tab_jum&query=%EC%83%A4%EC%9D%B4%EC%83%A4%EC%9D%B4%EC%83%A4%EC%9D%B4%20%EB%A6%AC%ED%8F%AC%EC%A2%80%20%EB%A6%AC%ED%8E%98%EC%96%B4%20%EB%B0%80%ED%82%A4%20%ED%81%AC%EB%A6%BC%2050ml%202%EA%B0%9C\",\"loadedUrl\":\"https://search.naver.com/search.naver?ssc=tab.image.all&where=image&sm=tab_jum&query=%EC%83%A4%EC%9D%B4%EC%83%A4%EC%9D%B4%EC%83%A4%EC%9D%B4%20%EB%A6%AC%ED%8F%AC%EC%A2%80%20%EB%A6%AC%ED%8E%98%EC%96%B4%20%EB%B0%80%ED%82%A4%20%ED%81%AC%EB%A6%BC%2050ml%202%EA%B0%9C\",\"uniqueKey\":\"https://search.naver.com/search.naver?query=%EC%83%A4%EC%9D%B4%EC%83%A4%EC%9D%B4%EC%83%A4%EC%9D%B4+%EB%A6%AC%ED%8F%AC%EC%A2%80+%EB%A6%AC%ED%8E%98%EC%96%B4+%EB%B0%80%ED%82%A4+%ED%81%AC%EB%A6%BC+50ml+2%EA%B0%9C&sm=tab_jum&ssc=tab.image.all&where=image\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"state\":4}},\"handledAt\":\"2026-02-01T06:28:06.851Z\"}",
+	"method": "GET",
+	"orderNo": null,
+	"retryCount": 0,
+	"uniqueKey": "https://search.naver.com/search.naver?query=%EC%83%A4%EC%9D%B4%EC%83%A4%EC%9D%B4%EC%83%A4%EC%9D%B4+%EB%A6%AC%ED%8F%AC%EC%A2%80+%EB%A6%AC%ED%8E%98%EC%96%B4+%EB%B0%80%ED%82%A4+%ED%81%AC%EB%A6%BC+50ml+2%EA%B0%9C&sm=tab_jum&ssc=tab.image.all&where=image",
+	"url": "https://search.naver.com/search.naver?ssc=tab.image.all&where=image&sm=tab_jum&query=%EC%83%A4%EC%9D%B4%EC%83%A4%EC%9D%B4%EC%83%A4%EC%9D%B4%20%EB%A6%AC%ED%8F%AC%EC%A2%80%20%EB%A6%AC%ED%8E%98%EC%96%B4%20%EB%B0%80%ED%82%A4%20%ED%81%AC%EB%A6%BC%2050ml%202%EA%B0%9C"
+}
