@@ -895,19 +895,6 @@
                     </div>
                 </div>
 
-                <div class="card p-6 mb-6">
-                    <h3 class="text-lg font-semibold mb-4">🚀 추가된 URL 처리</h3>
-                    <p class="text-gray-400 text-sm mb-4">위에서 추가한 URL들의 스크래핑을 실행합니다 (Phase 1→2→3→4→5)</p>
-                    <div class="flex gap-3">
-                        <button onclick="runPipelineForAddedUrls()" class="btn-success px-6 py-3 rounded-lg font-medium text-white">
-                            🚀 전체 파이프라인 실행
-                        </button>
-                        <button onclick="runPhase1Only()" class="btn-primary px-6 py-3 rounded-lg font-medium text-slate-900">
-                            📥 Phase 1만 실행 (스크래핑)
-                        </button>
-                    </div>
-                </div>
-
                 <div class="card">
                     <div class="card-header">
                         <h3 class="card-title">📋 Recently Added URLs</h3>
@@ -1473,49 +1460,6 @@
         socket.on('progress', (progress) => {
             updateProgress(progress);
         });
-
-        // ==================== 추가된 URL 파이프라인 실행 ====================
-        async function runPipelineForAddedUrls() {
-            if (!confirm('추가된 URL들의 전체 파이프라인을 실행하시겠습니까?')) return;
-
-            try {
-                const response = await fetch('/api/pipeline/start', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ productLimit: 100, phases: { phase1: true, phase2: true, phase3: true, phase4: true, phase5: true } })
-                });
-                const data = await response.json();
-                if (data.success) {
-                    alert('✅ 파이프라인 시작됨! 실시간 로그 탭에서 진행상황을 확인하세요.');
-                    showTab('logs');
-                } else {
-                    alert('❌ 실패: ' + data.error);
-                }
-            } catch (error) {
-                alert('❌ 오류: ' + error.message);
-            }
-        }
-
-        async function runPhase1Only() {
-            if (!confirm('Phase 1 (스크래핑)만 실행하시겠습니까?')) return;
-
-            try {
-                const response = await fetch('/api/pipeline/run-phase', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ phaseId: 'phase1', productLimit: 100 })
-                });
-                const data = await response.json();
-                if (data.success) {
-                    alert('✅ Phase 1 시작됨!');
-                    showTab('logs');
-                } else {
-                    alert('❌ 실패: ' + data.error);
-                }
-            } catch (error) {
-                alert('❌ 오류: ' + error.message);
-            }
-        }
 
         // ==================== Initial Load ====================
         loadUrlQueue();

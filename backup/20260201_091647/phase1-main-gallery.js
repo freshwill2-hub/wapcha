@@ -601,8 +601,7 @@ async function getOliveyoungProducts(limit = 100, offset = 0) {
                 headers: { 'xc-token': NOCODB_TOKEN },
                 params: {
                     offset: offset,
-                    limit: limit,
-                    where: '(title_kr,is,null)'
+                    limit: limit
                 }
             }
         );
