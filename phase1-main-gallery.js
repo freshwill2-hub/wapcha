@@ -111,7 +111,7 @@ const MEMORY_CHECK_INTERVAL = 5;
 
 const openai = OPENAI_API_KEY ? new OpenAI({ apiKey: OPENAI_API_KEY }) : null;
 
-log('🚀 Phase 1: 제품 상세 스크래핑 (v2.9 - 용량 제한 기능 추가)');
+log('🚀 Phase 1: 제품 상세 스크래핑 (v2.9.1 - product_url null 필터링 추가)');
 log('='.repeat(70));
 log('🔧 설정 확인:');
 log(`- NocoDB URL: ${NOCODB_API_URL}`);
@@ -124,12 +124,10 @@ if (deletedLogs.length > 0) {
     log(`🧹 오래된 로그 ${deletedLogs.length}개 삭제됨 (${LOG_RETENTION_DAYS}일 이상)`);
 }
 log('');
-log('🆕 v2.9 수정 사항:');
-log('   ✅ 용량 제한 기능 추가 (MAX_VOLUME_LIMIT 환경변수)');
-log('   ✅ 타이틀에서 총 용량 계산 (ml, g 단위)');
-log('   ✅ 용량 초과 제품 자동 스킵');
-log('   ✅ 세트 감지 로직 유지 (v2.7에서 계승)');
-log('   ✅ 가격 셀렉터 분리 유지 (v2.8에서 계승)');
+log('🆕 v2.9.1 수정 사항:');
+log('   ✅ product_url이 null인 제품 필터링 추가');
+log('   ✅ noUrlSkipped 통계 추가');
+log('   ✅ v2.9 용량 제한 기능 유지');
 log('');
 
 // ==================== 전역 변수 ====================
@@ -155,13 +153,10 @@ const stats = {
     setDetected: 0,
     promotionalRemoved: 0,
     // ✅ v2.9: 용량 제한 통계
-    volumeExceededSkipped: 0
+    volumeExceededSkipped: 0,
+    // ✅ v2.9.1: product_url null 통계
+    noUrlSkipped: 0
 };
-
-// ✅ v2.11: 용량 체크 제외 카테고리 (액체가 아닌 제품들)
-const VOLUME_CHECK_EXCLUDED_CATEGORIES = [
-    '티슈/패드', '티슈', '패드', '화장솜', '면봉', '마스크', '시트마스크'
-];
 
 // ==================== 메모리 관리 함수 ====================
 function getMemoryUsage() {
@@ -209,75 +204,71 @@ function checkMissingFields(product) {
     return missing;
 }
 
-// ==================== ✅ v2.11: 용량 총합 계산 함수 (쉼표 처리 개선) ====================
+// ==================== ✅ v2.9: 용량 총합 계산 함수 ====================
 function calculateTotalVolume(title) {
     if (!title) return 0;
-
+    
     let totalVolume = 0;
-
+    
     // 1. 개수 정보 추출 (예: "2개", "3입")
-    const countMatch = title.match(/(\d+)\s*(개|입|pcs)/i);
+    const countMatch = title.match(/(\d+)\s*(개|입|매|pcs)/i);
     const productCount = countMatch ? parseInt(countMatch[1]) : 1;
-
+    
     // 2. 모든 용량 추출 (ml, g 단위)
-    // ✅ v2.11: 천 단위 구분자 쉼표 처리 (예: 1,112ml → 1112ml)
-    const volumePattern = /(\d{1,3}(?:,\d{3})*|\d+)\s*(ml|mL|ML|g|G)/gi;
+    const volumePattern = /(\d+)\s*(ml|mL|ML|g|G)/gi;
     const volumes = [];
     let match;
-
+    
     while ((match = volumePattern.exec(title)) !== null) {
-        // ✅ 쉼표 제거 후 숫자로 변환
-        const value = parseInt(match[1].replace(/,/g, ''));
+        const value = parseInt(match[1]);
         const unit = match[2].toLowerCase();
+        // g를 ml로 대략 변환 (밀도 ~1 가정, 화장품은 대체로 비슷)
         const mlValue = unit === 'g' ? value : value;
         volumes.push(mlValue);
     }
-
+    
     // 3. 용량 합계 계산
     if (volumes.length === 0) {
-        return 0;
+        return 0;  // 용량 정보 없음
     } else if (volumes.length === 1) {
+        // 단일 용량 × 개수
         totalVolume = volumes[0] * productCount;
     } else {
+        // 여러 용량이 있으면 합산 (세트 제품)
         totalVolume = volumes.reduce((sum, v) => sum + v, 0);
+        // 개수가 명시되어 있고 용량이 하나만 반복된 것 같으면 곱하기
         if (productCount > 1 && volumes.every(v => v === volumes[0])) {
             totalVolume = volumes[0] * productCount;
         }
     }
-
+    
     return totalVolume;
 }
 
 // ==================== ✅ v2.8.2: 개선된 타이틀 클리닝 함수 ====================
-// 변경사항:
-//   - STEP 1.5: 대괄호 먼저 제거 (불완전한 대괄호 문제 해결)
-//   - STEP 2.5: 괄호 없는 용량+용량 패턴 (40ml+20ml) 처리
-//   - 메인 용량 유지: 다른 용량일 때 큰 용량 보존 (증정품 제거)
 function cleanProductTitle(rawTitle) {
     if (!rawTitle) return '';
     
     let cleaned = rawTitle;
-    let setInfo = null;  // 세트 정보 저장
+    let setInfo = null;
     
     log(`   🔍 타이틀 클리닝 시작: "${cleaned.substring(0, 80)}..."`);
     
-    // ==================== STEP 0: 문자열 정규화 ====================
+    // STEP 0: 문자열 정규화
     cleaned = cleaned.replace(/[\u00A0\u2000-\u200B\u202F\u205F\u3000]/g, ' ');
     cleaned = cleaned.replace(/\s+/g, ' ').trim();
     
-    // ==================== STEP 1: "| 올리브영" 또는 "- 올리브영" 제거 ====================
+    // STEP 1: "| 올리브영" 또는 "- 올리브영" 제거
     cleaned = cleaned.replace(/\s*[\|｜]\s*올리브영.*$/g, '');
     cleaned = cleaned.replace(/\s*[-–—]\s*올리브영.*$/g, '');
     cleaned = cleaned.replace(/\s+올리브영\s*$/g, '');
     cleaned = cleaned.replace(/^\s*올리브영\s*[\|｜\-–—]\s*/g, '');
     
-    // ==================== STEP 1.5: ✅ v2.8.2 대괄호 먼저 제거 ====================
-    // [20ml추가증정/1+1] 같은 패턴에서 1+1이 먼저 제거되면 [20ml추가증정/]가 남는 문제 방지
+    // STEP 1.5: 대괄호 먼저 제거
     cleaned = cleaned.replace(/\[[^\]]*\]/g, '');
-    cleaned = cleaned.replace(/\[[^\]]*$/g, '');  // 불완전한 대괄호
+    cleaned = cleaned.replace(/\[[^\]]*$/g, '');
     
-    // ==================== STEP 2: 세트 감지 - 같은 용량 반복 패턴 (괄호 안) ====================
-    // 패턴: (55ml+55ml), (100ml+100ml) 등
+    // STEP 2: 세트 감지 - 같은 용량 반복 패턴 (괄호 안)
     const sameVolumeMatch = cleaned.match(/\((\d+)(ml|mL|ML|g|G)\s*\+\s*(\d+)(ml|mL|ML|g|G)\)/i);
     if (sameVolumeMatch) {
         const vol1 = parseInt(sameVolumeMatch[1]);
@@ -286,13 +277,11 @@ function cleanProductTitle(rawTitle) {
         const unit2 = sameVolumeMatch[4].toLowerCase();
         
         if (vol1 === vol2 && unit1 === unit2) {
-            // ✅ 같은 용량 반복 → 세트!
             setInfo = { volume: `${vol1}${unit1}`, count: 2, type: 'same_volume' };
             log(`   ✅ 세트 감지 (같은 용량): ${vol1}${unit1} × 2`);
             cleaned = cleaned.replace(sameVolumeMatch[0], '');
             stats.setDetected++;
         } else {
-            // ❌ 다른 용량 → 증정품! 메인 용량(큰 것) 유지
             const mainVolume = Math.max(vol1, vol2);
             const mainUnit = vol1 > vol2 ? unit1 : unit2;
             log(`   ⚠️  다른 용량 감지 (증정품): ${vol1}${unit1} + ${vol2}${unit2} → ${mainVolume}${mainUnit} 유지`);
@@ -301,8 +290,7 @@ function cleanProductTitle(rawTitle) {
         }
     }
     
-    // ==================== STEP 2.5: ✅ v2.8.2 괄호 없는 용량+용량 패턴 ====================
-    // 패턴: 40ml+20ml, 50g+50g 등 (괄호 없이 각 숫자에 단위가 붙은 경우)
+    // STEP 2.5: 괄호 없는 용량+용량 패턴
     if (!setInfo) {
         const volumePlusVolumeMatch = cleaned.match(/(\d+)(ml|mL|ML|g|G)\s*\+\s*(\d+)(ml|mL|ML|g|G)/i);
         if (volumePlusVolumeMatch) {
@@ -312,13 +300,11 @@ function cleanProductTitle(rawTitle) {
             const unit2 = volumePlusVolumeMatch[4].toLowerCase();
             
             if (vol1 === vol2 && unit1 === unit2) {
-                // ✅ 같은 용량 반복 → 세트!
                 setInfo = { volume: `${vol1}${unit1}`, count: 2, type: 'same_volume_no_paren' };
                 log(`   ✅ 세트 감지 (괄호 없는 같은 용량): ${vol1}${unit1} × 2`);
                 cleaned = cleaned.replace(volumePlusVolumeMatch[0], '');
                 stats.setDetected++;
             } else {
-                // ❌ 다른 용량 → 증정품! 메인 용량(큰 것) 유지
                 const mainVolume = Math.max(vol1, vol2);
                 const mainUnit = vol1 > vol2 ? unit1 : unit2;
                 log(`   ⚠️  다른 용량 감지 (증정품): ${vol1}${unit1} + ${vol2}${unit2} → ${mainVolume}${mainUnit} 유지`);
@@ -328,8 +314,7 @@ function cleanProductTitle(rawTitle) {
         }
     }
     
-    // ==================== STEP 3: 세트 감지 - 50+50g 패턴 (괄호 없이) ====================
-    // 패턴: 50+50g, 100+100ml 등 (단위가 마지막에만 있는 경우)
+    // STEP 3: 세트 감지 - 50+50g 패턴
     const volumePlusMatch = cleaned.match(/(\d+)\s*\+\s*(\d+)\s*(ml|mL|ML|g|G)/i);
     if (volumePlusMatch && !setInfo) {
         const vol1 = parseInt(volumePlusMatch[1]);
@@ -337,13 +322,11 @@ function cleanProductTitle(rawTitle) {
         const unit = volumePlusMatch[3].toLowerCase();
         
         if (vol1 === vol2) {
-            // ✅ 같은 용량 반복 → 세트!
             setInfo = { volume: `${vol1}${unit}`, count: 2, type: 'volume_plus' };
             log(`   ✅ 세트 감지 (용량+용량): ${vol1}${unit} × 2`);
             cleaned = cleaned.replace(volumePlusMatch[0], `${vol1}${unit}`);
             stats.setDetected++;
         } else {
-            // ❌ v2.8.2: 다른 용량 → 메인 용량 유지
             const mainVolume = Math.max(vol1, vol2);
             log(`   ⚠️  다른 용량 감지: ${vol1}${unit} + ${vol2}${unit} → ${mainVolume}${unit} 유지`);
             cleaned = cleaned.replace(volumePlusMatch[0], `${mainVolume}${unit}`);
@@ -351,7 +334,7 @@ function cleanProductTitle(rawTitle) {
         }
     }
     
-    // ==================== STEP 4: 프로모션 키워드로 세트 감지 ====================
+    // STEP 4: 프로모션 키워드로 세트 감지
     const promoSetPatterns = [
         { pattern: /\[?\s*1\s*\+\s*1\s*\]?/gi, count: 2, name: '1+1' },
         { pattern: /\[?\s*2\s*\+\s*1\s*\]?/gi, count: 3, name: '2+1' },
@@ -395,41 +378,17 @@ function cleanProductTitle(rawTitle) {
         cleaned = cleaned.replace(/\+\s*1\s*(?!개|입|매|ml|mL|g|G)/gi, ' ');
     }
     
-    // ==================== STEP 5: 대괄호 제거 (남은 것들) ====================
+    // STEP 5-7: 괄호 제거
     cleaned = cleaned.replace(/^\s*\[[^\]]*\]\s*/g, '');
     cleaned = cleaned.replace(/\[[^\]]*\]/g, '');
-    
-    // ==================== STEP 5.5: ✅ v2.9.1 용량×수량 괄호 패턴 보존 ====================
-    // (46매X3), (100mlX2), (50gx3) 같은 중요한 제품 정보 보존
-    const volumeCountParenMatch = cleaned.match(/\(([0-9]+)(매|ml|mL|ML|g|G)\s*[×xX]\s*([0-9]+)\)/i);
-    if (volumeCountParenMatch) {
-        const volume = volumeCountParenMatch[1];
-        const unit = volumeCountParenMatch[2];
-        const count = parseInt(volumeCountParenMatch[3]);
-        
-        if (setInfo) {
-            setInfo.volume = `${volume}${unit}`;
-            setInfo.count = count;
-            log(`   ✅ 용량×수량 패턴으로 업데이트: ${volume}${unit} × ${count}개`);
-        } else {
-            setInfo = { volume: `${volume}${unit}`, count: count, type: 'volume_count_paren' };
-            log(`   ✅ 용량×수량 패턴 감지: ${volume}${unit} × ${count}개`);
-            stats.setDetected++;
-        }
-        cleaned = cleaned.replace(volumeCountParenMatch[0], '');
-    }
-
-    // ==================== STEP 6: 소괄호 제거 (증정품 정보) ====================
     cleaned = cleaned.replace(/\([^)]*\)/g, '');
-    
-    // ==================== STEP 7: 기타 괄호 제거 ====================
     cleaned = cleaned.replace(/【[^】]*】/g, '');
     cleaned = cleaned.replace(/〔[^〕]*〕/g, '');
     cleaned = cleaned.replace(/〈[^〉]*〉/g, '');
     cleaned = cleaned.replace(/《[^》]*》/g, '');
     cleaned = cleaned.replace(/\{[^}]*\}/g, '');
     
-    // ==================== STEP 8: 프로모션/마케팅 키워드 제거 ====================
+    // STEP 8: 프로모션/마케팅 키워드 제거
     const removeKeywords = [
         '기획증정', '기획 증정', '증정기획', '증정 기획',
         '기획세트', '기획 세트',
@@ -456,19 +415,14 @@ function cleanProductTitle(rawTitle) {
             cleaned = cleaned.replace(new RegExp(keyword, 'gi'), '');
         }
     }
-
-    // ==================== STEP 8.3: "기획" + 용량 패턴 제거 ====================
-    // "기획60ml", "기획 30g" 등 제거 (증정품 정보가 괄호 없이 붙은 경우)
-    cleaned = cleaned.replace(/기획\s*\d+\s*(ml|mL|ML|g|G)/gi, '');
-
-    // ==================== STEP 8.5: "외 N종" 패턴 제거 ====================
-    // "외 2종", "외 3종", "외2종" 등 제거 (다른 제품 포함 세트 표시)
+    
+    // STEP 8.5: "외 N종" 패턴 제거
     cleaned = cleaned.replace(/외\s*\d+\s*종/gi, '');
 
-    // ==================== STEP 9: 공백 정리 ====================
+    // STEP 9: 공백 정리
     cleaned = cleaned.replace(/\s+/g, ' ').trim();
     
-    // ==================== STEP 10: 세트 정보 추가 ====================
+    // STEP 10: 세트 정보 추가
     if (setInfo) {
         const existingCountMatch = cleaned.match(/(\d+)\s*(개|입|매|pcs)/i);
         
@@ -482,7 +436,7 @@ function cleanProductTitle(rawTitle) {
         }
     }
     
-    // ==================== STEP 11: 최종 정리 ====================
+    // STEP 11: 최종 정리
     cleaned = cleaned.replace(/\s+/g, ' ').trim();
     cleaned = cleaned.replace(/^[\/\-\s\+]+|[\/\-\s\+]+$/g, '');
     
@@ -887,7 +841,7 @@ async function processProductImages(product, imageUrls) {
 
 // ==================== 메인 ====================
 async function main() {
-    log('🚀 Phase 1: 메인 갤러리 이미지 + 타이틀/가격/설명 추출 (v2.9)');
+    log('🚀 Phase 1: 메인 갤러리 이미지 + 타이틀/가격/설명 추출 (v2.9.1)');
     log('='.repeat(70));
     log('');
     
@@ -906,12 +860,23 @@ async function main() {
             return;
         }
         
+        // ✅ v2.9.1: product_url 필터링 추가
         const productsToProcess = products.filter(p => {
+            // ✅ v2.9.1: product_url이 null이거나 빈 문자열인 경우 스킵
+            if (!p.product_url || p.product_url.trim() === '') {
+                stats.noUrlSkipped++;
+                log(`⚠️  제품 ID ${p.Id}: product_url이 없음 → 스킵`);
+                return false;
+            }
+            
             const missing = checkMissingFields(p);
             return missing.needsPageVisit;
         });
         
         log(`📋 페이지 방문 필요: ${productsToProcess.length}/${products.length}개`);
+        if (stats.noUrlSkipped > 0) {
+            log(`⚠️  product_url 없음으로 스킵: ${stats.noUrlSkipped}개`);
+        }
         log('');
         
         if (productsToProcess.length === 0) {
@@ -1084,8 +1049,7 @@ async function main() {
                                 }
                             }
                             
-                            // ===== ✅ v2.8: 가격 추출 (한 덩어리 파싱 방식) =====
-                            // 올리브영 가격은 "47,800원37%29,700원" 형태로 한 덩어리로 표시됨
+                            // ===== 가격 추출 =====
                             const priceSelectors = [
                                 '[class*="GoodsDetailInfo_price"]',
                                 '[class*="price-area"]',
@@ -1102,16 +1066,13 @@ async function main() {
                                     const priceEl = document.querySelector(selector);
                                     if (priceEl) {
                                         const priceText = priceEl.textContent;
-                                        // 정규식으로 모든 가격 추출 (예: "47,800원37%29,700원")
                                         const prices = priceText.match(/[\d,]+원/g);
                                         
                                         if (prices && prices.length >= 2) {
-                                            // 첫 번째: 정가, 두 번째: 할인가
                                             result.priceOriginal = parseInt(prices[0].replace(/[^0-9]/g, ''));
                                             result.priceDiscount = parseInt(prices[1].replace(/[^0-9]/g, ''));
                                             break;
                                         } else if (prices && prices.length === 1) {
-                                            // 할인 없는 경우
                                             result.priceOriginal = parseInt(prices[0].replace(/[^0-9]/g, ''));
                                             result.priceDiscount = result.priceOriginal;
                                             break;
@@ -1120,7 +1081,6 @@ async function main() {
                                 } catch (e) {}
                             }
                             
-                            // 정가가 할인가보다 작으면 스왑 (데이터 정합성)
                             if (result.priceOriginal && result.priceDiscount && 
                                 result.priceOriginal < result.priceDiscount) {
                                 const temp = result.priceOriginal;
@@ -1391,53 +1351,36 @@ async function main() {
                             log(`   원본: "${productData.rawTitle.substring(0, 60)}"`);
                             log(`   정제: "${cleanedTitle}"`);
                             
-                            // ✅ v2.11: 용량 제한 체크 (카테고리 제외 + 쉼표 처리)
+                            // v2.9: 용량 제한 체크
                             if (MAX_VOLUME_LIMIT > 0) {
-                                // ✅ 카테고리 기반 용량 체크 제외
-                                const productCategory = product.category || '';
-                                const isExcludedCategory = VOLUME_CHECK_EXCLUDED_CATEGORIES.some(cat =>
-                                    productCategory.includes(cat) ||
-                                    cleanedTitle.includes('티슈') ||
-                                    cleanedTitle.includes('패드') ||
-                                    cleanedTitle.includes('마스크')
-                                );
-
-                                if (isExcludedCategory) {
-                                    log(`   📦 용량 체크 제외 (카테고리: ${productCategory || '타이틀에서 감지'})`);
-                                } else {
-                                    let totalVolume = calculateTotalVolume(cleanedTitle);
-                                    let volumeSource = '타이틀';
-
-                                    // 타이틀에 용량이 없으면 상세설명에서 가져오기
-                                    if (totalVolume === 0 && productData.infoTable.volume) {
-                                        totalVolume = calculateTotalVolume(productData.infoTable.volume);
-                                        volumeSource = '상세설명';
-
-                                        // 용량이 제한 이하이고 타이틀에 용량이 없으면 추가
-                                        if (totalVolume > 0 && totalVolume <= MAX_VOLUME_LIMIT) {
-                                            const volumeMatch = productData.infoTable.volume.match(/(\d{1,3}(?:,\d{3})*|\d+)\s*(ml|mL|ML|g|G)/i);
-                                            if (volumeMatch) {
-                                                const volumeNum = volumeMatch[1].replace(/,/g, '');
-                                                const volumeStr = `${volumeNum}${volumeMatch[2].toLowerCase()}`;
-                                                cleanedTitle = `${cleanedTitle} ${volumeStr}`;
-                                                updateData.title_kr = cleanedTitle;
-                                                log(`   ✅ 타이틀에 용량 추가: "${cleanedTitle}"`);
-                                            }
+                                let totalVolume = calculateTotalVolume(cleanedTitle);
+                                let volumeSource = '타이틀';
+                                
+                                if (totalVolume === 0 && productData.infoTable.volume) {
+                                    totalVolume = calculateTotalVolume(productData.infoTable.volume);
+                                    volumeSource = '상세설명';
+                                    
+                                    if (totalVolume > 0 && totalVolume <= MAX_VOLUME_LIMIT) {
+                                        const volumeMatch = productData.infoTable.volume.match(/(\d+)\s*(ml|mL|ML|g|G)/i);
+                                        if (volumeMatch) {
+                                            const volumeStr = `${volumeMatch[1]}${volumeMatch[2].toLowerCase()}`;
+                                            cleanedTitle = `${cleanedTitle} ${volumeStr}`;
+                                            updateData.title_kr = cleanedTitle;
+                                            log(`   ✅ 타이틀에 용량 추가: "${cleanedTitle}"`);
                                         }
                                     }
-
-                                    log(`   📦 용량 계산 (${volumeSource}): ${totalVolume}ml (제한: ${MAX_VOLUME_LIMIT}ml)`);
-
-                                    if (totalVolume > MAX_VOLUME_LIMIT) {
-                                        log(`   ⚠️  용량 초과! ${totalVolume}ml > ${MAX_VOLUME_LIMIT}ml → 스킵`);
-                                        stats.volumeExceededSkipped++;
-                                        skippedCount++;
-                                        processedCount++;
-                                        return;
-                                    }
+                                }
+                                
+                                log(`   📦 용량 계산 (${volumeSource}): ${totalVolume}ml (제한: ${MAX_VOLUME_LIMIT}ml)`);
+                                
+                                if (totalVolume > MAX_VOLUME_LIMIT) {
+                                    log(`   ⚠️  용량 초과! ${totalVolume}ml > ${MAX_VOLUME_LIMIT}ml → 스킵`);
+                                    stats.volumeExceededSkipped++;
+                                    skippedCount++;
+                                    processedCount++;
+                                    return;
                                 }
                             }
-
 
                             if (missingFields.needsTitleEn) {
                                 const englishTitle = await translateToEnglish(cleanedTitle);
@@ -1451,7 +1394,6 @@ async function main() {
                             stats.titleKrSkipped++;
                             cleanedTitle = product.title_kr || '';
                             
-                            // ✅ v2.9: 기존 타이틀로도 용량 체크
                             if (MAX_VOLUME_LIMIT > 0 && cleanedTitle) {
                                 const totalVolume = calculateTotalVolume(cleanedTitle);
                                 log(`   📦 용량 계산 (기존 타이틀): ${totalVolume}ml (제한: ${MAX_VOLUME_LIMIT}ml)`);
@@ -1461,7 +1403,7 @@ async function main() {
                                     stats.volumeExceededSkipped++;
                                     skippedCount++;
                                     processedCount++;
-                                    return;  // 다음 제품으로
+                                    return;
                                 }
                             }
                             
@@ -1615,6 +1557,7 @@ async function main() {
         log(`   - 세트 감지: ${stats.setDetected}개`);
         log(`   - 증정품 제거: ${stats.promotionalRemoved}개`);
         log(`   - 용량 초과 스킵: ${stats.volumeExceededSkipped}개`);
+        log(`   - ⚠️  product_url 없음 스킵: ${stats.noUrlSkipped}개`);  // ✅ v2.9.1 추가
         
         logMemoryUsage('최종');
         

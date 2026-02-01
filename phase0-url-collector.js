@@ -74,7 +74,7 @@ function cleanupOldLogs() {
 // ✅ 시작 시 오래된 로그 삭제
 const deletedLogs = cleanupOldLogs();
 
-// ✅ 통합 로그 경로 (파이프라인 실행 시 설정됨)
+// ✅ v2.2: 통합 로그 경로 지원
 const UNIFIED_LOG_PATH = process.env.UNIFIED_LOG_PATH || null;
 
 const LOG_FILENAME = `phase0_${getSydneyTimeForFile()}.log`;
@@ -86,8 +86,8 @@ function log(...args) {
     const message = args.join(' ');
     console.log(timestamp, message);
     logStream.write(`${timestamp} ${message}\n`);
-
-    // ✅ 통합 로그에도 기록
+    
+    // ✅ v2.2: 통합 로그에도 기록
     if (UNIFIED_LOG_PATH) {
         try {
             fs.appendFileSync(UNIFIED_LOG_PATH, `${timestamp} ${message}\n`);
@@ -97,7 +97,7 @@ function log(...args) {
     }
 }
 
-// ✅ 통합 로그에 Phase 시작 구분선 추가
+// ✅ v2.2: 통합 로그에 Phase 시작 구분선 추가
 if (UNIFIED_LOG_PATH) {
     const separator = '═══ PHASE 0: URL 수집 시작 ═══';
     try {
@@ -123,7 +123,7 @@ const MAX_PRODUCTS = parseInt(process.env.MAX_PRODUCTS) || parseInt(process.argv
 const MAX_PAGES = parseInt(process.env.MAX_PAGES) || parseInt(process.argv[4]) || 0;
 const UNLIMITED_PAGES = MAX_PAGES === 0;
 
-log('🚀 Phase 0: 올리브영 URL 수집기 (v2.1 - 로그 시스템 추가)');
+log('🚀 Phase 0: 올리브영 URL 수집기 (v2.2 - 페이지네이션 개선)');
 log('='.repeat(70));
 log(`📂 카테고리 URL: ${CATEGORY_URL}`);
 log(`📊 최대 수집 개수: ${MAX_PRODUCTS}`);
@@ -131,16 +131,19 @@ log(`📄 최대 페이지 수: ${UNLIMITED_PAGES ? '무제한 (마지막까지)
 log(`💾 저장 테이블: ${OLIVEYOUNG_TABLE_ID}`);
 log(`🛒 Shopify 스토어: ${SHOPIFY_STORE_URL}`);
 log(`📝 로그 파일: ${LOG_PATH}`);
+if (UNIFIED_LOG_PATH) {
+    log(`📝 통합 로그: ${path.basename(UNIFIED_LOG_PATH)}`);
+}
 if (deletedLogs.length > 0) {
     log(`🧹 오래된 로그 ${deletedLogs.length}개 삭제됨 (${LOG_RETENTION_DAYS}일 이상)`);
 }
 log('='.repeat(70));
 log('');
-log('✨ v2.1 변경사항:');
-log('   ✅ 로그 시스템 추가 (logs/phase0_*.log)');
-log('   ✅ 시드니 시간대 기반 타임스탬프');
-log('   ✅ 5일 이상 된 로그 자동 삭제');
-log('   ✅ Shopify에 이미 업로드된 SKU 체크 (v2.0에서 계승)');
+log('✨ v2.2 변경사항:');
+log('   ✅ 연속 빈 페이지 감지 로직 추가 (3번 연속 시 종료)');
+log('   ✅ 페이지 변경 후 확인 로직 강화');
+log('   ✅ 통합 로그 시스템 지원');
+log('   ✅ 페이지당 수집량 로깅 개선');
 log('='.repeat(70) + '\n');
 
 // ==================== ✅ NEW: Shopify에서 기존 SKU 가져오기 ====================
@@ -203,26 +206,6 @@ async function getShopifyExistingSkus() {
         }
         log('   → Shopify 중복 체크 없이 계속 진행합니다\n');
         return new Set();
-    }
-}
-
-// ==================== ✅ NEW: URL에서 카테고리 추출 ====================
-function extractCategoryFromUrl(url) {
-    try {
-        const urlObj = new URL(url);
-        const midCategory = urlObj.searchParams.get('midCategory');
-        if (midCategory) {
-            return decodeURIComponent(midCategory);
-        }
-        const t2ndCategory = urlObj.searchParams.get('t_2nd_category_type');
-        if (t2ndCategory) {
-            const decoded = decodeURIComponent(t2ndCategory);
-            const match = decoded.match(/[중소]_(.+)/);
-            return match ? match[1] : decoded;
-        }
-        return null;
-    } catch (e) {
-        return null;
     }
 }
 
@@ -327,6 +310,13 @@ async function collectUrls() {
     let skippedShopifyCount = 0;  // ✅ Shopify 중복으로 스킵된 개수
     let skippedNocodbCount = 0;   // ✅ NocoDB 중복으로 스킵된 개수
     
+    // ✅ v2.2: 연속 빈 페이지 감지용 카운터
+    let consecutiveEmptyPages = 0;
+    const MAX_CONSECUTIVE_EMPTY = 3;  // 3번 연속 빈 페이지면 종료
+    
+    // ✅ v2.2: 이전 페이지의 첫 번째 SKU 저장 (페이지 변경 확인용)
+    let previousFirstSku = null;
+    
     // Playwright 크롤러 설정 (가벼운 설정)
     const crawler = new PlaywrightCrawler({
         launchContext: {
@@ -352,6 +342,7 @@ async function collectUrls() {
             const pageNum = request.userData?.pageNum || 1;
             
             log(`\n📄 카테고리 페이지 ${pageNum}${UNLIMITED_PAGES ? '' : '/' + MAX_PAGES} 로딩 중...`);
+            log(`   URL: ${request.url.substring(0, 80)}...`);
             
             try {
                 await page.waitForLoadState('load', { timeout: 30000 });
@@ -360,7 +351,8 @@ async function collectUrls() {
                 await page.waitForLoadState('domcontentloaded', { timeout: 15000 });
             }
             
-            await page.waitForTimeout(3000);
+            // ✅ v2.2: 페이지 로드 후 더 긴 대기
+            await page.waitForTimeout(4000);
             
             try {
                 await page.waitForSelector('a[href*="goodsNo="]', { timeout: 10000 });
@@ -371,9 +363,10 @@ async function collectUrls() {
             
             log('📜 페이지 스크롤 중...');
             
-            for (let i = 0; i < 5; i++) {
-                await page.evaluate(() => window.scrollBy(0, 1000));
-                await page.waitForTimeout(500);
+            // ✅ v2.2: 더 많은 스크롤 수행
+            for (let i = 0; i < 8; i++) {
+                await page.evaluate(() => window.scrollBy(0, 800));
+                await page.waitForTimeout(400);
                 
                 const currentCount = await page.evaluate(() => {
                     return document.querySelectorAll('a[href*="getGoodsDetail.do"]').length;
@@ -383,6 +376,10 @@ async function collectUrls() {
                     break;
                 }
             }
+            
+            // 페이지 맨 위로 돌아가서 모든 이미지 로드 확인
+            await page.evaluate(() => window.scrollTo(0, 0));
+            await page.waitForTimeout(1000);
             
             // 제품 URL 및 SKU 추출
             const products = await page.evaluate(() => {
@@ -408,6 +405,15 @@ async function collectUrls() {
             });
             
             log(`📊 페이지 ${pageNum}에서 ${products.length}개 제품 발견`);
+            
+            // ✅ v2.2: 페이지 변경 확인
+            const currentFirstSku = products.length > 0 ? products[0].sku : null;
+            if (previousFirstSku && currentFirstSku === previousFirstSku) {
+                log(`⚠️  페이지가 변경되지 않음! (첫 SKU 동일: ${currentFirstSku})`);
+                hasMorePages = false;
+                return;
+            }
+            previousFirstSku = currentFirstSku;
             
             // ✅ SKU 기반 중복 체크 (Shopify + NocoDB 통합)
             let pageSkippedShopify = 0;
@@ -443,6 +449,21 @@ async function collectUrls() {
                 log(`   ⏭️  스킵: ${totalSkipped}개 (Shopify: ${pageSkippedShopify}, NocoDB: ${pageSkippedNocodb})`);
             }
             
+            // ✅ v2.2: 연속 빈 페이지 감지
+            if (newProducts.length === 0) {
+                consecutiveEmptyPages++;
+                log(`⚠️  새 제품 없음 (연속 ${consecutiveEmptyPages}/${MAX_CONSECUTIVE_EMPTY}번)`);
+                
+                if (consecutiveEmptyPages >= MAX_CONSECUTIVE_EMPTY) {
+                    log(`🛑 연속 ${MAX_CONSECUTIVE_EMPTY}번 새 제품 없음 - 수집 종료`);
+                    hasMorePages = false;
+                    return;
+                }
+            } else {
+                // 새 제품이 있으면 카운터 리셋
+                consecutiveEmptyPages = 0;
+            }
+            
             // 최대 개수까지만 추가
             const remainingSlots = MAX_PRODUCTS - collectedProducts.length;
             const productsToAdd = newProducts.slice(0, remainingSlots);
@@ -455,19 +476,21 @@ async function collectUrls() {
             
             // 다음 페이지 확인
             if (collectedProducts.length >= MAX_PRODUCTS) {
+                log(`✅ 목표 개수(${MAX_PRODUCTS}개) 달성!`);
                 hasMorePages = false;
-            } else if (newProducts.length === 0 && products.length > 0) {
-                log(`⚠️  새 제품 없음 - 다음 페이지 확인...`);
             } else if (products.length === 0) {
                 log(`⚠️  제품 없음 - 마지막 페이지로 판단`);
                 hasMorePages = false;
             } else if (!UNLIMITED_PAGES && pageNum >= MAX_PAGES) {
+                log(`✅ 최대 페이지(${MAX_PAGES}) 도달`);
                 hasMorePages = false;
             }
+            // ✅ v2.2: newProducts.length === 0인 경우에도 계속 진행 (연속 빈 페이지 체크로 대체)
         },
         
         failedRequestHandler: async ({ request }) => {
             log(`❌ 페이지 로드 실패: ${request.url}`);
+            hasMorePages = false;  // ✅ v2.2: 실패 시에도 종료
         }
     });
     
@@ -489,11 +512,17 @@ async function collectUrls() {
             break;
         }
         
+        // ✅ v2.2: hasMorePages가 false로 설정되었으면 루프 종료
+        if (!hasMorePages) {
+            break;
+        }
+        
         currentPage++;
         
         if (hasMorePages && collectedProducts.length < MAX_PRODUCTS) {
-            log(`⏳ 다음 페이지 로딩 전 2초 대기...`);
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            // ✅ v2.2: 더 긴 대기 시간
+            log(`⏳ 다음 페이지 로딩 전 3초 대기...`);
+            await new Promise(resolve => setTimeout(resolve, 3000));
         }
     }
     
@@ -508,13 +537,9 @@ async function collectUrls() {
         for (let i = 0; i < collectedProducts.length; i++) {
             const product = collectedProducts[i];
             
-            // ✅ 카테고리 정보 추가
-            const category = extractCategoryFromUrl(CATEGORY_URL);
-
             const productData = {
                 sku: product.sku,
-                product_url: product.url,
-                category: category || ''
+                product_url: product.url
             };
             
             const saved = await saveProductUrl(productData);
