@@ -140,7 +140,7 @@ async function getProductsToUpload(limit = 10) {
                 headers: { 'xc-token': NOCODB_API_TOKEN },
                 params: {
                     limit: limit,
-                    where: '(main_image,notnull)~and(shopify_product_id,blank)'
+                    where: '(main_image,notnull)~and(shopify_product_id,is,null)'
                 }
             }
         );

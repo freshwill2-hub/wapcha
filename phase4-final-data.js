@@ -169,7 +169,7 @@ async function getProductsFromNocoDB() {
             headers: { 'xc-token': NOCODB_API_TOKEN },
             params: {
                 limit: parseInt(process.env.PRODUCT_LIMIT) || 1000,
-                where: '(validated_images,notnull)'
+                where: '(validated_images,notnull)~and(final_images,is,null)'
             }
         }
     );

@@ -824,7 +824,7 @@ async function processProducts() {
                 headers: { 'xc-token': NOCODB_API_TOKEN },
                 params: {
                     limit: PRODUCT_LIMIT,
-                    where: '(ai_product_images,notnull)'
+                    where: '(ai_product_images,notnull)~and(gemini_selected,is,null)'
                 }
             }
         );
