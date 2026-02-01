@@ -1,38 +1,49 @@
 {
-  "requestsFinished": 5,
-  "requestsFailed": 0,
-  "requestsRetries": 2,
+  "requestsFinished": 84,
+  "requestsFailed": 16,
+  "requestsRetries": 64,
   "requestsFailedPerMinute": 0,
   "requestsFinishedPerMinute": 2,
-  "requestMinDurationMillis": 24446,
-  "requestMaxDurationMillis": 45125,
-  "requestTotalFailedDurationMillis": 0,
-  "requestTotalFinishedDurationMillis": 157149,
-  "crawlerStartedAt": "2026-02-01T09:44:55.050Z",
-  "crawlerFinishedAt": "2026-02-01T09:47:34.823Z",
-  "statsPersistedAt": "2026-02-01T09:47:34.823Z",
-  "crawlerRuntimeMillis": 160002,
-  "crawlerLastStartTimestamp": 1769939094821,
+  "requestMinDurationMillis": 18281,
+  "requestMaxDurationMillis": 60660,
+  "requestTotalFailedDurationMillis": 10149,
+  "requestTotalFinishedDurationMillis": 2382891,
+  "crawlerStartedAt": "2026-02-01T12:03:02.768Z",
+  "crawlerFinishedAt": "2026-02-01T12:44:13.278Z",
+  "statsPersistedAt": "2026-02-01T12:44:13.278Z",
+  "crawlerRuntimeMillis": 2470838,
+  "crawlerLastStartTimestamp": 1769947382440,
   "requestRetryHistogram": [
-    3,
-    2
+    36,
+    32,
+    32
   ],
   "statsId": 0,
-  "requestAvgFailedDurationMillis": null,
-  "requestAvgFinishedDurationMillis": 31430,
-  "requestTotalDurationMillis": 157149,
-  "requestsTotal": 5,
+  "requestAvgFailedDurationMillis": 634,
+  "requestAvgFinishedDurationMillis": 28368,
+  "requestTotalDurationMillis": 2393040,
+  "requestsTotal": 100,
   "requestsWithStatusCode": {
-    "200": 5,
-    "403": 2
+    "200": 84,
+    "403": 112
   },
-  "errors": {},
+  "errors": {
+    "/root/copychu-scraper/node_modules/@crawlee/basic/internals/basic-crawler.js:903:19": {
+      "missing error code": {
+        "Error": {
+          "Request blocked - received 403 status code.": {
+            "count": 16
+          }
+        }
+      }
+    }
+  },
   "retryErrors": {
     "/root/copychu-scraper/node_modules/@crawlee/basic/internals/basic-crawler.js:903:19": {
       "missing error code": {
         "Error": {
           "Request blocked - received 403 status code.": {
-            "count": 2
+            "count": 96
           }
         }
       }
