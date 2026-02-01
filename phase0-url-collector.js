@@ -317,7 +317,7 @@ async function collectUrls() {
     // ✅ v2.2: 이전 페이지의 첫 번째 SKU 저장 (페이지 변경 확인용)
     let previousFirstSku = null;
     
-    // Playwright 크롤러 설정 (가벼운 설정)
+    // ✅ v2.3: 403 에러 방지를 위한 강화된 설정
     const crawler = new PlaywrightCrawler({
         launchContext: {
             launchOptions: {
@@ -329,14 +329,59 @@ async function collectUrls() {
                     '--disable-gpu',
                     '--single-process',
                     '--disable-extensions',
-                    '--disable-background-networking'
+                    '--disable-background-networking',
+                    '--disable-blink-features=AutomationControlled'
                 ]
             }
         },
-        
+
+        // ✅ v2.3: 브라우저 풀 설정 - fingerprint 우회
+        browserPoolOptions: {
+            useFingerprints: true,
+            fingerprintOptions: {
+                fingerprintGeneratorOptions: {
+                    browsers: ['chrome'],
+                    devices: ['desktop'],
+                    operatingSystems: ['windows'],
+                    locales: ['ko-KR']
+                }
+            }
+        },
+
         maxRequestsPerCrawl: 100,
         maxConcurrency: 1,
         requestHandlerTimeoutSecs: 120,
+
+        // ✅ v2.3: 403 에러 방지 - 세션 풀 사용
+        useSessionPool: true,
+        sessionPoolOptions: {
+            maxPoolSize: 100,
+            sessionOptions: {
+                maxUsageCount: 50
+            }
+        },
+
+        // ✅ v2.3: 요청 전 헤더 설정
+        preNavigationHooks: [
+            async ({ page }) => {
+                await page.setExtraHTTPHeaders({
+                    'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                    'Accept-Encoding': 'gzip, deflate, br',
+                    'Connection': 'keep-alive',
+                    'Upgrade-Insecure-Requests': '1',
+                    'Cache-Control': 'max-age=0'
+                });
+
+                // 웹드라이버 감지 우회 (Playwright용 addInitScript)
+                await page.addInitScript(() => {
+                    Object.defineProperty(navigator, 'webdriver', { get: () => false });
+                    Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3, 4, 5] });
+                    Object.defineProperty(navigator, 'languages', { get: () => ['ko-KR', 'ko', 'en-US', 'en'] });
+                    window.chrome = { runtime: {} };
+                });
+            }
+        ],
         
         requestHandler: async ({ page, request }) => {
             const pageNum = request.userData?.pageNum || 1;
