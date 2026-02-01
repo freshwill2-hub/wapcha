@@ -23,7 +23,7 @@ const OLIVEYOUNG_TABLE_ID = process.env.OLIVEYOUNG_TABLE_ID;
 const SHOPIFY_TABLE_ID = process.env.SHOPIFY_TABLE_ID;
 const SCRIPTS_DIR = process.env.SCRIPTS_DIR || '/root/copychu-scraper';
 
-console.log('🔧 Environment check:');
+console.log('🔧 환경 변수 확인:');
 console.log(`- NOCODB_API_URL: ${NOCODB_API_URL}`);
 console.log(`- OLIVEYOUNG_TABLE_ID: ${OLIVEYOUNG_TABLE_ID}`);
 console.log(`- SHOPIFY_TABLE_ID: ${SHOPIFY_TABLE_ID}`);
@@ -89,10 +89,10 @@ function loadConfig() {
         if (fs.existsSync(CONFIG_FILE)) {
             const data = fs.readFileSync(CONFIG_FILE, 'utf-8');
             config = { ...config, ...JSON.parse(data) };
-            console.log('✅ Config loaded');
+            console.log('✅ 설정 로드 완료');
         }
     } catch (error) {
-        console.error('❌ Config load failed:', error.message);
+        console.error('❌ 설정 로드 실패:', error.message);
     }
 }
 
@@ -100,9 +100,9 @@ function loadConfig() {
 function saveConfig() {
     try {
         fs.writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2));
-        console.log('✅ Config saved');
+        console.log('✅ 설정 저장 완료');
     } catch (error) {
-        console.error('❌ Config save failed:', error.message);
+        console.error('❌ 설정 저장 실패:', error.message);
     }
 }
 
@@ -121,10 +121,10 @@ function loadUrlQueue() {
         if (fs.existsSync(URL_QUEUE_FILE)) {
             const data = fs.readFileSync(URL_QUEUE_FILE, 'utf-8');
             urlQueue = JSON.parse(data);
-            console.log('✅ URL queue loaded');
+            console.log('✅ URL 큐 로드 완료');
         }
     } catch (error) {
-        console.error('❌ URL queue load failed:', error.message);
+        console.error('❌ URL 큐 로드 실패:', error.message);
     }
 }
 
@@ -132,7 +132,7 @@ function saveUrlQueue() {
     try {
         fs.writeFileSync(URL_QUEUE_FILE, JSON.stringify(urlQueue, null, 2));
     } catch (error) {
-        console.error('❌ URL queue save failed:', error.message);
+        console.error('❌ URL 큐 저장 실패:', error.message);
     }
 }
 
@@ -209,138 +209,13 @@ function getImageUrl(imageData) {
 
 // ==================== Phase 정의 ====================
 const PHASES = [
-    { id: 'phase0', name: 'Phase 0: URL Collect', script: 'phase0-url-collector.js' },
-    { id: 'phase1', name: 'Phase 1: Scraping', script: 'phase1-main-gallery.js' },
-    { id: 'phase2', name: 'Phase 2: BG Remove', script: 'phase2-ai-generate.js' },
-    { id: 'phase3', name: 'Phase 3: AI Crop', script: 'phase3-multi-3products.js' },
-    { id: 'phase4', name: 'Phase 4: Final Image', script: 'phase4-final-data.js' },
-    { id: 'phase5', name: 'Phase 5: Shopify Upload', script: 'phase5-shopify-upload.js' }  // ✅ Phase 5 added!
+    { id: 'phase0', name: 'Phase 0: URL 수집', script: 'phase0-url-collector.js' },
+    { id: 'phase1', name: 'Phase 1: 스크래핑', script: 'phase1-main-gallery.js' },
+    { id: 'phase2', name: 'Phase 2: 배경 제거', script: 'phase2-ai-generate.js' },
+    { id: 'phase3', name: 'Phase 3: AI 크롭', script: 'phase3-multi-3products.js' },
+    { id: 'phase4', name: 'Phase 4: 이미지 선별', script: 'phase4-final-data.js' },
+    { id: 'phase5', name: 'Phase 5: Shopify 업로드', script: 'phase5-shopify-upload.js' }  // ✅ Phase 5 추가!
 ];
-
-// ==================== Phase 0: URL 수집 (✅ maxPages 0 = 무제한) ====================
-async function runPhase0(categoryUrl, maxProducts, categoryName, maxPages = 0) {
-    return new Promise((resolve, reject) => {
-        const scriptPath = path.join(SCRIPTS_DIR, 'phase0-url-collector.js');
-        
-        if (!fs.existsSync(scriptPath)) {
-            addLog('error', `❌ Phase 0 script not found: ${scriptPath}`, 'phase0');
-            reject(new Error('phase0-url-collector.js not found'));
-            return;
-        }
-        
-        const pagesText = maxPages === 0 ? 'unlimited' : `${maxPages} pages`;
-        addLog('info', `🚀 Phase 0 started: ${categoryName || 'Category'} (max ${maxProducts}, ${pagesText})`, 'phase0');
-        
-        const env = {
-            ...process.env,
-            CATEGORY_URL: categoryUrl,
-            MAX_PRODUCTS: maxProducts.toString(),
-            MAX_PAGES: maxPages.toString()  // ✅ 0이면 무제한
-        };
-        
-        const child = spawn('node', [scriptPath], {
-            cwd: SCRIPTS_DIR,
-            env: env
-        });
-        
-        currentProcess = child;
-        
-        child.stdout.on('data', (data) => {
-            const lines = data.toString().split('\n').filter(l => l.trim());
-            lines.forEach(line => {
-                let logType = 'info';
-                if (line.includes('✅') || line.includes('완료')) logType = 'success';
-                if (line.includes('❌') || line.includes('실패')) logType = 'error';
-                if (line.includes('⚠️')) logType = 'warning';
-                
-                addLog(logType, line, 'phase0');
-            });
-            io.emit('state', systemState);
-        });
-        
-        child.stderr.on('data', (data) => {
-            const message = data.toString().trim();
-            if (message) {
-                addLog('error', message, 'phase0');
-            }
-        });
-        
-        child.on('close', (code) => {
-            currentProcess = null;
-            if (code === 0) {
-                addLog('success', `✅ Phase 0 completed: ${categoryName || 'Category'}`, 'phase0');
-                resolve(true);
-            } else {
-                addLog('error', `❌ Phase 0 failed (code: ${code})`, 'phase0');
-                reject(new Error(`Phase 0 failed with code ${code}`));
-            }
-        });
-        
-        child.on('error', (error) => {
-            currentProcess = null;
-            addLog('error', `❌ Phase 0 error: ${error.message}`, 'phase0');
-            reject(error);
-        });
-    });
-}
-
-// URL 큐 전체 처리 (✅ maxPages 지원)
-async function processUrlQueue() {
-    if (systemState.status === 'running') {
-        throw new Error('Already running');
-    }
-    
-    const pendingCategories = urlQueue.categories.filter(c => c.status === 'pending');
-    
-    if (pendingCategories.length === 0) {
-        throw new Error('No categories to process');
-    }
-    
-    systemState.status = 'running';
-    systemState.currentPhase = 'phase0';
-    io.emit('state', systemState);
-    
-    addLog('info', `📥 URL queue processing started: ${pendingCategories.length} categories`);
-    
-    let totalCollected = 0;
-    
-    for (const category of pendingCategories) {
-        try {
-            category.status = 'processing';
-            saveUrlQueue();
-            io.emit('urlQueue', urlQueue);
-            
-            // ✅ maxPages 전달 (없으면 0 = 무제한)
-            const maxPages = category.maxPages !== undefined ? category.maxPages : 0;
-            await runPhase0(category.url, category.maxProducts, category.name, maxPages);
-            
-            category.status = 'completed';
-            category.completedAt = new Date().toISOString();
-            totalCollected += category.maxProducts;
-            
-            saveUrlQueue();
-            io.emit('urlQueue', urlQueue);
-            
-            await new Promise(resolve => setTimeout(resolve, 3000));
-            
-        } catch (error) {
-            category.status = 'error';
-            category.error = error.message;
-            saveUrlQueue();
-            io.emit('urlQueue', urlQueue);
-            
-            addLog('error', `❌ Category processing failed: ${category.name} - ${error.message}`);
-        }
-    }
-    
-    systemState.status = 'idle';
-    systemState.currentPhase = null;
-    io.emit('state', systemState);
-    
-    addLog('success', `🎉 URL queue processing completed! ~${totalCollected} products collected`);
-    
-    return { success: true, totalCollected };
-}
 
 // ==================== 통합 로그 시스템 ====================
 function getSydneyTimeForFile() {
@@ -379,6 +254,159 @@ function writeUnifiedLog(logPath, message) {
     fs.appendFileSync(logPath, `[${timestamp}] ${message}\n`);
 }
 
+// ==================== Phase 0: URL 수집 (✅ 통합 로그 지원 추가) ====================
+async function runPhase0(categoryUrl, maxProducts, categoryName, maxPages = 0, unifiedLogPath = null) {
+    return new Promise((resolve, reject) => {
+        const scriptPath = path.join(SCRIPTS_DIR, 'phase0-url-collector.js');
+        
+        if (!fs.existsSync(scriptPath)) {
+            addLog('error', `❌ Phase 0 스크립트 없음: ${scriptPath}`, 'phase0');
+            reject(new Error('phase0-url-collector.js not found'));
+            return;
+        }
+        
+        const pagesText = maxPages === 0 ? '무제한' : `${maxPages}페이지`;
+        addLog('info', `🚀 Phase 0 시작: ${categoryName || '카테고리'} (최대 ${maxProducts}개, ${pagesText})`, 'phase0');
+        
+        // ✅ 통합 로그에 Phase 0 시작 기록
+        if (unifiedLogPath) {
+            writeUnifiedLog(unifiedLogPath, '');
+            writeUnifiedLog(unifiedLogPath, '═══ PHASE 0: URL COLLECTION STARTED ═══');
+            writeUnifiedLog(unifiedLogPath, `═══ PHASE 0: URL 수집 시작 ═══`);
+            writeUnifiedLog(unifiedLogPath, `📂 카테고리: ${categoryName || '카테고리'}`);
+            writeUnifiedLog(unifiedLogPath, `📊 최대 수집: ${maxProducts}개, ${pagesText}`);
+        }
+        
+        const env = {
+            ...process.env,
+            CATEGORY_URL: categoryUrl,
+            MAX_PRODUCTS: maxProducts.toString(),
+            MAX_PAGES: maxPages.toString(),  // ✅ 0이면 무제한
+            UNIFIED_LOG_PATH: unifiedLogPath || ''  // ✅ 통합 로그 경로 전달
+        };
+        
+        const child = spawn('node', [scriptPath], {
+            cwd: SCRIPTS_DIR,
+            env: env
+        });
+        
+        currentProcess = child;
+        
+        child.stdout.on('data', (data) => {
+            const lines = data.toString().split('\n').filter(l => l.trim());
+            lines.forEach(line => {
+                let logType = 'info';
+                if (line.includes('✅') || line.includes('완료')) logType = 'success';
+                if (line.includes('❌') || line.includes('실패')) logType = 'error';
+                if (line.includes('⚠️')) logType = 'warning';
+                
+                addLog(logType, line, 'phase0');
+                
+                // ✅ 통합 로그에도 기록
+                if (unifiedLogPath) {
+                    writeUnifiedLog(unifiedLogPath, line);
+                }
+            });
+            io.emit('state', systemState);
+        });
+        
+        child.stderr.on('data', (data) => {
+            const message = data.toString().trim();
+            if (message) {
+                addLog('error', message, 'phase0');
+                // ✅ 통합 로그에 에러도 기록
+                if (unifiedLogPath) {
+                    writeUnifiedLog(unifiedLogPath, `[ERROR] ${message}`);
+                }
+            }
+        });
+        
+        child.on('close', (code) => {
+            currentProcess = null;
+            if (code === 0) {
+                addLog('success', `✅ Phase 0 완료: ${categoryName || '카테고리'}`, 'phase0');
+                if (unifiedLogPath) {
+                    writeUnifiedLog(unifiedLogPath, `✅ Phase 0 완료: ${categoryName || '카테고리'}`);
+                }
+                resolve(true);
+            } else {
+                addLog('error', `❌ Phase 0 실패 (코드: ${code})`, 'phase0');
+                if (unifiedLogPath) {
+                    writeUnifiedLog(unifiedLogPath, `❌ Phase 0 실패 (코드: ${code})`);
+                }
+                reject(new Error(`Phase 0 failed with code ${code}`));
+            }
+        });
+        
+        child.on('error', (error) => {
+            currentProcess = null;
+            addLog('error', `❌ Phase 0 오류: ${error.message}`, 'phase0');
+            if (unifiedLogPath) {
+                writeUnifiedLog(unifiedLogPath, `❌ Phase 0 오류: ${error.message}`);
+            }
+            reject(error);
+        });
+    });
+}
+
+// ==================== URL 큐 전체 처리 (✅ 통합 로그 지원) ====================
+async function processUrlQueue(unifiedLogPath = null) {
+    if (systemState.status === 'running') {
+        throw new Error('이미 실행 중입니다');
+    }
+    
+    const pendingCategories = urlQueue.categories.filter(c => c.status === 'pending');
+    
+    if (pendingCategories.length === 0) {
+        throw new Error('처리할 카테고리가 없습니다');
+    }
+    
+    systemState.status = 'running';
+    systemState.currentPhase = 'phase0';
+    io.emit('state', systemState);
+    
+    addLog('info', `📥 URL 큐 처리 시작: ${pendingCategories.length}개 카테고리`);
+    
+    let totalCollected = 0;
+    
+    for (const category of pendingCategories) {
+        try {
+            category.status = 'processing';
+            saveUrlQueue();
+            io.emit('urlQueue', urlQueue);
+            
+            // ✅ maxPages 전달 (없으면 0 = 무제한) + 통합 로그 전달
+            const maxPages = category.maxPages !== undefined ? category.maxPages : 0;
+            await runPhase0(category.url, category.maxProducts, category.name, maxPages, unifiedLogPath);
+            
+            category.status = 'completed';
+            category.completedAt = new Date().toISOString();
+            totalCollected += category.maxProducts;
+            
+            saveUrlQueue();
+            io.emit('urlQueue', urlQueue);
+            
+            await new Promise(resolve => setTimeout(resolve, 3000));
+            
+        } catch (error) {
+            category.status = 'error';
+            category.error = error.message;
+            saveUrlQueue();
+            io.emit('urlQueue', urlQueue);
+            
+            addLog('error', `❌ 카테고리 처리 실패: ${category.name} - ${error.message}`);
+        }
+    }
+    
+    systemState.status = 'idle';
+    systemState.currentPhase = null;
+    io.emit('state', systemState);
+    
+    addLog('success', `🎉 URL 큐 처리 완료! 약 ${totalCollected}개 제품 수집됨`);
+    
+    return { success: true, totalCollected };
+}
+
 // ==================== 파이프라인 실행 ====================
 // ✅ 수정: categoryUrl 옵션 추가
 async function runPhase(phase, productLimit, categoryUrl = null, maxProducts = null, maxPages = null, unifiedLogPath = null) {
@@ -386,12 +414,12 @@ async function runPhase(phase, productLimit, categoryUrl = null, maxProducts = n
         const scriptPath = path.join(SCRIPTS_DIR, phase.script);
         
         if (!fs.existsSync(scriptPath)) {
-            addLog('error', `❌ Script not found: ${scriptPath}`, phase.id);
+            addLog('error', `❌ 스크립트 파일 없음: ${scriptPath}`, phase.id);
             reject(new Error(`Script not found: ${scriptPath}`));
             return;
         }
         
-        addLog('info', `🚀 ${phase.name} started (${productLimit} products)`, phase.id);
+        addLog('info', `🚀 ${phase.name} 시작 (${productLimit}개 제품)`, phase.id);
         
         // ✅ 환경변수 설정 - categoryUrl이 있으면 추가
         const env = {
@@ -453,6 +481,11 @@ async function runPhase(phase, productLimit, categoryUrl = null, maxProducts = n
                 if (line.includes('⚠️') || line.includes('경고')) logType = 'warning';
                 
                 addLog(logType, line, phase.id);
+                
+                // ✅ 통합 로그에도 기록
+                if (unifiedLogPath) {
+                    writeUnifiedLog(unifiedLogPath, line);
+                }
             });
             
             io.emit('state', systemState);
@@ -467,6 +500,11 @@ async function runPhase(phase, productLimit, categoryUrl = null, maxProducts = n
                     message: message,
                     timestamp: new Date().toISOString()
                 });
+                
+                // ✅ 통합 로그에 에러도 기록
+                if (unifiedLogPath) {
+                    writeUnifiedLog(unifiedLogPath, `[ERROR] ${message}`);
+                }
             }
         });
         
@@ -474,17 +512,17 @@ async function runPhase(phase, productLimit, categoryUrl = null, maxProducts = n
             currentProcess = null;
             
             if (code === 0) {
-                addLog('success', `✅ ${phase.name} completed`, phase.id);
+                addLog('success', `✅ ${phase.name} 완료`, phase.id);
                 resolve(true);
             } else {
-                addLog('error', `❌ ${phase.name} failed (code: ${code})`, phase.id);
+                addLog('error', `❌ ${phase.name} 실패 (코드: ${code})`, phase.id);
                 reject(new Error(`Phase ${phase.id} failed with code ${code}`));
             }
         });
         
         child.on('error', (error) => {
             currentProcess = null;
-            addLog('error', `❌ ${phase.name} error: ${error.message}`, phase.id);
+            addLog('error', `❌ ${phase.name} 오류: ${error.message}`, phase.id);
             reject(error);
         });
     });
@@ -530,7 +568,7 @@ async function runPipeline(options = {}) {
     };
 
     io.emit('state', systemState);
-    addLog('info', `🎬 Pipeline started (${productLimit} products)`);
+    addLog('info', `🎬 파이프라인 시작 (${productLimit}개 제품)`);
     
     // ✅ NEW: categoryUrl이 있으면 Phase 0 먼저 실행
     if (categoryUrl && phases.phase0) {
@@ -538,12 +576,18 @@ async function runPipeline(options = {}) {
             systemState.currentPhase = 'phase0';
             io.emit('state', systemState);
             
-            addLog('info', `📂 Collecting from new URL: ${categoryUrl.substring(0, 60)}...`);
-            await runPhase0(categoryUrl, maxProducts || productLimit, 'URL Collect', maxPages || 0);
+            addLog('info', `📂 새 URL에서 제품 수집: ${categoryUrl.substring(0, 60)}...`);
+            
+            // ✅ 통합 로그에 Phase 0 시작 기록
+            writeUnifiedLog(unifiedLogPath, '');
+            writeUnifiedLog(unifiedLogPath, '═══ PHASE 0: URL COLLECTION STARTED ═══');
+            writeUnifiedLog(unifiedLogPath, `═══ PHASE 0: URL 수집 시작 ═══`);
+            
+            await runPhase0(categoryUrl, maxProducts || productLimit, 'URL 수집', maxPages || 0, unifiedLogPath);
             
             await new Promise(resolve => setTimeout(resolve, 2000));
         } catch (error) {
-            addLog('error', `❌ Phase 0 failed: ${error.message}`);
+            addLog('error', `❌ Phase 0 실패: ${error.message}`);
             
             // Phase 0 실패 시 전체 파이프라인 중단 여부 결정
             systemState.status = 'error';
@@ -562,7 +606,7 @@ async function runPipeline(options = {}) {
                 systemState.status = 'paused';
                 systemState.pausedAt = new Date().toISOString();
                 io.emit('state', systemState);
-                addLog('warning', '⏸️ Pipeline paused');
+                addLog('warning', '⏸️ 파이프라인 일시정지됨');
                 
                 await new Promise((resolve) => {
                     const checkPause = setInterval(() => {
@@ -576,15 +620,16 @@ async function runPipeline(options = {}) {
                 systemState.status = 'running';
                 systemState.pausedAt = null;
                 io.emit('state', systemState);
-                addLog('info', '▶️ Pipeline resumed');
+                addLog('info', '▶️ 파이프라인 재개됨');
             }
             
             systemState.currentPhase = phase.id;
             io.emit('state', systemState);
 
-            // ✅ 통합 로그에 Phase 시작 기록
+            // ✅ 통합 로그에 Phase 시작 기록 (영어 + 한국어)
             writeUnifiedLog(unifiedLogPath, '');
-            writeUnifiedLog(unifiedLogPath, `═══ ${phase.name.toUpperCase()} STARTED ═══`);
+            writeUnifiedLog(unifiedLogPath, `═══ ${phase.id.toUpperCase()}: ${phase.name.split(': ')[1]?.toUpperCase() || phase.name.toUpperCase()} STARTED ═══`);
+            writeUnifiedLog(unifiedLogPath, `═══ ${phase.name} 시작 ═══`);
 
             await runPhase(phase, productLimit, null, null, null, unifiedLogPath);
 
@@ -599,7 +644,7 @@ async function runPipeline(options = {}) {
         systemState.stats.totalProcessed = productLimit;
         io.emit('state', systemState);
         
-        addLog('success', `🎉 Pipeline completed! (Duration: ${Math.floor(duration / 60)}m ${duration % 60}s)`);
+        addLog('success', `🎉 파이프라인 완료! (소요 시간: ${Math.floor(duration / 60)}분 ${duration % 60}초)`);
 
         // ✅ 통합 로그에 완료 기록
         writeUnifiedLog(unifiedLogPath, '');
@@ -631,7 +676,7 @@ async function runPipeline(options = {}) {
         systemState.status = 'error';
         io.emit('state', systemState);
         
-        addLog('error', `❌ Pipeline failed: ${error.message}`);
+        addLog('error', `❌ 파이프라인 실패: ${error.message}`);
         
         addExecutionHistory({
             id: executionId,
@@ -660,7 +705,7 @@ function setupSchedules() {
         
         try {
             const job = cron.schedule(schedule.cron, async () => {
-                addLog('info', `⏰ Schedule executed: ${schedule.name}`);
+                addLog('info', `⏰ 스케줄 실행: ${schedule.name}`);
                 await runPipeline({
                     productLimit: schedule.productLimit,
                     phases: schedule.phases || config.phases
@@ -668,9 +713,9 @@ function setupSchedules() {
             });
             
             scheduledJobs.push(job);
-            addLog('info', `📅 Schedule registered: ${schedule.name} (${schedule.cron})`);
+            addLog('info', `📅 스케줄 등록: ${schedule.name} (${schedule.cron})`);
         } catch (error) {
-            addLog('error', `❌ Schedule registration failed: ${schedule.name} - ${error.message}`);
+            addLog('error', `❌ 스케줄 등록 실패: ${schedule.name} - ${error.message}`);
         }
     });
 }
@@ -713,7 +758,7 @@ async function getProductStats() {
             completedProducts: completedResponse.data.pageInfo?.totalRows || 0
         };
     } catch (error) {
-        console.error('❌ Stats query failed:', error.message);
+        console.error('❌ 통계 조회 실패:', error.message);
         return {
             totalProducts: 0,
             shopifyProducts: 0,
@@ -741,7 +786,7 @@ async function getRecentProducts(limit = 10) {
             
             return {
                 id: product.Id,
-                title: product.title_en || product.title_kr || `Product #${product.Id}`,
+                title: product.title_en || product.title_kr || `제품 #${product.Id}`,
                 mainImage: mainImageUrl,
                 galleryImages: product.gallery_images?.length || 0,
                 madeAt: product.made_at,
@@ -749,7 +794,7 @@ async function getRecentProducts(limit = 10) {
             };
         });
     } catch (error) {
-        console.error('❌ Recent products query failed:', error.message);
+        console.error('❌ 최근 제품 조회 실패:', error.message);
         return [];
     }
 }
@@ -769,11 +814,11 @@ async function getFailedProducts() {
         
         return response.data.list.map(product => ({
             id: product.Id,
-            title: product.title_en || product.title_kr || `Product #${product.Id}`,
+            title: product.title_en || product.title_kr || `제품 #${product.Id}`,
             validatedImages: product.validated_images?.length || 0
         }));
     } catch (error) {
-        console.error('❌ Failed products query failed:', error.message);
+        console.error('❌ 실패 제품 조회 실패:', error.message);
         return [];
     }
 }
@@ -801,17 +846,17 @@ app.post('/api/config', (req, res) => {
 // ✅ 수정: 파이프라인 실행 - categoryUrl 파라미터 추가
 app.post('/api/pipeline/start', async (req, res) => {
     if (systemState.status === 'running') {
-        return res.status(400).json({ error: 'Already running' });
+        return res.status(400).json({ error: '이미 실행 중입니다' });
     }
-
+    
     const { productLimit, phases, categoryUrl, maxProducts, maxPages } = req.body;
-
-    // ✅ URL validation
+    
+    // ✅ URL 유효성 검사
     if (categoryUrl && !categoryUrl.includes('oliveyoung.co.kr')) {
-        return res.status(400).json({ error: 'Not an Oliveyoung URL' });
+        return res.status(400).json({ error: '올리브영 URL이 아닙니다' });
     }
-
-    res.json({ success: true, message: 'Pipeline started' });
+    
+    res.json({ success: true, message: '파이프라인 시작됨' });
     
     runPipeline({
         productLimit: productLimit || config.productLimit,
@@ -825,21 +870,21 @@ app.post('/api/pipeline/start', async (req, res) => {
 // 파이프라인 일시정지
 app.post('/api/pipeline/pause', (req, res) => {
     if (systemState.status !== 'running') {
-        return res.status(400).json({ error: 'Not running' });
+        return res.status(400).json({ error: '실행 중이 아닙니다' });
     }
-
+    
     isPaused = true;
-    res.json({ success: true, message: 'Pause requested' });
+    res.json({ success: true, message: '일시정지 요청됨' });
 });
 
 // 파이프라인 재개
 app.post('/api/pipeline/resume', (req, res) => {
     if (systemState.status !== 'paused') {
-        return res.status(400).json({ error: 'Not paused' });
+        return res.status(400).json({ error: '일시정지 상태가 아닙니다' });
     }
-
+    
     isPaused = false;
-    res.json({ success: true, message: 'Resumed' });
+    res.json({ success: true, message: '재개됨' });
 });
 
 // 파이프라인 중지
@@ -854,35 +899,35 @@ app.post('/api/pipeline/stop', (req, res) => {
     systemState.currentPhase = null;
     io.emit('state', systemState);
     
-    addLog('warning', '🛑 Pipeline force stopped');
-
-    res.json({ success: true, message: 'Stopped' });
+    addLog('warning', '🛑 파이프라인 강제 중지됨');
+    
+    res.json({ success: true, message: '중지됨' });
 });
 
 // ✅ 수정: 단일 Phase 실행 - categoryUrl 파라미터 추가
 app.post('/api/pipeline/run-phase', async (req, res) => {
     if (systemState.status === 'running') {
-        return res.status(400).json({ error: 'Already running' });
+        return res.status(400).json({ error: '이미 실행 중입니다' });
     }
-
+    
     const { phaseId, productLimit, categoryUrl, maxProducts, maxPages } = req.body;
     const phase = PHASES.find(p => p.id === phaseId);
-
+    
     if (!phase) {
-        return res.status(400).json({ error: 'Invalid Phase' });
+        return res.status(400).json({ error: '유효하지 않은 Phase' });
     }
-
-    // ✅ URL required for Phase 0
+    
+    // ✅ Phase 0인 경우 URL 필수 체크
     if (phaseId === 'phase0') {
         if (!categoryUrl) {
-            return res.status(400).json({ error: 'Category URL required for Phase 0' });
+            return res.status(400).json({ error: 'Phase 0 실행에는 카테고리 URL이 필요합니다' });
         }
         if (!categoryUrl.includes('oliveyoung.co.kr')) {
-            return res.status(400).json({ error: 'Not an Oliveyoung URL' });
+            return res.status(400).json({ error: '올리브영 URL이 아닙니다' });
         }
     }
-
-    res.json({ success: true, message: `${phase.name} started` });
+    
+    res.json({ success: true, message: `${phase.name} 시작됨` });
     
     systemState.status = 'running';
     systemState.currentPhase = phaseId;
@@ -891,7 +936,7 @@ app.post('/api/pipeline/run-phase', async (req, res) => {
     try {
         // ✅ Phase 0인 경우 runPhase0 사용, 그 외에는 runPhase 사용
         if (phaseId === 'phase0') {
-            await runPhase0(categoryUrl, maxProducts || productLimit || config.productLimit, 'URL Collect', maxPages || 0);
+            await runPhase0(categoryUrl, maxProducts || productLimit || config.productLimit, 'URL 수집', maxPages || 0);
         } else {
             await runPhase(phase, productLimit || config.productLimit);
         }
@@ -962,10 +1007,10 @@ app.post('/api/products/retry', async (req, res) => {
     const { productIds } = req.body;
     
     if (!productIds || productIds.length === 0) {
-        return res.status(400).json({ error: 'Product IDs required' });
+        return res.status(400).json({ error: '제품 ID가 필요합니다' });
     }
-
-    res.json({ success: true, message: `${productIds.length} products scheduled for retry` });
+    
+    res.json({ success: true, message: `${productIds.length}개 제품 재처리 예정` });
 });
 
 // 스케줄 목록
@@ -1010,7 +1055,7 @@ app.patch('/api/schedules/:id/toggle', (req, res) => {
         setupSchedules();
         res.json({ success: true, enabled: schedule.enabled });
     } else {
-        res.status(404).json({ error: 'Schedule not found' });
+        res.status(404).json({ error: '스케줄을 찾을 수 없습니다' });
     }
 });
 
@@ -1042,7 +1087,7 @@ app.get('/api/debug/image/:id', async (req, res) => {
                 gallery_images_raw: product.gallery_images
             });
         } else {
-            res.status(404).json({ error: 'Product not found' });
+            res.status(404).json({ error: '제품 없음' });
         }
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -1061,11 +1106,11 @@ app.post('/api/url-queue/category', (req, res) => {
     const { url, name, maxProducts = 100, maxPages = 0, limitPages = false } = req.body;
     
     if (!url) {
-        return res.status(400).json({ error: 'URL required' });
+        return res.status(400).json({ error: 'URL이 필요합니다' });
     }
-
+    
     if (!url.includes('oliveyoung.co.kr')) {
-        return res.status(400).json({ error: 'Not an Oliveyoung URL' });
+        return res.status(400).json({ error: '올리브영 URL이 아닙니다' });
     }
     
     // ✅ limitPages가 false면 maxPages를 0으로 (무제한)
@@ -1074,7 +1119,7 @@ app.post('/api/url-queue/category', (req, res) => {
     const category = {
         id: uuidv4(),
         url: url.trim(),
-        name: name?.trim() || 'Unnamed',
+        name: name?.trim() || '이름 없음',
         maxProducts: parseInt(maxProducts) || 100,
         maxPages: finalMaxPages,  // ✅ 0 = 무제한
         status: 'pending',
@@ -1085,8 +1130,8 @@ app.post('/api/url-queue/category', (req, res) => {
     saveUrlQueue();
     
     io.emit('urlQueue', urlQueue);
-    const pagesText = finalMaxPages === 0 ? 'unlimited' : `${finalMaxPages} pages`;
-    addLog('info', `📂 Category added: ${category.name} (max ${category.maxProducts}, ${pagesText})`);
+    const pagesText = finalMaxPages === 0 ? '무제한' : `${finalMaxPages}페이지`;
+    addLog('info', `📂 카테고리 추가됨: ${category.name} (최대 ${category.maxProducts}개, ${pagesText})`);
     
     res.json({ success: true, category });
 });
@@ -1097,14 +1142,14 @@ app.delete('/api/url-queue/category/:id', (req, res) => {
     
     const index = urlQueue.categories.findIndex(c => c.id === id);
     if (index === -1) {
-        return res.status(404).json({ error: 'Category not found' });
+        return res.status(404).json({ error: '카테고리를 찾을 수 없습니다' });
     }
-
+    
     const removed = urlQueue.categories.splice(index, 1)[0];
     saveUrlQueue();
-
+    
     io.emit('urlQueue', urlQueue);
-    addLog('info', `🗑️ Category removed: ${removed.name}`);
+    addLog('info', `🗑️ 카테고리 삭제됨: ${removed.name}`);
     
     res.json({ success: true });
 });
@@ -1115,9 +1160,9 @@ app.patch('/api/url-queue/category/:id/reset', (req, res) => {
     
     const category = urlQueue.categories.find(c => c.id === id);
     if (!category) {
-        return res.status(404).json({ error: 'Category not found' });
+        return res.status(404).json({ error: '카테고리를 찾을 수 없습니다' });
     }
-
+    
     category.status = 'pending';
     delete category.completedAt;
     delete category.error;
@@ -1144,13 +1189,13 @@ app.delete('/api/url-queue/completed', (req, res) => {
 app.post('/api/url-queue/process', async (req, res) => {
     try {
         if (systemState.status === 'running') {
-            return res.status(400).json({ error: 'Already running' });
+            return res.status(400).json({ error: '이미 실행 중입니다' });
         }
-
-        res.json({ success: true, message: 'URL queue processing started' });
-
+        
+        res.json({ success: true, message: 'URL 큐 처리 시작됨' });
+        
         processUrlQueue().catch(error => {
-            addLog('error', `❌ URL queue processing failed: ${error.message}`);
+            addLog('error', `❌ URL 큐 처리 실패: ${error.message}`);
         });
         
     } catch (error) {
@@ -1158,32 +1203,177 @@ app.post('/api/url-queue/process', async (req, res) => {
     }
 });
 
-// URL 큐 + 파이프라인 통합 실행
+// ✅✅✅ 핵심 수정: URL 큐 + 파이프라인 통합 실행 (Phase 0 로그 기록 추가) ✅✅✅
 app.post('/api/url-queue/process-full', async (req, res) => {
     try {
         if (systemState.status === 'running') {
-            return res.status(400).json({ error: 'Already running' });
+            return res.status(400).json({ error: '이미 실행 중입니다' });
         }
-
+        
         const { phases = config.phases } = req.body;
-
-        res.json({ success: true, message: 'URL collect + pipeline started' });
-
+        
+        // ✅ pending 카테고리 확인
+        const pendingCategories = urlQueue.categories.filter(c => c.status === 'pending');
+        
+        if (pendingCategories.length === 0) {
+            return res.status(400).json({ 
+                error: '처리할 카테고리가 없습니다. URL 관리 페이지에서 카테고리를 먼저 추가해주세요.',
+                hint: '📂 카테고리 URL 추가 → 🚀 전체 파이프라인 버튼 클릭'
+            });
+        }
+        
+        res.json({ success: true, message: 'URL 수집 + 파이프라인 시작됨' });
+        
         (async () => {
+            // ✅ 통합 로그 파일 먼저 생성
+            const unifiedLogPath = createUnifiedLogPath();
+            
+            // ✅ 파이프라인 헤더 로그 기록
+            const totalMaxProducts = pendingCategories.reduce((sum, c) => sum + c.maxProducts, 0);
+            writeUnifiedLog(unifiedLogPath, '═══════════════════════════════════════════════════════════════════════');
+            writeUnifiedLog(unifiedLogPath, '🎬 Pipeline started');
+            writeUnifiedLog(unifiedLogPath, `📋 Products: ${totalMaxProducts}`);
+            writeUnifiedLog(unifiedLogPath, `📁 Unified log: ${path.basename(unifiedLogPath)}`);
+            writeUnifiedLog(unifiedLogPath, '═══════════════════════════════════════════════════════════════════════');
+            
             try {
-                const queueResult = await processUrlQueue();
-
+                // ✅ Phase 0 실행 (통합 로그 경로 전달)
+                const queueResult = await processUrlQueue(unifiedLogPath);
+                
                 if (queueResult.success && queueResult.totalCollected > 0) {
-                    addLog('info', '🔄 URL collection complete, starting pipeline...');
+                    addLog('info', '🔄 URL 수집 완료, 파이프라인 시작...');
+                    writeUnifiedLog(unifiedLogPath, '');
+                    writeUnifiedLog(unifiedLogPath, '🔄 URL 수집 완료, 파이프라인 시작...');
+                    
                     await new Promise(resolve => setTimeout(resolve, 3000));
+                    
+                    // ✅ Phase 1~5 실행을 위한 별도 로직 (runPipeline의 일부를 인라인으로 실행)
+                    const executionId = uuidv4();
+                    const startTime = new Date();
+                    
+                    systemState = {
+                        status: 'running',
+                        currentPhase: null,
+                        currentProduct: 0,
+                        totalProducts: queueResult.totalCollected,
+                        startTime: startTime.toISOString(),
+                        pausedAt: null,
+                        errors: [],
+                        stats: {
+                            totalProcessed: 0,
+                            successCount: 0,
+                            failedCount: 0,
+                            apiCalls: 0,
+                            estimatedCost: 0
+                        },
+                        unifiedLogPath: unifiedLogPath
+                    };
+                    io.emit('state', systemState);
+                    
+                    // Phase 1~5만 필터링 (Phase 0 이미 처리됨)
+                    const pipelinePhases = PHASES.filter(p => p.id !== 'phase0');
+                    const enabledPhases = pipelinePhases.filter(p => phases[p.id]);
+                    
+                    try {
+                        for (const phase of enabledPhases) {
+                            if (isPaused) {
+                                systemState.status = 'paused';
+                                systemState.pausedAt = new Date().toISOString();
+                                io.emit('state', systemState);
+                                addLog('warning', '⏸️ 파이프라인 일시정지됨');
+                                
+                                await new Promise((resolve) => {
+                                    const checkPause = setInterval(() => {
+                                        if (!isPaused) {
+                                            clearInterval(checkPause);
+                                            resolve();
+                                        }
+                                    }, 1000);
+                                });
+                                
+                                systemState.status = 'running';
+                                systemState.pausedAt = null;
+                                io.emit('state', systemState);
+                                addLog('info', '▶️ 파이프라인 재개됨');
+                            }
+                            
+                            systemState.currentPhase = phase.id;
+                            io.emit('state', systemState);
 
-                    await runPipeline({
-                        productLimit: queueResult.totalCollected,
-                        phases: phases
-                    });
+                            // ✅ 통합 로그에 Phase 시작 기록 (영어 + 한국어)
+                            writeUnifiedLog(unifiedLogPath, '');
+                            writeUnifiedLog(unifiedLogPath, `═══ ${phase.id.toUpperCase()}: ${phase.name.split(': ')[1]?.toUpperCase() || phase.name.toUpperCase()} STARTED ═══`);
+                            writeUnifiedLog(unifiedLogPath, `═══ ${phase.name} 시작 ═══`);
+
+                            await runPhase(phase, queueResult.totalCollected, null, null, null, unifiedLogPath);
+
+                            await new Promise(resolve => setTimeout(resolve, 2000));
+                        }
+                        
+                        const endTime = new Date();
+                        const duration = Math.round((endTime - startTime) / 1000);
+                        
+                        systemState.status = 'idle';
+                        systemState.currentPhase = null;
+                        systemState.stats.totalProcessed = queueResult.totalCollected;
+                        io.emit('state', systemState);
+                        
+                        addLog('success', `🎉 파이프라인 완료! (소요 시간: ${Math.floor(duration / 60)}분 ${duration % 60}초)`);
+
+                        // ✅ 통합 로그에 완료 기록
+                        writeUnifiedLog(unifiedLogPath, '');
+                        writeUnifiedLog(unifiedLogPath, '═══════════════════════════════════════════════════════════════════════');
+                        writeUnifiedLog(unifiedLogPath, '🎉 Pipeline completed!');
+                        writeUnifiedLog(unifiedLogPath, `⏱️  Duration: ${Math.floor(duration / 60)}m ${duration % 60}s`);
+                        writeUnifiedLog(unifiedLogPath, `✅ Success: ${systemState.stats.successCount}`);
+                        writeUnifiedLog(unifiedLogPath, `❌ Failed: ${systemState.stats.failedCount}`);
+                        writeUnifiedLog(unifiedLogPath, '═══════════════════════════════════════════════════════════════════════');
+
+                        addExecutionHistory({
+                            id: executionId,
+                            startTime: startTime.toISOString(),
+                            endTime: endTime.toISOString(),
+                            duration: duration,
+                            productLimit: queueResult.totalCollected,
+                            phases: ['phase0', ...enabledPhases.map(p => p.id)],
+                            stats: { ...systemState.stats },
+                            errors: [...systemState.errors],
+                            status: 'completed'
+                        });
+                        
+                    } catch (error) {
+                        const endTime = new Date();
+                        const duration = Math.round((endTime - startTime) / 1000);
+                        
+                        systemState.status = 'error';
+                        io.emit('state', systemState);
+                        
+                        addLog('error', `❌ 파이프라인 실패: ${error.message}`);
+                        writeUnifiedLog(unifiedLogPath, `❌ 파이프라인 실패: ${error.message}`);
+                        
+                        addExecutionHistory({
+                            id: executionId,
+                            startTime: startTime.toISOString(),
+                            endTime: endTime.toISOString(),
+                            duration: duration,
+                            productLimit: queueResult.totalCollected,
+                            phases: ['phase0', ...enabledPhases.map(p => p.id)],
+                            stats: { ...systemState.stats },
+                            errors: [...systemState.errors],
+                            status: 'failed',
+                            errorMessage: error.message
+                        });
+                    }
+                } else {
+                    addLog('warning', '⚠️ URL 수집 결과가 없습니다. Phase 1~5를 건너뜁니다.');
+                    writeUnifiedLog(unifiedLogPath, '⚠️ URL 수집 결과가 없습니다. Phase 1~5를 건너뜁니다.');
                 }
             } catch (error) {
-                addLog('error', `❌ Full pipeline failed: ${error.message}`);
+                addLog('error', `❌ 통합 실행 실패: ${error.message}`);
+                writeUnifiedLog(unifiedLogPath, `❌ 통합 실행 실패: ${error.message}`);
+                
+                systemState.status = 'error';
+                io.emit('state', systemState);
             }
         })();
         
@@ -1197,16 +1387,16 @@ app.post('/api/url-queue/product', async (req, res) => {
     const { url } = req.body;
     
     if (!url) {
-        return res.status(400).json({ error: 'URL required' });
+        return res.status(400).json({ error: 'URL이 필요합니다' });
     }
-
+    
     if (!url.includes('oliveyoung.co.kr') || !url.includes('goodsNo=')) {
-        return res.status(400).json({ error: 'Not an Oliveyoung product URL' });
+        return res.status(400).json({ error: '올리브영 제품 URL이 아닙니다' });
     }
-
+    
     const goodsNoMatch = url.match(/goodsNo=([A-Z0-9]+)/);
     if (!goodsNoMatch) {
-        return res.status(400).json({ error: 'Invalid product URL' });
+        return res.status(400).json({ error: '유효하지 않은 제품 URL입니다' });
     }
     
     const goodsNo = goodsNoMatch[1];
@@ -1226,7 +1416,7 @@ app.post('/api/url-queue/product', async (req, res) => {
         );
         
         if (existingCheck.data.list.length > 0) {
-            return res.status(400).json({ error: `SKU already exists: ${goodsNo}` });
+            return res.status(400).json({ error: `이미 등록된 SKU입니다: ${goodsNo}` });
         }
         
         const productData = {
@@ -1246,12 +1436,12 @@ app.post('/api/url-queue/product', async (req, res) => {
             }
         );
         
-        addLog('success', `📦 Product URL added: ${goodsNo}`);
+        addLog('success', `📦 제품 URL 추가됨: ${goodsNo}`);
         res.json({ success: true, productId: response.data.Id, sku: goodsNo });
         
     } catch (error) {
         if (error.response?.status === 422) {
-            return res.status(400).json({ error: 'URL already registered' });
+            return res.status(400).json({ error: '이미 등록된 URL입니다' });
         }
         res.status(500).json({ error: error.message });
     }
@@ -1381,7 +1571,7 @@ app.get('/api/logs/files', (req, res) => {
         });
         
     } catch (error) {
-        console.error('Log file list query failed:', error);
+        console.error('로그 파일 목록 조회 실패:', error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -1573,119 +1763,119 @@ app.get('/api/logs/summary/:phase', (req, res) => {
         });
         
     } catch (error) {
-        console.error('Phase log summary query failed:', error);
+        console.error('Phase 로그 요약 조회 실패:', error);
         res.status(500).json({ error: error.message });
     }
 });
 
-// ==================== Force Kill API ==================== ✅ Added!
+// ==================== 강제 종료 API ==================== ✅ 추가됨!
 app.post('/api/force-kill', async (req, res) => {
-    console.log('🛑 Force kill requested...');
-    addLog('warning', '🔴 Force kill requested...');
-
+    console.log('🛑 강제 종료 요청됨...');
+    addLog('warning', '🔴 강제 종료 요청됨...');
+    
     const results = { message: [] };
-
-    // 1. Kill current process
+    
+    // 1. 현재 프로세스 종료
     if (currentProcess) {
         try {
             currentProcess.kill('SIGKILL');
             currentProcess = null;
-            results.message.push('✅ Current process killed');
+            results.message.push('✅ 현재 프로세스 종료됨');
         } catch (e) {
-            results.message.push('⚠️ Current process kill failed: ' + e.message);
+            results.message.push('⚠️ 현재 프로세스 종료 실패: ' + e.message);
         }
     }
-
-    // 2. Kill Phase related node processes
+    
+    // 2. Phase 관련 node 프로세스 종료
     try {
         execSync('pkill -f "node phase" 2>/dev/null || true', { timeout: 5000 });
-        results.message.push('✅ Phase processes killed');
+        results.message.push('✅ Phase 프로세스 종료됨');
     } catch (e) {
-        results.message.push('⚠️ No Phase processes or kill failed');
+        results.message.push('⚠️ Phase 프로세스 없거나 종료 실패');
     }
-
-    // 3. Kill Chromium/Playwright
+    
+    // 3. Chromium/Playwright 종료
     try {
         execSync('pkill -f chromium 2>/dev/null || true', { timeout: 5000 });
-        results.message.push('✅ Chromium processes killed');
+        results.message.push('✅ Chromium 프로세스 종료됨');
     } catch (e) {
-        results.message.push('⚠️ No Chromium processes or kill failed');
+        results.message.push('⚠️ Chromium 프로세스 없거나 종료 실패');
     }
-
-    // 4. Reset state
+    
+    // 4. 상태 초기화
     isPaused = false;
     systemState.status = 'idle';
     systemState.currentPhase = null;
     io.emit('state', systemState);
-
-    addLog('success', '🛑 Force kill complete!');
-    console.log('🛑 Force kill complete:', results.message.join(', '));
-
+    
+    addLog('success', '🛑 강제 종료 완료!');
+    console.log('🛑 강제 종료 완료:', results.message.join(', '));
+    
     res.json({ success: true, message: results.message.join('\n') });
 });
 
 // ==================== Socket.io ====================
 io.on('connection', (socket) => {
-    console.log('🔌 Client connected:', socket.id);
-
+    console.log('🔌 클라이언트 연결됨:', socket.id);
+    
     socket.emit('state', systemState);
     socket.emit('logs', logs.slice(-100));
     socket.emit('urlQueue', urlQueue);
-
+    
     socket.on('disconnect', () => {
-        console.log('🔌 Client disconnected:', socket.id);
+        console.log('🔌 클라이언트 연결 해제:', socket.id);
     });
 });
 
-// ==================== Server Start ====================
+// ==================== 서버 시작 ====================
 httpServer.listen(PORT, '0.0.0.0', () => {
     console.log('='.repeat(60));
-    console.log('🚀 Copychu Dashboard Server Started!');
+    console.log('🚀 Copychu Dashboard 서버 시작!');
     console.log('='.repeat(60));
-    console.log(`📡 Address: http://localhost:${PORT}`);
-    console.log(`📡 External: http://77.42.67.165:${PORT}`);
-    console.log(`📂 Scripts path: ${SCRIPTS_DIR}`);
+    console.log(`📡 주소: http://localhost:${PORT}`);
+    console.log(`📡 외부 접속: http://77.42.67.165:${PORT}`);
+    console.log(`📂 스크립트 경로: ${SCRIPTS_DIR}`);
     console.log('='.repeat(60));
-    console.log('\n📋 Available Phases:');
+    console.log('\n📋 사용 가능한 Phase:');
     PHASES.forEach(p => console.log(`   - ${p.name}`));
-    console.log('\n🔗 URL Queue API:');
+    console.log('\n🔗 URL 큐 API:');
     console.log('   - GET  /api/url-queue');
     console.log('   - POST /api/url-queue/category');
     console.log('   - POST /api/url-queue/process');
     console.log('   - POST /api/url-queue/process-full');
-    console.log('   - POST /api/force-kill  ← 🆕 Force Kill');
+    console.log('   - POST /api/force-kill  ← 🆕 강제 종료');
     console.log('='.repeat(60));
 });
 // ==================== Graceful Shutdown ====================
 function gracefulShutdown(signal) {
-    console.log(`\n⚠️ ${signal} received - Server shutting down...`);
-
-    // 1. Kill running process
+    console.log(`\n⚠️ ${signal} 수신 - 서버 종료 중...`);
+    
+    // 1. 실행 중인 프로세스 종료
     if (currentProcess) {
         try {
             currentProcess.kill('SIGTERM');
             currentProcess = null;
-            console.log('✅ Current process killed');
+            console.log('✅ 현재 프로세스 종료됨');
         } catch (e) {
-            console.log('⚠️ Process kill failed:', e.message);
+            console.log('⚠️ 프로세스 종료 실패:', e.message);
         }
     }
-
-    // 2. Close all socket connections
+    
+    // 2. 모든 소켓 연결 종료
     io.close(() => {
-        console.log('✅ Socket.io connections closed');
+        console.log('✅ Socket.io 연결 종료됨');
     });
-
-    // 3. Close HTTP server
+    
+    // 3. HTTP 서버 종료
     httpServer.close(() => {
-        console.log('✅ HTTP server closed');
-        console.log('👋 Server fully shutdown');
+        console.log('✅ HTTP 서버 종료됨');
+        console.log('👋 서버 완전히 종료됨');
         process.exit(0);
     });
-
-    // 4. Force kill after 5 seconds (safety)
+    
+    // 4. 5초 후 강제 종료 (안전장치)
     setTimeout(() => {
-        console.log('⚠️ Force kill (timeout)');
+        console.log('⚠️ 강제 종료 (타임아웃)');
         process.exit(1);
     }, 5000);
 }
