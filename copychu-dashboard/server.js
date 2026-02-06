@@ -217,7 +217,8 @@ const PHASES = [
     { id: 'phase5', name: 'Phase 5: Shopify 업로드', script: 'phase5-shopify-upload.js' }  // ✅ Phase 5 추가!
 ];
 
-// ==================== Phase 0: URL 수집 (✅ maxPages 0 = 무제한, unifiedLogPath 추가) ====================
+// ==================== Phase 0: URL 수집 (✅ maxPages 0 = 무제한, ✅ 통합 로그 지원) ====================
+// 🔧 수정 1: unifiedLogPath 파라미터 추가
 async function runPhase0(categoryUrl, maxProducts, categoryName, maxPages = 0, unifiedLogPath = null) {
     return new Promise((resolve, reject) => {
         const scriptPath = path.join(SCRIPTS_DIR, 'phase0-url-collector.js');
@@ -231,7 +232,7 @@ async function runPhase0(categoryUrl, maxProducts, categoryName, maxPages = 0, u
         const pagesText = maxPages === 0 ? '무제한' : `${maxPages}페이지`;
         addLog('info', `🚀 Phase 0 시작: ${categoryName || '카테고리'} (최대 ${maxProducts}개, ${pagesText})`, 'phase0');
         
-        // ✅ 통합 로그에 Phase 0 시작 기록
+        // 🔧 수정 2: 통합 로그에 Phase 0 시작 기록
         if (unifiedLogPath) {
             writeUnifiedLog(unifiedLogPath, '');
             writeUnifiedLog(unifiedLogPath, `═══ PHASE 0: URL 수집 시작 ═══`);
@@ -239,11 +240,12 @@ async function runPhase0(categoryUrl, maxProducts, categoryName, maxPages = 0, u
             writeUnifiedLog(unifiedLogPath, `📊 최대 수집: ${maxProducts}개, ${pagesText}`);
         }
         
+        // 🔧 수정 3: 환경변수에 UNIFIED_LOG_PATH 추가
         const env = {
             ...process.env,
             CATEGORY_URL: categoryUrl,
             MAX_PRODUCTS: maxProducts.toString(),
-            MAX_PAGES: maxPages.toString(),  // ✅ 0이면 무제한
+            MAX_PAGES: maxPages.toString(),
             UNIFIED_LOG_PATH: unifiedLogPath || ''  // ✅ 통합 로그 경로 전달
         };
         
@@ -254,6 +256,7 @@ async function runPhase0(categoryUrl, maxProducts, categoryName, maxPages = 0, u
         
         currentProcess = child;
         
+        // 🔧 수정 4: stdout 핸들러에 통합 로그 기록 추가
         child.stdout.on('data', (data) => {
             const lines = data.toString().split('\n').filter(l => l.trim());
             lines.forEach(line => {
@@ -264,7 +267,7 @@ async function runPhase0(categoryUrl, maxProducts, categoryName, maxPages = 0, u
                 
                 addLog(logType, line, 'phase0');
                 
-                // ✅ 통합 로그에 기록
+                // ✅ 통합 로그에도 기록
                 if (unifiedLogPath) {
                     writeUnifiedLog(unifiedLogPath, line);
                 }
@@ -276,10 +279,6 @@ async function runPhase0(categoryUrl, maxProducts, categoryName, maxPages = 0, u
             const message = data.toString().trim();
             if (message) {
                 addLog('error', message, 'phase0');
-                // ✅ 통합 로그에 에러도 기록
-                if (unifiedLogPath) {
-                    writeUnifiedLog(unifiedLogPath, `[ERROR] ${message}`);
-                }
             }
         });
         
@@ -287,7 +286,7 @@ async function runPhase0(categoryUrl, maxProducts, categoryName, maxPages = 0, u
             currentProcess = null;
             if (code === 0) {
                 addLog('success', `✅ Phase 0 완료: ${categoryName || '카테고리'}`, 'phase0');
-                // ✅ 통합 로그에 완료 기록
+                // ✅ 통합 로그에 Phase 0 완료 기록
                 if (unifiedLogPath) {
                     writeUnifiedLog(unifiedLogPath, `✅ Phase 0 완료: ${categoryName || '카테고리'}`);
                 }
@@ -304,15 +303,13 @@ async function runPhase0(categoryUrl, maxProducts, categoryName, maxPages = 0, u
         child.on('error', (error) => {
             currentProcess = null;
             addLog('error', `❌ Phase 0 오류: ${error.message}`, 'phase0');
-            if (unifiedLogPath) {
-                writeUnifiedLog(unifiedLogPath, `❌ Phase 0 오류: ${error.message}`);
-            }
             reject(error);
         });
     });
 }
 
-// URL 큐 전체 처리 (✅ maxPages 지원 + unifiedLogPath 추가)
+// URL 큐 전체 처리 (✅ maxPages 지원, ✅ 통합 로그 지원)
+// 🔧 수정 5: unifiedLogPath 파라미터 추가
 async function processUrlQueue(unifiedLogPath = null) {
     if (systemState.status === 'running') {
         throw new Error('이미 실행 중입니다');
@@ -330,9 +327,8 @@ async function processUrlQueue(unifiedLogPath = null) {
     
     addLog('info', `📥 URL 큐 처리 시작: ${pendingCategories.length}개 카테고리`);
     
-    // ✅ 통합 로그에 URL 큐 시작 기록
+    // ✅ 통합 로그에 큐 처리 시작 기록
     if (unifiedLogPath) {
-        writeUnifiedLog(unifiedLogPath, '');
         writeUnifiedLog(unifiedLogPath, `📥 URL 큐 처리 시작: ${pendingCategories.length}개 카테고리`);
     }
     
@@ -344,8 +340,9 @@ async function processUrlQueue(unifiedLogPath = null) {
             saveUrlQueue();
             io.emit('urlQueue', urlQueue);
             
-            // ✅ maxPages 전달 (없으면 0 = 무제한) + unifiedLogPath 전달
+            // ✅ maxPages 전달 (없으면 0 = 무제한)
             const maxPages = category.maxPages !== undefined ? category.maxPages : 0;
+            // 🔧 수정 6: runPhase0 호출 시 unifiedLogPath 전달
             await runPhase0(category.url, category.maxProducts, category.name, maxPages, unifiedLogPath);
             
             category.status = 'completed';
@@ -364,9 +361,6 @@ async function processUrlQueue(unifiedLogPath = null) {
             io.emit('urlQueue', urlQueue);
             
             addLog('error', `❌ 카테고리 처리 실패: ${category.name} - ${error.message}`);
-            if (unifiedLogPath) {
-                writeUnifiedLog(unifiedLogPath, `❌ 카테고리 처리 실패: ${category.name} - ${error.message}`);
-            }
         }
     }
     
@@ -376,7 +370,7 @@ async function processUrlQueue(unifiedLogPath = null) {
     
     addLog('success', `🎉 URL 큐 처리 완료! 약 ${totalCollected}개 제품 수집됨`);
     
-    // ✅ 통합 로그에 완료 기록
+    // ✅ 통합 로그에 큐 처리 완료 기록
     if (unifiedLogPath) {
         writeUnifiedLog(unifiedLogPath, `🎉 URL 큐 처리 완료! 약 ${totalCollected}개 제품 수집됨`);
     }
@@ -532,7 +526,8 @@ async function runPhase(phase, productLimit, categoryUrl = null, maxProducts = n
     });
 }
 
-// ✅ 수정: categoryUrl 옵션 추가 + 통합 로그 지원 + existingLogPath 추가
+// ✅ 수정: categoryUrl 옵션 추가 + 통합 로그 지원
+// 🔧 수정 7: existingLogPath 옵션 추가
 async function runPipeline(options = {}) {
     const {
         productLimit = config.productLimit,
@@ -540,16 +535,16 @@ async function runPipeline(options = {}) {
         categoryUrl = null,    // ✅ NEW
         maxProducts = null,    // ✅ NEW
         maxPages = null,       // ✅ NEW
-        existingLogPath = null // ✅ NEW: 기존 로그 경로 (process-full에서 전달)
+        existingLogPath = null // 🔧 NEW: 기존 통합 로그 경로 (process-full에서 전달)
     } = options;
 
     const executionId = uuidv4();
     const startTime = new Date();
 
-    // ✅ 통합 로그 파일 생성 또는 기존 경로 사용
+    // 🔧 수정 7: 기존 로그 경로가 있으면 사용, 없으면 새로 생성
     const unifiedLogPath = existingLogPath || createUnifiedLogPath();
     
-    // ✅ 새 로그 파일인 경우에만 헤더 작성
+    // 새로 생성한 경우에만 헤더 기록 (기존 경로면 이미 Phase 0에서 기록됨)
     if (!existingLogPath) {
         writeUnifiedLog(unifiedLogPath, '═══════════════════════════════════════════════════════════════════════');
         writeUnifiedLog(unifiedLogPath, '🎬 파이프라인 실행 시작');
@@ -586,7 +581,7 @@ async function runPipeline(options = {}) {
             io.emit('state', systemState);
             
             addLog('info', `📂 새 URL에서 제품 수집: ${categoryUrl.substring(0, 60)}...`);
-            await runPhase0(categoryUrl, maxProducts || productLimit, 'URL 수집', maxPages || 0, unifiedLogPath);
+            await runPhase0(categoryUrl, maxProducts || productLimit, 'URL 수집', maxPages || 0);
             
             await new Promise(resolve => setTimeout(resolve, 2000));
         } catch (error) {
@@ -1205,7 +1200,8 @@ app.post('/api/url-queue/process', async (req, res) => {
     }
 });
 
-// ✅ 수정: URL 큐 + 파이프라인 통합 실행 (통합 로그 연결)
+// URL 큐 + 파이프라인 통합 실행
+// 🔧 수정 8: 통합 로그를 먼저 생성하고 Phase 0 → Phase 1~5 모두에 전달
 app.post('/api/url-queue/process-full', async (req, res) => {
     try {
         if (systemState.status === 'running') {
@@ -1218,14 +1214,14 @@ app.post('/api/url-queue/process-full', async (req, res) => {
         
         (async () => {
             try {
-                // ✅ 통합 로그 파일 먼저 생성
+                // 🔧 통합 로그 파일 먼저 생성
                 const unifiedLogPath = createUnifiedLogPath();
                 
-                // ✅ 예상 총 제품 수 계산
+                // 🔧 예상 총 제품 수 계산
                 const pendingCategories = urlQueue.categories.filter(c => c.status === 'pending');
                 const expectedTotal = pendingCategories.reduce((sum, c) => sum + c.maxProducts, 0);
                 
-                // ✅ 통합 로그 헤더 작성
+                // 🔧 통합 로그 헤더 작성
                 writeUnifiedLog(unifiedLogPath, '═══════════════════════════════════════════════════════════════════════');
                 writeUnifiedLog(unifiedLogPath, '🎬 전체 파이프라인 시작 (Phase 0 → Phase 1~5)');
                 writeUnifiedLog(unifiedLogPath, `📋 예상 제품 수: ${expectedTotal}개`);
@@ -1233,11 +1229,11 @@ app.post('/api/url-queue/process-full', async (req, res) => {
                 writeUnifiedLog(unifiedLogPath, `📁 통합 로그: ${path.basename(unifiedLogPath)}`);
                 writeUnifiedLog(unifiedLogPath, '═══════════════════════════════════════════════════════════════════════');
                 
-                // ✅ processUrlQueue에 통합 로그 경로 전달
+                // 🔧 processUrlQueue에 통합 로그 경로 전달
                 const queueResult = await processUrlQueue(unifiedLogPath);
                 
                 if (queueResult.success && queueResult.totalCollected > 0) {
-                    // ✅ 통합 로그에 Phase 1~5 시작 기록
+                    // 🔧 통합 로그에 Phase 1~5 시작 기록
                     writeUnifiedLog(unifiedLogPath, '');
                     writeUnifiedLog(unifiedLogPath, '═══════════════════════════════════════════════════════════════════════');
                     writeUnifiedLog(unifiedLogPath, '🔄 URL 수집 완료, Phase 1~5 시작...');
@@ -1246,15 +1242,15 @@ app.post('/api/url-queue/process-full', async (req, res) => {
                     addLog('info', '🔄 URL 수집 완료, 파이프라인 시작...');
                     await new Promise(resolve => setTimeout(resolve, 3000));
                     
-                    // ✅ runPipeline에 기존 로그 경로 전달 (새 로그 파일 안 만들게)
+                    // 🔧 runPipeline에 기존 로그 경로 전달 (새 로그 파일 만들지 않음)
                     await runPipeline({
                         productLimit: queueResult.totalCollected,
                         phases: phases,
                         existingLogPath: unifiedLogPath  // ✅ 핵심: 기존 로그 경로 전달
                     });
                 } else {
-                    writeUnifiedLog(unifiedLogPath, '');
-                    writeUnifiedLog(unifiedLogPath, '⚠️ URL 수집 실패 또는 제품 없음, 파이프라인 건너뜀');
+                    writeUnifiedLog(unifiedLogPath, '⚠️ URL 수집 실패 또는 수집된 제품 없음');
+                    addLog('warning', '⚠️ URL 수집 실패 또는 수집된 제품 없음');
                 }
             } catch (error) {
                 addLog('error', `❌ 통합 실행 실패: ${error.message}`);
