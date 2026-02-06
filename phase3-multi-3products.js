@@ -556,14 +556,14 @@ async function updateProduct(recordId, validatedImages) {
         log(`\n🗑️  기존 validated_images 삭제 중...`);
         await axios.patch(
             `${NOCODB_BASE_URL}/api/v2/tables/${SHOPIFY_TABLE_ID}/records`,
-            { Id: recordId, validated_images: null },
+            [{ Id: recordId, validated_images: null }],  // ✅ 배열
             { headers: { 'xc-token': NOCODB_API_TOKEN, 'Content-Type': 'application/json' } }
         );
         
         log(`💾 새 validated_images 저장 중...`);
         await axios.patch(
             `${NOCODB_BASE_URL}/api/v2/tables/${SHOPIFY_TABLE_ID}/records`,
-            { Id: recordId, validated_images: validatedImages },
+            [{ Id: recordId, validated_images: validatedImages }],  // ✅ 배열
             { headers: { 'xc-token': NOCODB_API_TOKEN, 'Content-Type': 'application/json' } }
         );
         

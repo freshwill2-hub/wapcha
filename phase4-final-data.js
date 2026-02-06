@@ -1199,7 +1199,7 @@ async function processProduct(product, productIndex, totalProducts) {
     try {
         await axios.patch(
             `${NOCODB_API_URL}/api/v2/tables/${SHOPIFY_TABLE_ID}/records`,
-            { Id: Id, main_image: null, gallery_images: null },
+            [{ Id: Id, main_image: null, gallery_images: null }],  // ✅ 배열
             { headers: { 'xc-token': NOCODB_API_TOKEN, 'Content-Type': 'application/json' } }
         );
         log(`   ✅ 초기화 완료!\n`);
@@ -1341,12 +1341,12 @@ async function processProduct(product, productIndex, totalProducts) {
     try {
         await axios.patch(
             `${NOCODB_API_URL}/api/v2/tables/${SHOPIFY_TABLE_ID}/records`,
-            {
+            [{  // ✅ 배열
                 Id: Id,
                 main_image: [mainImage],
                 gallery_images: galleryImages.length > 0 ? galleryImages : null,
                 made_at: madeAt
-            },
+            }],
             { headers: { 'xc-token': NOCODB_API_TOKEN, 'Content-Type': 'application/json' } }
         );
         
@@ -1494,7 +1494,7 @@ async function processProduct(product, productIndex, totalProducts) {
     try {
         await axios.patch(
             `${NOCODB_API_URL}/api/v2/tables/${SHOPIFY_TABLE_ID}/records`,
-            { Id: Id, gallery_images: updatedGallery },
+            [{ Id: Id, gallery_images: updatedGallery }],  // ✅ 배열
             { headers: { 'xc-token': NOCODB_API_TOKEN, 'Content-Type': 'application/json' } }
         );
         

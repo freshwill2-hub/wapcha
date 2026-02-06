@@ -244,7 +244,7 @@ async function getOrCreateShopifyProduct(oliveyoungProduct) {
             
             await axios.patch(
                 `${NOCODB_API_URL}/api/v2/tables/${SHOPIFY_TABLE_ID}/records`,
-                updateData,
+                [updateData],  // ✅ NocoDB v2: 배열
                 { headers: { 'xc-token': NOCODB_API_TOKEN } }
             );
             
@@ -385,14 +385,14 @@ async function saveAIImages(shopifyProductId, imageDataArray) {
         log(`🗑️  기존 ai_product_images 삭제 중...`);
         await axios.patch(
             `${NOCODB_API_URL}/api/v2/tables/${SHOPIFY_TABLE_ID}/records`,
-            { Id: shopifyProductId, ai_product_images: null },
+            [{ Id: shopifyProductId, ai_product_images: null }],  // ✅ 배열
             { headers: { 'xc-token': NOCODB_API_TOKEN } }
         );
         
         log(`💾 새 ai_product_images 저장 중...`);
         const response = await axios.patch(
             `${NOCODB_API_URL}/api/v2/tables/${SHOPIFY_TABLE_ID}/records`,
-            { Id: shopifyProductId, ai_product_images: imageDataArray },
+            [{ Id: shopifyProductId, ai_product_images: imageDataArray }],  // ✅ 배열
             { headers: { 'xc-token': NOCODB_API_TOKEN } }
         );
         
