@@ -247,12 +247,10 @@ async function analyzeImage(imageUrl, productTitle, isSetProduct) {
    - 가장 선명하고 중앙에 있는 1개만 크롭해야 함
    - ⚠️ "+" 기호와 함께 동일 제품이 2개 보이면 (1+1 프로모션), 개별 제품(isSetProduct=false)이면 반드시 CROP_SINGLE
 
-4. SKIP_MODEL (제외 - 모델/사람) ⚠️ 매우 중요!
-   - 사람의 얼굴, 몸, 손(제품을 들고 있는 손 포함)이 이미지 면적의 10% 이상이면 반드시 SKIP_MODEL
-   - 아이돌/연예인/모델의 광고 사진이면 반드시 SKIP_MODEL (한국 화장품 브랜드는 아이돌 광고가 매우 많음)
-   - 사람이 제품을 사용하는 장면 (세럼을 바르는 모습, 크림을 얼굴에 바르는 모습 등)이면 SKIP_MODEL
-   - 사람의 피부 클로즈업 (before/after 비교 사진 등)이면 SKIP_MODEL
-   - 예외: 제품 패키징에 인쇄된 사람 일러스트/그림은 OK (제품 자체 디자인이므로 PASS)
+4. SKIP_MODEL (제외 - 모델/사람)
+   - 사람/모델이 등장하는 사진
+   - 제품을 들고 있거나 사용하는 모습
+   - 얼굴이 보이는 사진
 
 5. SKIP_BANNER (제외 - 배너/광고)
    - 제품 없이 텍스트/광고만 있음
@@ -317,7 +315,7 @@ REASON: [한 줄 설명]`;
         } else if (action === 'CROP_SINGLE') {
             log(`      🔪 개별 제품 크롭 필요 (${productCount}개 중 1개만 선택)`);
         } else if (action === 'SKIP_MODEL') {
-            log(`      ⏭️ 모델/사람 사진 → 건너뜀`);
+            log(`      ❌ 모델/사람 사진 → 건너뛰기`);
         } else if (action === 'SKIP_BANNER') {
             log(`      ❌ 배너/광고 → 건너뛰기`);
         } else if (action === 'SKIP_SET_MISMATCH') {

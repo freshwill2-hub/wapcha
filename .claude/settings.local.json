@@ -10,7 +10,11 @@
       "Bash(python3:*)",
       "Bash(git commit:*)",
       "Bash(node --check:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(git pull:*)",
+      "Bash(test:*)",
+      "Bash(npm install:*)",
+      "Bash(git status:*)"
     ]
   }
 }
