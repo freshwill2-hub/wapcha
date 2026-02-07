@@ -754,6 +754,328 @@ async function calculateQualityScore(imagePath, productTitle) {
     }
 }
 
+// ==================== 통합 API: 기본 분석 (여러제품 + 포장박스 + 완성도) ====================
+async function analyzeImageBasics(imagePath, productTitle, productInfo) {
+    try {
+        const isSetProduct = productInfo.isSetProduct;
+
+        const imageBuffer = fs.readFileSync(imagePath);
+        const base64 = imageBuffer.toString('base64');
+
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+
+        const expectedCount = productInfo.setCount || 1;
+
+        const prompt = `이 제품 이미지를 분석해주세요.
+
+제품명: "${productTitle}"
+예상 제품 개수: ${expectedCount}개
+
+다음 3가지를 확인해주세요:
+
+1. **제품 개수**: 이 이미지에 동일한 제품이 몇 개 보이나요?
+   - 실물 제품(화장품 병, 튜브, 용기 등)만 카운트
+   - 그림자, 반사, 포장박스는 제외
+
+2. **포장박스**: 제품 본체 외에 종이 상자/패키지 박스가 있나요?
+   - 제품 자체의 플라스틱 용기/튜브/병은 포장박스 아님
+   - 종이로 된 외부 상자만 포장박스
+
+3. **완성도**: 제품이 완전한가요?
+   - 제품이 잘려있나요? (캡, 바디, 하단)
+   - 제품 전체가 이미지 안에 있나요?
+
+다음 형식으로만 답변하세요:
+PRODUCT_COUNT: [숫자]
+HAS_PACKAGING: [YES/NO]
+IS_COMPLETE: [YES/NO]`;
+
+        const result = await model.generateContent([
+            prompt,
+            {
+                inlineData: {
+                    data: base64,
+                    mimeType: 'image/png'
+                }
+            }
+        ]);
+
+        trackGeminiCall('analyzeImageBasics');
+
+        const response = result.response.text().trim();
+
+        const countMatch = response.match(/PRODUCT_COUNT:\s*(\d+)/i);
+        const packagingMatch = response.match(/HAS_PACKAGING:\s*(YES|NO)/i);
+        const completeMatch = response.match(/IS_COMPLETE:\s*(YES|NO)/i);
+
+        const detectedCount = countMatch ? parseInt(countMatch[1]) : 1;
+        const hasPackaging = packagingMatch ? packagingMatch[1].toUpperCase() === 'YES' : false;
+        const isComplete = completeMatch ? completeMatch[1].toUpperCase() === 'YES' : false;
+
+        // 여러 제품 감점 (세트 제품이면 스킵)
+        let multipleProductsPenalty = 0;
+        if (isSetProduct) {
+            log(`      🎁 세트 제품 → 여러 제품 검사 생략`);
+        } else {
+            if (detectedCount >= 2) {
+                multipleProductsPenalty = -40;
+                log(`      ⚠️  여러 제품 감지 (${detectedCount}개)`);
+                log(`      📉 감점: -40점 (개별 제품에 다른 제품 포함!)`);
+            } else {
+                log(`      ✅ 단일 제품 확인 (${detectedCount}개)`);
+            }
+        }
+
+        // 포장박스 감점
+        let packagingPenalty = 0;
+        if (hasPackaging) {
+            packagingPenalty = -15;
+            log(`      ⚠️  포장박스 감지됨`);
+            log(`      📉 감점: -15점 (탈락 아님!)`);
+        } else {
+            log(`      ✅ 포장박스 없음`);
+        }
+
+        // 완성도 점수
+        let completenessScore;
+        if (isComplete) {
+            completenessScore = 25;
+            log(`      ✅ 완성도: 25/25점`);
+        } else {
+            completenessScore = 10;
+            log(`      ⚠️  완성도: 10/25점`);
+            log(`      📉 불완전하지만 계속 평가! (탈락 아님)`);
+        }
+
+        return {
+            multipleProductsPenalty,
+            packagingPenalty,
+            completenessScore
+        };
+
+    } catch (error) {
+        log('      ❌ 기본 분석 실패:', error.message);
+        return {
+            multipleProductsPenalty: 0,
+            packagingPenalty: 0,
+            completenessScore: 15
+        };
+    }
+}
+
+// ==================== 통합 API: 상세 평가 (타이틀매칭 + 세트구성 + 품질) ====================
+async function evaluateImageDetails(imagePath, productTitle, productInfo, originalImageUrl = null) {
+    try {
+        let base64;
+        let imageSource = '크롭 이미지';
+
+        if (originalImageUrl) {
+            try {
+                log(`      📥 원본 이미지로 확인 중...`);
+                const response = await axios.get(originalImageUrl, {
+                    responseType: 'arraybuffer',
+                    timeout: 30000,
+                    headers: {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                        'Referer': 'https://www.oliveyoung.co.kr'
+                    }
+                });
+                base64 = Buffer.from(response.data).toString('base64');
+                imageSource = '원본 이미지';
+                log(`      ✅ 원본 이미지 로드 완료`);
+            } catch (err) {
+                log(`      ⚠️  원본 이미지 로드 실패, 크롭 이미지 사용`);
+                const imageBuffer = fs.readFileSync(imagePath);
+                base64 = imageBuffer.toString('base64');
+            }
+        } else {
+            const imageBuffer = fs.readFileSync(imagePath);
+            base64 = imageBuffer.toString('base64');
+        }
+
+        log(`      🖼️  검사 대상: ${imageSource}`);
+
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+
+        const isSetProduct = productInfo.setCount && productInfo.setCount > 1;
+        const setSection = isSetProduct ? `
+5. **세트 구성**: 예상 세트 개수 ${productInfo.setCount}개 대비 실제 개수와 적합도
+   - COUNT: [숫자]
+   - SET_SUITABLE: [EXCELLENT/GOOD/FAIR/POOR]` : '';
+
+        const setFormat = isSetProduct ? `
+SET_COUNT: [숫자]
+SET_SUITABLE: [EXCELLENT/GOOD/FAIR/POOR]` : '';
+
+        const prompt = `이 제품 이미지를 분석해주세요.
+
+**타겟 제품:**
+- 브랜드: "${productInfo.brandName || 'N/A'}"
+- 제품 라인: "${productInfo.productLineName || 'N/A'}"
+- 용량: "${productInfo.volume || 'N/A'}"
+
+**이미지에서 다음을 확인해주세요:**
+1. **브랜드명**: 이미지에서 읽은 브랜드
+2. **제품명/라인명**: 이미지에서 읽은 제품 라인
+3. **용량**: ml, g 등
+4. **이미지 품질**: 선명도, 중앙 배치, 배경 품질, 쇼핑몰 사용 적합성 (0-20점)${setSection}
+
+다음 형식으로만 답변:
+BRAND: [읽은 브랜드명 또는 UNKNOWN]
+PRODUCT_LINE: [읽은 제품라인명 또는 UNKNOWN]
+VOLUME: [읽은 용량 또는 UNKNOWN]
+QUALITY: [0-20 숫자]${setFormat}`;
+
+        const result = await model.generateContent([
+            prompt,
+            {
+                inlineData: {
+                    data: base64,
+                    mimeType: 'image/png'
+                }
+            }
+        ]);
+
+        trackGeminiCall('evaluateImageDetails');
+
+        const response = result.response.text().trim();
+        log(`      📄 Gemini 응답:\n${response.split('\n').map(l => '         ' + l).join('\n')}`);
+
+        // === 타이틀 매칭 점수 계산 ===
+        const brandMatch = response.match(/BRAND:\s*([^\n]+)/i);
+        const productLineMatch = response.match(/PRODUCT_LINE:\s*([^\n]+)/i);
+        const volumeMatch = response.match(/VOLUME:\s*([^\n]+)/i);
+
+        const detectedBrand = brandMatch ? brandMatch[1].trim().toLowerCase() : 'unknown';
+        const detectedProductLine = productLineMatch ? productLineMatch[1].trim().toLowerCase() : 'unknown';
+        const detectedVolume = volumeMatch ? volumeMatch[1].trim().toLowerCase() : 'unknown';
+
+        let titleMatchScore = 0;
+        const targetBrand = (productInfo.brandName || '').toLowerCase();
+        const targetLine = (productInfo.productLineName || '').toLowerCase();
+
+        // 브랜드 확인
+        if (detectedBrand !== 'unknown' && targetBrand) {
+            if (detectedBrand.includes(targetBrand) || targetBrand.includes(detectedBrand)) {
+                titleMatchScore += 10;
+                log(`      ✅ 브랜드 일치: ${detectedBrand} (+10점)`);
+            } else {
+                titleMatchScore += 5;
+                log(`      ⚠️  브랜드 불일치: ${detectedBrand} ≠ ${targetBrand} (+5점)`);
+            }
+        } else {
+            titleMatchScore += 5;
+            log(`      ⚠️  브랜드 미확인 (+5점)`);
+        }
+
+        // 제품 라인 확인
+        if (detectedProductLine !== 'unknown' && targetLine) {
+            const targetWords = targetLine.split(' ').slice(0, 2).join(' ');
+            const detectedWords = detectedProductLine.split(' ').slice(0, 2).join(' ');
+
+            if (detectedProductLine.includes(targetWords) || targetLine.includes(detectedWords) ||
+                detectedWords.includes(targetWords) || targetWords.includes(detectedWords)) {
+                titleMatchScore += 10;
+                log(`      ✅ 제품 라인 일치 (+10점)`);
+            } else {
+                titleMatchScore += 5;
+                log(`      ⚠️  제품 라인 불일치 (+5점)`);
+            }
+        } else {
+            titleMatchScore += 5;
+            log(`      ⚠️  제품 라인 미확인 (+5점)`);
+        }
+
+        // 용량 확인
+        let volumePenalty = 0;
+        if (detectedVolume !== 'unknown' && productInfo.volume) {
+            const detectedNum = parseInt(detectedVolume.match(/\d+/)?.[0] || '0');
+            const expectedNum = productInfo.volumeNumber;
+
+            if (expectedNum && detectedNum > 0) {
+                const diffPercent = Math.abs(detectedNum - expectedNum) / expectedNum * 100;
+
+                if (detectedNum === expectedNum) {
+                    titleMatchScore += 10;
+                    log(`      ✅ 용량 일치: ${detectedVolume} (+10점)`);
+                } else if (diffPercent <= 15) {
+                    titleMatchScore += 7;
+                    log(`      ⚠️  용량 근사: ${detectedVolume} ≈ ${productInfo.volume} (+7점)`);
+                } else if (diffPercent <= 30) {
+                    titleMatchScore += 3;
+                    log(`      ⚠️  용량 차이: ${detectedVolume} ≠ ${productInfo.volume} (+3점)`);
+                } else {
+                    volumePenalty = -30;
+                    log(`      ❌ 용량 크게 불일치: ${detectedVolume} ≠ ${productInfo.volume}`);
+                    log(`      📉 다른 제품 감점: -30점`);
+                }
+            }
+        } else {
+            titleMatchScore += 5;
+            log(`      ⚠️  용량 미확인 (+5점)`);
+        }
+
+        titleMatchScore += volumePenalty;
+        log(`      📊 타이틀 매칭: ${titleMatchScore}/30점`);
+
+        // === 세트 구성 점수 계산 ===
+        let setCompositionScore;
+        if (!isSetProduct) {
+            setCompositionScore = 20;
+            log(`      ✅ 단일 제품 → 자동 20점`);
+        } else {
+            log(`      🎁 세트 제품: ${productInfo.setCount}개 예상`);
+
+            const setCountMatch = response.match(/SET_COUNT:\s*(\d+)/i);
+            const suitableMatch = response.match(/SET_SUITABLE:\s*(EXCELLENT|GOOD|FAIR|POOR)/i);
+
+            const detectedCount = setCountMatch ? parseInt(setCountMatch[1]) : 0;
+            const suitable = suitableMatch ? suitableMatch[1].toUpperCase() : 'FAIR';
+
+            setCompositionScore = 0;
+
+            if (detectedCount === productInfo.setCount) {
+                setCompositionScore += 10;
+            } else if (Math.abs(detectedCount - productInfo.setCount) === 1) {
+                setCompositionScore += 5;
+            }
+
+            if (suitable === 'EXCELLENT') setCompositionScore += 10;
+            else if (suitable === 'GOOD') setCompositionScore += 7;
+            else if (suitable === 'FAIR') setCompositionScore += 4;
+            else setCompositionScore += 2;
+
+            setCompositionScore = Math.max(0, Math.min(20, setCompositionScore));
+            log(`      📊 세트 구성: ${setCompositionScore}/20점`);
+        }
+
+        // === 품질 점수 계산 ===
+        const qualityMatch = response.match(/QUALITY:\s*(\d+)/i);
+        let qualityScore = qualityMatch ? parseInt(qualityMatch[1]) : 12;
+
+        if (isNaN(qualityScore) || qualityScore < 0 || qualityScore > 20) {
+            log(`      ⚠️  유효하지 않은 품질 점수: ${qualityScore}, 기본값 12점 사용`);
+            qualityScore = 12;
+        }
+
+        log(`      📊 이미지 품질: ${qualityScore}/20점`);
+
+        return {
+            titleMatchScore: { score: titleMatchScore, isWrongProduct: false },
+            setCompositionScore,
+            qualityScore
+        };
+
+    } catch (error) {
+        log('      ❌ 상세 평가 실패:', error.message);
+        return {
+            titleMatchScore: { score: 15, isWrongProduct: false },
+            setCompositionScore: 10,
+            qualityScore: 12
+        };
+    }
+}
+
 // ==================== v9: 이미지 점수 계산 (탈락 없음!) ====================
 async function scoreImage(imageData, imagePath, productTitle, productInfo, index) {
     log(`\n   이미지 ${index + 1} 평가:`);
@@ -772,26 +1094,17 @@ async function scoreImage(imageData, imagePath, productTitle, productInfo, index
     scores.resolution = calculateResolutionScore(resolution);
     log(`      📐 해상도: ${scores.resolution}/30점 (${resolution?.width}x${resolution?.height})`);
     
-    // ✅ v9: 여러 제품 감지 → 탈락 대신 감점!
-    const multipleResult = await detectMultipleProducts(imagePath, productTitle, productInfo);
-    scores.penalties += multipleResult.penalty;
-    
-    // ✅ v9: 포장박스 감지 → 탈락 대신 감점!
-    const packagingResult = await detectPackagingBox(imagePath, productTitle);
-    scores.penalties += packagingResult.penalty;
-    
-    // ✅ v9: 완성도 점수 (항상 평가, 탈락 없음!)
-    scores.completeness = await calculateCompletenessScore(imagePath, productTitle, productInfo);
-    
-    // ✅ v9: 타이틀 매칭 (항상 평가, 탈락 없음!)
-    const titleMatchResult = await calculateTitleMatchScore(imagePath, productTitle, productInfo, imageData.originalUrl || null);
-    scores.titleMatch = titleMatchResult.score;
-    
-    // 세트 구성 점수
-    scores.setComposition = await calculateSetCompositionScore(imagePath, productTitle, productInfo);
-    
-    // 품질 점수
-    scores.quality = await calculateQualityScore(imagePath, productTitle);
+    // ✅ 통합 API 1: 기본 분석 (여러제품 + 포장박스 + 완성도)
+    const basics = await analyzeImageBasics(imagePath, productTitle, productInfo);
+    scores.penalties += basics.multipleProductsPenalty;
+    scores.penalties += basics.packagingPenalty;
+    scores.completeness = basics.completenessScore;
+
+    // ✅ 통합 API 2: 상세 평가 (타이틀매칭 + 세트구성 + 품질)
+    const details = await evaluateImageDetails(imagePath, productTitle, productInfo, imageData.originalUrl || null);
+    scores.titleMatch = details.titleMatchScore.score;
+    scores.setComposition = details.setCompositionScore;
+    scores.quality = details.qualityScore;
     
     // ✅ v10: 품질이 너무 낮으면 감점!
     if (scores.quality < 12) {
@@ -1266,8 +1579,8 @@ async function processProduct(product, productIndex, totalProducts) {
             scoredImages.push(scored);
             
             if (i < validated_images.length - 1) {
-                log(`\n      ⏳ 10초 대기...`);
-                await new Promise(resolve => setTimeout(resolve, 10000));
+                log(`\n      ⏳ 6초 대기...`);
+                await new Promise(resolve => setTimeout(resolve, 6000));
             }
             
         } catch (error) {
@@ -1472,9 +1785,9 @@ async function processProduct(product, productIndex, totalProducts) {
         
         if (naverProcessed.length >= needed) break;
         
-        await new Promise(resolve => setTimeout(resolve, 10000));
+        await new Promise(resolve => setTimeout(resolve, 6000));
     }
-    
+
     if (naverProcessed.length === 0) {
         log(`\n⚠️  네이버 이미지 처리 실패`);
         return;
@@ -1531,8 +1844,8 @@ async function main() {
                 
                 if (i < products.length - 1) {
                     log(`\n${'='.repeat(70)}`);
-                    log('⏳ 다음 제품 20초 대기...\n');
-                    await new Promise(resolve => setTimeout(resolve, 20000));
+                    log('⏳ 다음 제품 10초 대기...\n');
+                    await new Promise(resolve => setTimeout(resolve, 10000));
                 }
             } catch (productError) {
                 log(`\n❌ 제품 ${i + 1} 오류:`, productError.message);
