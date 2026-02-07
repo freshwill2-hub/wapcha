@@ -169,7 +169,7 @@ async function getProductsFromNocoDB() {
             headers: { 'xc-token': NOCODB_API_TOKEN },
             params: {
                 limit: parseInt(process.env.PRODUCT_LIMIT) || 1000,
-                where: '(validated_images,notnull)~and(main_image,is,null)'
+                where: '(validated_images,notnull)'
             }
         }
     );
@@ -1768,16 +1768,8 @@ async function processProduct(product, productIndex, totalProducts) {
             }
             
             const rembgSuccess = await removeBackgroundAndAddWhite(processPath, finalPath);
-
+            
             if (rembgSuccess) {
-                // ✅ 기본 품질 검증: 파일 크기 10KB 미만이면 빈 이미지로 간주
-                const fileSize = fs.statSync(finalPath).size;
-                if (fileSize < 10240) {
-                    log(`      ⚠️  파일 크기 너무 작음 (${(fileSize/1024).toFixed(1)}KB) → 건너뛰기`);
-                    cleanupFiles(inputPath, croppedPath, finalPath);
-                    continue;
-                }
-
                 const fileName = `naver-${Id}-${i + 1}-${timestamp}.png`;
                 const uploadedData = await uploadToNocoDB(finalPath, fileName);
                 naverProcessed.push(uploadedData[0]);

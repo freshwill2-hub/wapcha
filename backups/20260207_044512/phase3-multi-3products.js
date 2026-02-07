@@ -670,13 +670,15 @@ async function processProduct(product, productIndex, totalProducts) {
             // 3단계: 처리 방식 결정
             if (analysis.action === 'PASS') {
                 passCount++;
-
-                fs.copyFileSync(inputPath, finalPath);
-                log(`      ✅ Phase 2 처리 완료 이미지 사용 (rembg 생략)`);
-                const fileName = `final-${Id}-${i + 1}-${timestamp}.png`;
-                const uploadedData = await uploadToNocoDB(finalPath, fileName);
-                validatedImages.push(uploadedData[0]);
-                log(`      📤 저장 완료! (그대로 통과)`);
+                
+                const rembgSuccess = await removeBackgroundAndAddWhite(inputPath, finalPath);
+                
+                if (rembgSuccess) {
+                    const fileName = `final-${Id}-${i + 1}-${timestamp}.png`;
+                    const uploadedData = await uploadToNocoDB(finalPath, fileName);
+                    validatedImages.push(uploadedData[0]);
+                    log(`      📤 저장 완료! (그대로 통과)`);
+                }
                 
             } else if (analysis.action === 'CROP_BADGE') {
                 badgeCropCount++;
@@ -696,33 +698,39 @@ async function processProduct(product, productIndex, totalProducts) {
                 
                 if (coords) {
                     const cropSuccess = await cropImage(inputPath, croppedPath, coords.x, coords.y, coords.width, coords.height);
-
+                    
                     if (cropSuccess) {
-                        fs.copyFileSync(croppedPath, finalPath);
-                        log(`      ✅ 크롭 이미지 사용 (rembg 생략)`);
-                        const fileName = `final-${Id}-${i + 1}-${timestamp}.png`;
-                        const uploadedData = await uploadToNocoDB(finalPath, fileName);
-                        validatedImages.push(uploadedData[0]);
-                        log(`      📤 저장 완료! (배지 제거됨)`);
+                        const rembgSuccess = await removeBackgroundAndAddWhite(croppedPath, finalPath);
+                        
+                        if (rembgSuccess) {
+                            const fileName = `final-${Id}-${i + 1}-${timestamp}.png`;
+                            const uploadedData = await uploadToNocoDB(finalPath, fileName);
+                            validatedImages.push(uploadedData[0]);
+                            log(`      📤 저장 완료! (배지 제거됨)`);
+                        }
                     } else {
                         log(`      ⚠️  크롭 실패 → 원본으로 진행`);
-                        fs.copyFileSync(inputPath, finalPath);
-                        log(`      ✅ 원본 이미지 사용 (rembg 생략)`);
+                        const rembgSuccess = await removeBackgroundAndAddWhite(inputPath, finalPath);
+                        
+                        if (rembgSuccess) {
+                            const fileName = `final-${Id}-${i + 1}-${timestamp}.png`;
+                            const uploadedData = await uploadToNocoDB(finalPath, fileName);
+                            validatedImages.push(uploadedData[0]);
+                            log(`      📤 저장 완료! (원본 사용)`);
+                        }
+                    }
+                } else {
+                    log(`      ⚠️  좌표 획득 실패 → 원본으로 진행`);
+                    const rembgSuccess = await removeBackgroundAndAddWhite(inputPath, finalPath);
+                    
+                    if (rembgSuccess) {
                         const fileName = `final-${Id}-${i + 1}-${timestamp}.png`;
                         const uploadedData = await uploadToNocoDB(finalPath, fileName);
                         validatedImages.push(uploadedData[0]);
                         log(`      📤 저장 완료! (원본 사용)`);
                     }
-                } else {
-                    log(`      ⚠️  좌표 획득 실패 → 원본으로 진행`);
-                    fs.copyFileSync(inputPath, finalPath);
-                    log(`      ✅ 원본 이미지 사용 (rembg 생략)`);
-                    const fileName = `final-${Id}-${i + 1}-${timestamp}.png`;
-                    const uploadedData = await uploadToNocoDB(finalPath, fileName);
-                    validatedImages.push(uploadedData[0]);
-                    log(`      📤 저장 완료! (원본 사용)`);
                 }
-
+                
             } else if (analysis.action === 'CROP_SINGLE') {
                 singleCropCount++;
                 
@@ -739,31 +747,37 @@ async function processProduct(product, productIndex, totalProducts) {
                 
                 if (coords) {
                     const cropSuccess = await cropImage(inputPath, croppedPath, coords.x, coords.y, coords.width, coords.height);
-
+                    
                     if (cropSuccess) {
-                        fs.copyFileSync(croppedPath, finalPath);
-                        log(`      ✅ 크롭 이미지 사용 (rembg 생략)`);
-                        const fileName = `final-${Id}-${i + 1}-${timestamp}.png`;
-                        const uploadedData = await uploadToNocoDB(finalPath, fileName);
-                        validatedImages.push(uploadedData[0]);
-                        log(`      📤 저장 완료! (개별 제품 1개 크롭됨)`);
+                        const rembgSuccess = await removeBackgroundAndAddWhite(croppedPath, finalPath);
+                        
+                        if (rembgSuccess) {
+                            const fileName = `final-${Id}-${i + 1}-${timestamp}.png`;
+                            const uploadedData = await uploadToNocoDB(finalPath, fileName);
+                            validatedImages.push(uploadedData[0]);
+                            log(`      📤 저장 완료! (개별 제품 1개 크롭됨)`);
+                        }
                     } else {
                         log(`      ⚠️  크롭 실패 → 원본으로 진행`);
-                        fs.copyFileSync(inputPath, finalPath);
-                        log(`      ✅ 원본 이미지 사용 (rembg 생략)`);
+                        const rembgSuccess = await removeBackgroundAndAddWhite(inputPath, finalPath);
+                        
+                        if (rembgSuccess) {
+                            const fileName = `final-${Id}-${i + 1}-${timestamp}.png`;
+                            const uploadedData = await uploadToNocoDB(finalPath, fileName);
+                            validatedImages.push(uploadedData[0]);
+                            log(`      📤 저장 완료! (원본 사용)`);
+                        }
+                    }
+                } else {
+                    log(`      ⚠️  좌표 획득 실패 → 원본으로 진행`);
+                    const rembgSuccess = await removeBackgroundAndAddWhite(inputPath, finalPath);
+                    
+                    if (rembgSuccess) {
                         const fileName = `final-${Id}-${i + 1}-${timestamp}.png`;
                         const uploadedData = await uploadToNocoDB(finalPath, fileName);
                         validatedImages.push(uploadedData[0]);
                         log(`      📤 저장 완료! (원본 사용)`);
                     }
-                } else {
-                    log(`      ⚠️  좌표 획득 실패 → 원본으로 진행`);
-                    fs.copyFileSync(inputPath, finalPath);
-                    log(`      ✅ 원본 이미지 사용 (rembg 생략)`);
-                    const fileName = `final-${Id}-${i + 1}-${timestamp}.png`;
-                    const uploadedData = await uploadToNocoDB(finalPath, fileName);
-                    validatedImages.push(uploadedData[0]);
-                    log(`      📤 저장 완료! (원본 사용)`);
                 }
             }
             
