@@ -1,0 +1,9 @@
+{
+	"id": "4vqL2yvWc66wAL2",
+	"json": "{\"id\":\"4vqL2yvWc66wAL2\",\"url\":\"https://search.naver.com/search.naver?ssc=tab.image.all&where=image&sm=tab_jum&query=%EC%9B%B0%EB%9D%BC%EC%A5%AC%20%EB%A6%AC%EC%96%BC%20%ED%9E%88%EC%95%8C%EB%A3%A8%EB%A1%9C%EB%8B%89%20%EB%B8%94%EB%A3%A8%20100%20%EC%95%B0%ED%94%8C%2075ml%202%EC%9E%85\",\"loadedUrl\":\"https://search.naver.com/search.naver?ssc=tab.image.all&where=image&sm=tab_jum&query=%EC%9B%B0%EB%9D%BC%EC%A5%AC%20%EB%A6%AC%EC%96%BC%20%ED%9E%88%EC%95%8C%EB%A3%A8%EB%A1%9C%EB%8B%89%20%EB%B8%94%EB%A3%A8%20100%20%EC%95%B0%ED%94%8C%2075ml%202%EC%9E%85\",\"uniqueKey\":\"https://search.naver.com/search.naver?query=%EC%9B%B0%EB%9D%BC%EC%A5%AC+%EB%A6%AC%EC%96%BC+%ED%9E%88%EC%95%8C%EB%A3%A8%EB%A1%9C%EB%8B%89+%EB%B8%94%EB%A3%A8+100+%EC%95%B0%ED%94%8C+75ml+2%EC%9E%85&sm=tab_jum&ssc=tab.image.all&where=image\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"__crawlee\":{\"state\":4}},\"handledAt\":\"2026-02-07T11:42:11.350Z\"}",
+	"method": "GET",
+	"orderNo": null,
+	"retryCount": 0,
+	"uniqueKey": "https://search.naver.com/search.naver?query=%EC%9B%B0%EB%9D%BC%EC%A5%AC+%EB%A6%AC%EC%96%BC+%ED%9E%88%EC%95%8C%EB%A3%A8%EB%A1%9C%EB%8B%89+%EB%B8%94%EB%A3%A8+100+%EC%95%B0%ED%94%8C+75ml+2%EC%9E%85&sm=tab_jum&ssc=tab.image.all&where=image",
+	"url": "https://search.naver.com/search.naver?ssc=tab.image.all&where=image&sm=tab_jum&query=%EC%9B%B0%EB%9D%BC%EC%A5%AC%20%EB%A6%AC%EC%96%BC%20%ED%9E%88%EC%95%8C%EB%A3%A8%EB%A1%9C%EB%8B%89%20%EB%B8%94%EB%A3%A8%20100%20%EC%95%B0%ED%94%8C%2075ml%202%EC%9E%85"
+}

@@ -1,52 +1,29 @@
 {
-  "requestsFinished": 85,
-  "requestsFailed": 15,
-  "requestsRetries": 61,
+  "requestsFinished": 1,
+  "requestsFailed": 0,
+  "requestsRetries": 0,
   "requestsFailedPerMinute": 0,
-  "requestsFinishedPerMinute": 2,
-  "requestMinDurationMillis": 17430,
-  "requestMaxDurationMillis": 49108,
-  "requestTotalFailedDurationMillis": 9699,
-  "requestTotalFinishedDurationMillis": 1985335,
-  "crawlerStartedAt": "2026-02-07T09:48:12.303Z",
-  "crawlerFinishedAt": "2026-02-07T10:22:32.939Z",
-  "statsPersistedAt": "2026-02-07T10:22:32.939Z",
-  "crawlerRuntimeMillis": 2060847,
-  "crawlerLastStartTimestamp": 1770457692092,
+  "requestsFinishedPerMinute": 6,
+  "requestMinDurationMillis": 9846,
+  "requestMaxDurationMillis": 9846,
+  "requestTotalFailedDurationMillis": 0,
+  "requestTotalFinishedDurationMillis": 9846,
+  "crawlerStartedAt": "2026-02-07T11:42:01.471Z",
+  "crawlerFinishedAt": "2026-02-07T11:42:11.469Z",
+  "statsPersistedAt": "2026-02-07T11:42:11.470Z",
+  "crawlerRuntimeMillis": 10223,
+  "crawlerLastStartTimestamp": 1770464521247,
   "requestRetryHistogram": [
-    39,
-    28,
-    33
+    1
   ],
   "statsId": 0,
-  "requestAvgFailedDurationMillis": 647,
-  "requestAvgFinishedDurationMillis": 23357,
-  "requestTotalDurationMillis": 1995034,
-  "requestsTotal": 100,
+  "requestAvgFailedDurationMillis": null,
+  "requestAvgFinishedDurationMillis": 9846,
+  "requestTotalDurationMillis": 9846,
+  "requestsTotal": 1,
   "requestsWithStatusCode": {
-    "200": 85,
-    "403": 109
+    "200": 1
   },
-  "errors": {
-    "/root/copychu-scraper/node_modules/@crawlee/basic/internals/basic-crawler.js:903:19": {
-      "missing error code": {
-        "Error": {
-          "Request blocked - received 403 status code.": {
-            "count": 15
-          }
-        }
-      }
-    }
-  },
-  "retryErrors": {
-    "/root/copychu-scraper/node_modules/@crawlee/basic/internals/basic-crawler.js:903:19": {
-      "missing error code": {
-        "Error": {
-          "Request blocked - received 403 status code.": {
-            "count": 94
-          }
-        }
-      }
-    }
-  }
+  "errors": {},
+  "retryErrors": {}
 }
