@@ -168,13 +168,17 @@ async function getProductsFromNocoDB() {
         {
             headers: { 'xc-token': NOCODB_API_TOKEN },
             params: {
-                limit: parseInt(process.env.PRODUCT_LIMIT) || 1000,
-                where: '(validated_images,notnull)~and(main_image,is,null)'
+                limit: parseInt(process.env.PRODUCT_LIMIT) || 1000
             }
         }
     );
-    
-    return response.data.list;
+
+    // NocoDB notnull 필터가 attachment 필드에서 불안정하므로 JS에서 필터링
+    return response.data.list.filter(product =>
+        product.validated_images &&
+        Array.isArray(product.validated_images) &&
+        product.validated_images.length > 0
+    );
 }
 
 // ==================== 이미지 다운로드 ====================
