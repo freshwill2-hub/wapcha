@@ -101,7 +101,7 @@ if (UNIFIED_LOG_PATH) {
 // ==================== 설정 ====================
 const NOCODB_API_URL = process.env.NOCODB_API_URL || 'http://77.42.67.165:8080';
 const NOCODB_TOKEN = process.env.NOCODB_API_TOKEN;
-const OLIVEYOUNG_TABLE_ID = process.env.OLIVEYOUNG_TABLE_ID || 'mufuxqsjgqcvh80';
+const OLIVEYOUNG_TABLE_ID = process.env.OLIVEYOUNG_TABLE_ID || 'mfi4ic7zj2gfixv';
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const MAX_VOLUME_LIMIT = parseInt(process.env.MAX_VOLUME_LIMIT) || 0;  // ✅ v2.9: 용량 제한 (ml), 0이면 무제한
 

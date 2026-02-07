@@ -191,21 +191,75 @@ const cleanupFiles = (...files) => {
 // NocoDB에서 제품 가져오기
 async function getProducts(limit = 3) {
     log(`\n📥 tb_oliveyoung_products에서 제품 가져오는 중 (limit: ${limit})...`);
-    
-    const response = await axios.get(
-        `${NOCODB_API_URL}/api/v2/tables/${OLIVEYOUNG_TABLE_ID}/records`,
-        {
-            headers: { 'xc-token': NOCODB_API_TOKEN },
-            params: { limit: limit }
-        }
-    );
-    
-    const productsWithImages = response.data.list.filter(p => 
+
+    const pageSize = 200;
+    let allProducts = [];
+    let offset = 0;
+
+    while (true) {
+        const response = await axios.get(
+            `${NOCODB_API_URL}/api/v2/tables/${OLIVEYOUNG_TABLE_ID}/records`,
+            {
+                headers: { 'xc-token': NOCODB_API_TOKEN },
+                params: { limit: pageSize, offset: offset }
+            }
+        );
+
+        const records = response.data.list;
+        if (records.length === 0) break;
+        allProducts = allProducts.concat(records);
+        if (records.length < pageSize) break;
+        offset += pageSize;
+    }
+
+    const productsWithImages = allProducts.filter(p =>
         p.product_images && p.product_images.length > 0
     );
-    
-    log(`✅ ${productsWithImages.length}개 제품 가져옴 (이미지 있음)`);
-    return productsWithImages;
+
+    log(`   📋 이미지 있는 제품: ${productsWithImages.length}개`);
+
+    const processedIds = new Set();
+    let shopifyOffset = 0;
+
+    while (true) {
+        const shopifyResponse = await axios.get(
+            `${NOCODB_API_URL}/api/v2/tables/${SHOPIFY_TABLE_ID}/records`,
+            {
+                headers: { 'xc-token': NOCODB_API_TOKEN },
+                params: {
+                    offset: shopifyOffset,
+                    limit: pageSize,
+                    fields: 'Id,ai_product_images'
+                }
+            }
+        );
+
+        const shopifyProducts = shopifyResponse.data.list;
+        if (shopifyProducts.length === 0) break;
+
+        shopifyProducts.forEach(p => {
+            if (p.ai_product_images && p.ai_product_images.length > 0) {
+                processedIds.add(p.Id);
+            }
+        });
+
+        if (shopifyProducts.length < pageSize) break;
+        shopifyOffset += pageSize;
+    }
+
+    log(`   ✅ Phase 2 완료된 제품: ${processedIds.size}개`);
+
+    const newProducts = productsWithImages.filter(p => !processedIds.has(p.Id));
+
+    log(`   🆕 Phase 2 처리 필요: ${newProducts.length}개`);
+
+    if (newProducts.length === 0) {
+        log('   ℹ️  모든 제품이 이미 Phase 2 처리되었습니다.');
+    }
+
+    const result = newProducts.slice(0, limit);
+    log(`✅ ${result.length}개 제품 가져옴 (미처리 + 이미지 있음)`);
+    return result;
 }
 
 // NocoDB에서 Shopify 제품 확인/생성

@@ -9,7 +9,7 @@ const NOCODB_API_TOKEN = process.env.NOCODB_API_TOKEN;
 const SHOPIFY_TABLE_ID = process.env.SHOPIFY_TABLE_ID;
 
 // Shopify 설정
-const SHOPIFY_STORE_URL = process.env.SHOPIFY_STORE_URL || 'wap-au.myshopify.com';
+const SHOPIFY_STORE_URL = process.env.SHOPIFY_STORE_URL || 'wap-australia-2.myshopify.com';
 const SHOPIFY_ACCESS_TOKEN = process.env.SHOPIFY_ACCESS_TOKEN;
 const SHOPIFY_API_VERSION = '2024-01';
 
