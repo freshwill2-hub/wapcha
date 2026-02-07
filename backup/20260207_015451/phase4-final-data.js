@@ -231,15 +231,9 @@ function extractProductInfo(productTitle) {
         isSetProduct: false
     };
     
-    // ✅ v11.1: 영문 + 한국어 브랜드 모두 인식
-    const brandMatch = productTitle.match(/^([A-Za-z\u00C0-\u024F]+)/);
+    const brandMatch = productTitle.match(/^([A-Za-z]+)/);
     if (brandMatch) {
         info.brandName = brandMatch[1].toLowerCase();
-    } else {
-        const koreanBrandMatch = productTitle.match(/^([가-힣A-Za-z0-9]+)/);
-        if (koreanBrandMatch) {
-            info.brandName = koreanBrandMatch[1];
-        }
     }
     
     const productLineMatch = productTitle.match(/^[A-Za-z]+\s+(.+?)(?:\s+\d+\s*(?:ml|mL|g|G|pcs|개)|\s+Set|\s+세트|$)/i);

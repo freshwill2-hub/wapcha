@@ -413,14 +413,7 @@ function cleanProductTitle(rawTitle) {
     // STEP 5-7: 괄호 제거
     cleaned = cleaned.replace(/^\s*\[[^\]]*\]\s*/g, '');
     cleaned = cleaned.replace(/\[[^\]]*\]/g, '');
-    // ✅ v2.11: 단독 용량 정보 (50ml), (200g) 등은 보존
-    cleaned = cleaned.replace(/\(([^)]*)\)/g, (match, inner) => {
-        // 괄호 안이 순수 용량만인 경우 (예: "50ml", "200g") → 용량 보존
-        if (/^\s*\d+\s*(ml|mL|ML|g|G)\s*$/.test(inner)) {
-            return inner.trim();  // 괄호만 제거, 내용 보존
-        }
-        return '';  // 나머지는 전부 제거
-    });
+    cleaned = cleaned.replace(/\([^)]*\)/g, '');
     cleaned = cleaned.replace(/【[^】]*】/g, '');
     cleaned = cleaned.replace(/〔[^〕]*〕/g, '');
     cleaned = cleaned.replace(/〈[^〉]*〉/g, '');

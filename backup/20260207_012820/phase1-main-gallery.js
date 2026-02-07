@@ -264,38 +264,6 @@ function cleanProductTitle(rawTitle) {
     cleaned = cleaned.replace(/\s+올리브영\s*$/g, '');
     cleaned = cleaned.replace(/^\s*올리브영\s*[\|｜\-–—]\s*/g, '');
     
-    // ==================== STEP 1.4: ✅ v2.11 대괄호 내 세트 패턴 먼저 감지 ====================
-    // [1+1], [2+1], [더블기획] 등이 STEP 1.5에서 삭제되기 전에 세트 정보 추출
-    const bracketContents = cleaned.match(/\[([^\]]*)\]/g) || [];
-    for (const bracket of bracketContents) {
-        const inner = bracket.slice(1, -1); // 대괄호 제거
-
-        // 1+1, 2+1, 3+1 패턴
-        const nplusMatch = inner.match(/(\d)\s*\+\s*(\d)/);
-        if (nplusMatch) {
-            const n1 = parseInt(nplusMatch[1]);
-            const n2 = parseInt(nplusMatch[2]);
-            const total = n1 + n2;
-            if (!setInfo && total >= 2 && total <= 6) {
-                setInfo = { volume: null, count: total, type: 'bracket_plus' };
-                log(`   ✅ 세트 감지 (대괄호 내 ${n1}+${n2}): ${total}개`);
-                stats.setDetected++;
-            }
-        }
-
-        // 더블, 트리플 키워드
-        if (!setInfo && /더블|듀블/i.test(inner)) {
-            setInfo = { volume: null, count: 2, type: 'bracket_double' };
-            log(`   ✅ 세트 감지 (대괄호 내 더블): 2개`);
-            stats.setDetected++;
-        }
-        if (!setInfo && /트리플/i.test(inner)) {
-            setInfo = { volume: null, count: 3, type: 'bracket_triple' };
-            log(`   ✅ 세트 감지 (대괄호 내 트리플): 3개`);
-            stats.setDetected++;
-        }
-    }
-
     // STEP 1.5: 대괄호 먼저 제거
     cleaned = cleaned.replace(/\[[^\]]*\]/g, '');
     cleaned = cleaned.replace(/\[[^\]]*$/g, '');
@@ -413,14 +381,7 @@ function cleanProductTitle(rawTitle) {
     // STEP 5-7: 괄호 제거
     cleaned = cleaned.replace(/^\s*\[[^\]]*\]\s*/g, '');
     cleaned = cleaned.replace(/\[[^\]]*\]/g, '');
-    // ✅ v2.11: 단독 용량 정보 (50ml), (200g) 등은 보존
-    cleaned = cleaned.replace(/\(([^)]*)\)/g, (match, inner) => {
-        // 괄호 안이 순수 용량만인 경우 (예: "50ml", "200g") → 용량 보존
-        if (/^\s*\d+\s*(ml|mL|ML|g|G)\s*$/.test(inner)) {
-            return inner.trim();  // 괄호만 제거, 내용 보존
-        }
-        return '';  // 나머지는 전부 제거
-    });
+    cleaned = cleaned.replace(/\([^)]*\)/g, '');
     cleaned = cleaned.replace(/【[^】]*】/g, '');
     cleaned = cleaned.replace(/〔[^〕]*〕/g, '');
     cleaned = cleaned.replace(/〈[^〉]*〉/g, '');
