@@ -5,7 +5,10 @@
       "Bash(git commit -m \"$\\(cat <<''EOF''\nv2.10: title_kr 빈 제품만 조회 + 용량 초과 표시\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
       "Bash(git push:*)",
       "Bash(node -c:*)",
-      "Bash(git commit -m \"$\\(cat <<''EOF''\nfix: phase3 크롭실패 폴백 제거, phase4 하드탈락 조건 추가 및 네이버 검증 추가\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")"
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfix: phase3 크롭실패 폴백 제거, phase4 하드탈락 조건 추가 및 네이버 검증 추가\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(jq:*)",
+      "Bash(python3:*)",
+      "Bash(git commit:*)"
     ]
   }
 }

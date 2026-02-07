@@ -458,9 +458,6 @@ function cleanProductTitle(rawTitle) {
     // STEP 8.5: "외 N종" 패턴 제거
     cleaned = cleaned.replace(/외\s*\d+\s*종/gi, '');
 
-    // STEP 8.6: 범용 프로모션 키워드 패턴 제거 (GPT 번역 전 1차 필터)
-    cleaned = cleaned.replace(/\s*(리필\s*기획|기획\s*세트|스페셜\s*에디션|한정판|콜라보\s*에디션)\s*/gi, ' ');
-
     // STEP 9: 공백 정리
     cleaned = cleaned.replace(/\s+/g, ' ').trim();
     
@@ -566,62 +563,10 @@ async function translateToEnglish(koreanText) {
             messages: [
                 {
                     role: 'system',
-                    content: `당신은 한국 화장품 제품명을 영어로 번역하는 전문가입니다.
-
-[번역 규칙]
-1. 제품의 핵심 정보만 번역하세요: 브랜드명 + 제품 라인명 + 용량 + 세트 개수
-2. 다음은 반드시 제거하고 번역하지 마세요:
-   - 프로모션/기획명 (예: 리필기획, 더블기획, 올영특가, 단독기획)
-   - 콜라보/캐릭터명 (예: 잠만보, 망그러진곰, 카카오프렌즈, 산리오)
-   - 이벤트/한정 문구 (예: 한정판, 스페셜에디션, 기획세트)
-   - 증정품 설명 (예: +미니어처 증정, 파우치 포함)
-   - 시즌/날짜 문구 (예: 2026 봄, 설날 에디션)
-3. 한국 화장품 브랜드명은 공식 영문명으로 정확히 번역하세요:
-   - 파넬 → Parnell (Panel 아님)
-   - 아누아 → Anua
-   - 코스알엑스 → COSRX
-   - 웰라쥬 → Wellage
-   - 달바 → d'Alba
-   - 토리든 → Torriden
-   - 넘버즈인 → numbuzin
-   - 라운드랩 → Round Lab
-   - 메디힐 → Mediheal
-   - 이니스프리 → innisfree
-   - 미샤 → MISSHA
-   - 에뛰드 → ETUDE
-   - 닥터지 → Dr.G
-   - 클리오 → CLIO
-   - 롬앤 → rom&nd
-   - 성분에디터 → Ongreedients
-   - 조선미녀 → Beauty of Joseon
-   - 스킨푸드 → SKINFOOD
-   - 마녀공장 → Ma:nyo
-   - 구달 → Goodal
-   - 아이소이 → isoi
-   - 에스트라 → Aestura
-   - 바이오더마 → Bioderma
-   - 아벤느 → Avène
-   - 라로슈포제 → La Roche-Posay
-   - 비오템 → Biotherm
-   (위 목록에 없는 브랜드는 공식 영문 표기를 찾아 사용하세요)
-4. 세트 정보는 정확히 유지하세요:
-   - "2개" → "2 pcs" 또는 "Set of 2"
-   - "1+1" → "2 pcs" (프로모션이 아닌 실제 세트인 경우만)
-5. 용량 정보는 정확히 유지하세요: ml, mL, g, mg 등
-
-[예시]
-입력: "파넬 시카마누92세럼 30ml 리필기획 잠만보"
-출력: "Parnell Cica Manu 92 Serum 30ml"
-
-입력: "웰라쥬 리얼 히알루로닉 블루 100 앰플 75ml 2개기획 망그러진곰"
-출력: "Wellage Real Hyaluronic Blue 100 Ampoule 75ml 2 pcs"
-
-입력: "코스알엑스 더 6 펩타이드 스킨 부스터 세럼 150ml 1+1 올영단독"
-출력: "COSRX The 6 Peptide Skin Booster Serum 150ml 2 pcs"
-
-입력: "아누아 PRDN 히알루론산 캡슐100 세럼 30mL"
-출력: "Anua PRDN Hyaluronic Acid Capsule 100 Serum 30mL"
-
+                    content: `You are a professional translator specializing in Korean beauty products.
+Translate the Korean product name to English.
+Keep brand names in their original form (e.g., 아벤느 → Avène, VT → VT).
+Keep volume/quantity units (ml, g, 매, 입, 개) in their common English forms.
 Output ONLY the translated text, no explanations.`
                 },
                 {
