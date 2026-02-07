@@ -1,38 +1,38 @@
 {
-  "requestsFinished": 22,
-  "requestsFailed": 2,
-  "requestsRetries": 14,
+  "requestsFinished": 90,
+  "requestsFailed": 10,
+  "requestsRetries": 56,
   "requestsFailedPerMinute": 0,
   "requestsFinishedPerMinute": 2,
-  "requestMinDurationMillis": 19044,
-  "requestMaxDurationMillis": 32192,
-  "requestTotalFailedDurationMillis": 1142,
-  "requestTotalFinishedDurationMillis": 515062,
+  "requestMinDurationMillis": 16046,
+  "requestMaxDurationMillis": 33003,
+  "requestTotalFailedDurationMillis": 6386,
+  "requestTotalFinishedDurationMillis": 2127368,
   "crawlerStartedAt": "2026-02-07T13:50:27.544Z",
-  "crawlerFinishedAt": null,
-  "statsPersistedAt": "2026-02-07T13:59:27.583Z",
-  "crawlerRuntimeMillis": 540315,
+  "crawlerFinishedAt": "2026-02-07T14:27:04.318Z",
+  "statsPersistedAt": "2026-02-07T14:27:04.319Z",
+  "crawlerRuntimeMillis": 2197051,
   "crawlerLastStartTimestamp": 1770472227268,
   "requestRetryHistogram": [
-    10,
-    10,
-    4
+    44,
+    24,
+    32
   ],
   "statsId": 0,
-  "requestAvgFailedDurationMillis": 571,
-  "requestAvgFinishedDurationMillis": 23412,
-  "requestTotalDurationMillis": 516204,
-  "requestsTotal": 24,
+  "requestAvgFailedDurationMillis": 639,
+  "requestAvgFinishedDurationMillis": 23637,
+  "requestTotalDurationMillis": 2133754,
+  "requestsTotal": 100,
   "requestsWithStatusCode": {
-    "200": 23,
-    "403": 32
+    "200": 90,
+    "403": 98
   },
   "errors": {
     "/root/copychu-scraper/node_modules/@crawlee/basic/internals/basic-crawler.js:903:19": {
       "missing error code": {
         "Error": {
           "Request blocked - received 403 status code.": {
-            "count": 2
+            "count": 10
           }
         }
       }
@@ -43,7 +43,7 @@
       "missing error code": {
         "Error": {
           "Request blocked - received 403 status code.": {
-            "count": 30
+            "count": 88
           }
         }
       }

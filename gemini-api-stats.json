@@ -1,12 +1,12 @@
 {
   "date": "2026-02-07",
-  "dailyCalls": 1192,
+  "dailyCalls": 1197,
   "dailyLimit": 1500,
-  "remaining": 308,
-  "sessionCalls": 402,
+  "remaining": 303,
+  "sessionCalls": 5,
   "byFunction": {
-    "analyzeImage": 425,
-    "getBadgeCropCoordinates": 142,
+    "analyzeImage": 429,
+    "getBadgeCropCoordinates": 143,
     "detectMultipleProducts": 6,
     "detectPackagingBox": 14,
     "calculateCompletenessScore": 14,
@@ -20,31 +20,6 @@
     "quickNaverImageCheck": 5
   },
   "callHistory": [
-    {
-      "function": "analyzeImageBasics",
-      "time": "2026-02-07T12:10:09.513Z",
-      "dailyTotal": 1093
-    },
-    {
-      "function": "evaluateImageDetails",
-      "time": "2026-02-07T12:10:11.106Z",
-      "dailyTotal": 1094
-    },
-    {
-      "function": "analyzeImageBasics",
-      "time": "2026-02-07T12:10:18.773Z",
-      "dailyTotal": 1095
-    },
-    {
-      "function": "evaluateImageDetails",
-      "time": "2026-02-07T12:10:20.363Z",
-      "dailyTotal": 1096
-    },
-    {
-      "function": "analyzeImageBasics",
-      "time": "2026-02-07T12:10:33.026Z",
-      "dailyTotal": 1097
-    },
     {
       "function": "evaluateImageDetails",
       "time": "2026-02-07T12:10:34.859Z",
@@ -519,7 +494,32 @@
       "function": "evaluateImageDetails",
       "time": "2026-02-07T12:18:53.460Z",
       "dailyTotal": 1192
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-07T14:59:30.985Z",
+      "dailyTotal": 1193
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-07T14:59:36.157Z",
+      "dailyTotal": 1194
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-07T14:59:48.532Z",
+      "dailyTotal": 1195
+    },
+    {
+      "function": "getBadgeCropCoordinates",
+      "time": "2026-02-07T14:59:51.016Z",
+      "dailyTotal": 1196
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-07T14:59:59.168Z",
+      "dailyTotal": 1197
     }
   ],
-  "lastUpdated": "2026-02-07T12:18:53.460Z"
+  "lastUpdated": "2026-02-07T14:59:59.168Z"
 }
