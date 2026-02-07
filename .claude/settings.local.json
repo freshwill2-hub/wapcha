@@ -8,7 +8,9 @@
       "Bash(git commit -m \"$\\(cat <<''EOF''\nfix: phase3 크롭실패 폴백 제거, phase4 하드탈락 조건 추가 및 네이버 검증 추가\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
       "Bash(jq:*)",
       "Bash(python3:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(node --check:*)",
+      "Bash(node:*)"
     ]
   }
 }
