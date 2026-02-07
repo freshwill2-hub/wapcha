@@ -1090,7 +1090,7 @@
 
         // ==================== Full Pipeline (Phase 0→5) ====================
         async function processQueueFull() {
-            if (!confirm('🚀 Run full pipeline.\n\nPhase 0: URL Collection\nPhase 1: Product Scraping\nPhase 2: BG Removal\nPhase 2.5: AI Image Validation\nPhase 2.6: Image Selection\nPhase 4: Final Image Generation\nPhase 5: Shopify Upload\n\nThis may take a while. Continue?')) return;
+            if (!confirm('🚀 Run full pipeline.\n\nPhase 0: URL Collection\nPhase 1: Product Scraping\nPhase 2: BG Removal\nPhase 3: AI Image Validation\nPhase 4: Final Image Selection\nPhase 5: Shopify Upload\n\nThis may take a while. Continue?')) return;
 
             try {
                 addLogMessage({ type: 'info', message: '🚀 Starting full pipeline (Phase 0→1→2→3→4→5)', timestamp: new Date().toISOString() });
