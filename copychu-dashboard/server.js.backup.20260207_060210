@@ -140,7 +140,7 @@ loadUrlQueue();
 
 // ==================== 로그 관리 (✅ 시간 포맷 추가) ====================
 const logs = [];
-const MAX_LOGS = 3000;
+const MAX_LOGS = 1000;
 
 // ✅ 시간 포맷 함수
 function formatTime(date) {
@@ -266,15 +266,19 @@ async function runPhase0(categoryUrl, maxProducts, categoryName, maxPages = 0, u
                 if (line.includes('⚠️')) logType = 'warning';
                 
                 addLog(logType, line, 'phase0');
+                
+                // ✅ 통합 로그에도 기록
+                if (unifiedLogPath) {
+                    writeUnifiedLog(unifiedLogPath, line);
+                }
             });
             io.emit('state', systemState);
         });
-
+        
         child.stderr.on('data', (data) => {
             const message = data.toString().trim();
             if (message) {
-                const isPlaywrightInfo = message.includes('INFO') || message.includes('PlaywrightCrawler');
-                addLog(isPlaywrightInfo ? 'info' : 'error', message, 'phase0');
+                addLog('error', message, 'phase0');
             }
         });
         
@@ -493,15 +497,12 @@ async function runPhase(phase, productLimit, categoryUrl = null, maxProducts = n
         child.stderr.on('data', (data) => {
             const message = data.toString().trim();
             if (message) {
-                const isPlaywrightInfo = message.includes('INFO') || message.includes('PlaywrightCrawler');
-                addLog(isPlaywrightInfo ? 'info' : 'error', message, phase.id);
-                if (!isPlaywrightInfo) {
-                    systemState.errors.push({
-                        phase: phase.id,
-                        message: message,
-                        timestamp: new Date().toISOString()
-                    });
-                }
+                addLog('error', message, phase.id);
+                systemState.errors.push({
+                    phase: phase.id,
+                    message: message,
+                    timestamp: new Date().toISOString()
+                });
             }
         });
         
