@@ -238,7 +238,7 @@ function extractProductInfo(productTitle) {
     } else {
         const koreanBrandMatch = productTitle.match(/^([가-힣A-Za-z0-9]+)/);
         if (koreanBrandMatch) {
-            info.brandName = koreanBrandMatch[1].toLowerCase();
+            info.brandName = koreanBrandMatch[1];
         }
     }
     
@@ -609,10 +609,10 @@ VOLUME: [읽은 용량 또는 UNKNOWN]`;
                     score += 3;
                     log(`      ⚠️  용량 차이: ${detectedVolume} ≠ ${productInfo.volume} (+3점)`);
                 } else {
-                    // 50% 이상 차이는 완전히 다른 제품!
+                    // ✅ v10: 50% 이상 차이는 완전히 다른 제품! 강력 감점!
+                    volumePenalty = -30;
                     log(`      ❌ 용량 크게 불일치: ${detectedVolume} ≠ ${productInfo.volume}`);
-                    log(`      🚫 다른 제품 → 하드 탈락 시그널`);
-                    return { score: -1, isWrongProduct: true };
+                    log(`      📉 다른 제품 감점: -30점`);
                 }
             }
         } else {
@@ -1005,14 +1005,9 @@ QUALITY: [0-20 숫자]${setFormat}`;
                     titleMatchScore += 3;
                     log(`      ⚠️  용량 차이: ${detectedVolume} ≠ ${productInfo.volume} (+3점)`);
                 } else {
-                    // 50% 이상 차이는 완전히 다른 제품!
+                    volumePenalty = -30;
                     log(`      ❌ 용량 크게 불일치: ${detectedVolume} ≠ ${productInfo.volume}`);
-                    log(`      🚫 다른 제품 → 하드 탈락 시그널`);
-                    return {
-                        titleMatchScore: { score: -1, isWrongProduct: true },
-                        setCompositionScore: 0,
-                        qualityScore: 0
-                    };
+                    log(`      📉 다른 제품 감점: -30점`);
                 }
             }
         } else {
@@ -1118,36 +1113,25 @@ async function scoreImage(imageData, imagePath, productTitle, productInfo, index
     }
     
     // ✅ v9: 총점 계산 (감점 포함)
-    let totalScore = Math.max(0,
-        scores.resolution + scores.completeness + scores.titleMatch +
+    const totalScore = Math.max(0, 
+        scores.resolution + scores.completeness + scores.titleMatch + 
         scores.setComposition + scores.quality + scores.penalties
     );
-
-    // 하드 탈락: 개별 제품인데 여러 제품 감지 → 총점 0점
-    if (!productInfo.isSetProduct && basics.multipleProductsPenalty < 0) {
-        log(`      🚫 하드 탈락: 개별 제품인데 여러 제품 감지 → 0점`);
-        totalScore = 0;
-    }
-
-    // 하드 탈락: 용량 크게 불일치 → 총점 0점
-    if (scores.titleMatch < 0) {
-        log(`      🚫 하드 탈락: 용량 크게 불일치 → 0점`);
-        totalScore = 0;
-    }
-
+    
     log(`      📉 감점: ${scores.penalties}점`);
     log(`      🎯 총점: ${totalScore}/125점`);
-
+    
     return {
         imageData,
         imagePath,
         resolution,
         scores,
         totalScore,
-        isIncomplete: scores.completeness <= 10,
-        isWrongProduct: scores.titleMatch < 0,
-        hasPackaging: basics.packagingPenalty < 0,
-        hasMultipleProducts: basics.multipleProductsPenalty < 0
+        // ✅ v9: 모든 플래그 false (탈락 없음!)
+        isIncomplete: false,
+        isWrongProduct: false,
+        hasPackaging: false,
+        hasMultipleProducts: false
     };
 }
 
@@ -1249,42 +1233,6 @@ async function uploadToNocoDB(filePath, fileName) {
     } catch (error) {
         log('      ❌ 업로드 실패:', error.message);
         throw error;
-    }
-}
-
-// ==================== 네이버 이미지 기본 검증 ====================
-async function quickNaverImageCheck(imagePath, productInfo) {
-    try {
-        const imageBuffer = fs.readFileSync(imagePath);
-        const base64 = imageBuffer.toString('base64');
-        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
-
-        const prompt = `이 제품 이미지를 확인해주세요.
-타겟 브랜드: "${productInfo.brandName || 'N/A'}"
-타겟 용량: "${productInfo.volume || 'N/A'}"
-
-이미지의 제품이 타겟과 같은 브랜드/제품인가요?
-MATCH: [YES/NO]
-REASON: [한 줄]`;
-
-        const result = await model.generateContent([
-            prompt,
-            { inlineData: { data: base64, mimeType: 'image/png' } }
-        ]);
-
-        trackGeminiCall('quickNaverImageCheck');
-
-        const response = result.response.text().trim();
-        const matchResult = response.match(/MATCH:\s*(YES|NO)/i);
-        const reasonMatch = response.match(/REASON:\s*([^\n]+)/i);
-
-        const isMatch = matchResult ? matchResult[1].toUpperCase() === 'YES' : false;
-        const reason = reasonMatch ? reasonMatch[1].trim() : '파싱 실패';
-
-        return { pass: isMatch, reason };
-    } catch (error) {
-        log(`      ⚠️ 네이버 검증 실패: ${error.message}`);
-        return { pass: true, reason: 'API 오류 - 기본 통과' };
     }
 }
 
@@ -1826,14 +1774,6 @@ async function processProduct(product, productIndex, totalProducts) {
                 const fileSize = fs.statSync(finalPath).size;
                 if (fileSize < 10240) {
                     log(`      ⚠️  파일 크기 너무 작음 (${(fileSize/1024).toFixed(1)}KB) → 건너뛰기`);
-                    cleanupFiles(inputPath, croppedPath, finalPath);
-                    continue;
-                }
-
-                // ✅ 네이버 이미지 기본 검증: Gemini로 브랜드/용량 확인
-                const naverCheck = await quickNaverImageCheck(finalPath, productInfo);
-                if (!naverCheck.pass) {
-                    log(`      ❌ 네이버 이미지 검증 실패: ${naverCheck.reason}`);
                     cleanupFiles(inputPath, croppedPath, finalPath);
                     continue;
                 }
