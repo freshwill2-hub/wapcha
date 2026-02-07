@@ -1,5 +1,88 @@
 {
-  "usableSessionsCount": 0,
+  "usableSessionsCount": 2,
   "retiredSessionsCount": 0,
-  "sessions": []
+  "sessions": [
+    {
+      "id": "session_0nhFUFjt3T",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-07T00:14:59.992Z",
+      "createdAt": "2026-02-06T23:24:59.992Z",
+      "usageCount": 0,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    },
+    {
+      "id": "session_PzyJos9mQM",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": [
+          {
+            "key": "page_uid",
+            "value": "jhiGRsqo0qnL0ZJzdfl-337749",
+            "expires": "2026-02-07T00:15:11.187Z",
+            "domain": "naver.com",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-06T23:25:11.189Z",
+            "lastAccessed": "2026-02-06T23:25:11.189Z"
+          },
+          {
+            "key": "_naver_usersession_",
+            "value": "/x5A700OlAxXyDKOmnTb4fyK",
+            "expires": "2026-02-06T23:30:10.714Z",
+            "domain": "naver.com",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-06T23:25:11.193Z",
+            "lastAccessed": "2026-02-06T23:25:11.193Z"
+          },
+          {
+            "key": "NAC",
+            "value": "jdXiB8gc0fBwA",
+            "expires": "2027-03-13T23:25:06.807Z",
+            "domain": "naver.com",
+            "path": "/",
+            "secure": true,
+            "hostOnly": false,
+            "creation": "2026-02-06T23:25:11.195Z",
+            "lastAccessed": "2026-02-06T23:25:11.195Z"
+          },
+          {
+            "key": "NACT",
+            "value": "1",
+            "expires": "2026-02-07T23:25:06.810Z",
+            "domain": "naver.com",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-06T23:25:11.195Z",
+            "lastAccessed": "2026-02-06T23:25:11.195Z"
+          }
+        ]
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-07T00:14:59.999Z",
+      "createdAt": "2026-02-06T23:24:59.999Z",
+      "usageCount": 1,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    }
+  ]
 }
