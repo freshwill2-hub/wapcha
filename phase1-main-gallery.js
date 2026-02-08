@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import axios from 'axios';
-import { PlaywrightCrawler } from 'crawlee';
+import { PlaywrightCrawler, purgeDefaultStorages } from 'crawlee';
 import FormData from 'form-data';
 import OpenAI from 'openai';
 import fs from 'fs';
@@ -935,6 +935,9 @@ async function processProductImages(product, imageUrls) {
 async function processBatch(productsToProcess) {
     const totalProducts = productsToProcess.length;
     
+    // Crawlee 스토리지 초기화 (이전 실행 큐 제거 → 무한루프 방지)
+    await purgeDefaultStorages();
+
     // 배치별 카운터 초기화
     processedCount = 0;
     successCount = 0;
