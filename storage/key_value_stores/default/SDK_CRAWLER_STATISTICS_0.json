@@ -1,52 +1,29 @@
 {
-  "requestsFinished": 40,
-  "requestsFailed": 10,
-  "requestsRetries": 26,
+  "requestsFinished": 1,
+  "requestsFailed": 0,
+  "requestsRetries": 0,
   "requestsFailedPerMinute": 0,
-  "requestsFinishedPerMinute": 2,
-  "requestMinDurationMillis": 18517,
-  "requestMaxDurationMillis": 34605,
-  "requestTotalFailedDurationMillis": 5629,
-  "requestTotalFinishedDurationMillis": 954457,
-  "crawlerStartedAt": "2026-02-08T01:15:19.951Z",
-  "crawlerFinishedAt": "2026-02-08T01:31:49.160Z",
-  "statsPersistedAt": "2026-02-08T01:31:49.160Z",
-  "crawlerRuntimeMillis": 989437,
-  "crawlerLastStartTimestamp": 1770513319723,
+  "requestsFinishedPerMinute": 3,
+  "requestMinDurationMillis": 17942,
+  "requestMaxDurationMillis": 17942,
+  "requestTotalFailedDurationMillis": 0,
+  "requestTotalFinishedDurationMillis": 17942,
+  "crawlerStartedAt": "2026-02-08T02:05:00.439Z",
+  "crawlerFinishedAt": "2026-02-08T02:05:18.524Z",
+  "statsPersistedAt": "2026-02-08T02:05:18.524Z",
+  "crawlerRuntimeMillis": 18316,
+  "crawlerLastStartTimestamp": 1770516300208,
   "requestRetryHistogram": [
-    24,
-    8,
-    18
+    1
   ],
   "statsId": 0,
-  "requestAvgFailedDurationMillis": 563,
-  "requestAvgFinishedDurationMillis": 23861,
-  "requestTotalDurationMillis": 960086,
-  "requestsTotal": 50,
+  "requestAvgFailedDurationMillis": null,
+  "requestAvgFinishedDurationMillis": 17942,
+  "requestTotalDurationMillis": 17942,
+  "requestsTotal": 1,
   "requestsWithStatusCode": {
-    "200": 40,
-    "403": 54
+    "200": 1
   },
-  "errors": {
-    "/root/copychu-scraper/node_modules/@crawlee/basic/internals/basic-crawler.js:903:19": {
-      "missing error code": {
-        "Error": {
-          "Request blocked - received 403 status code.": {
-            "count": 10
-          }
-        }
-      }
-    }
-  },
-  "retryErrors": {
-    "/root/copychu-scraper/node_modules/@crawlee/basic/internals/basic-crawler.js:903:19": {
-      "missing error code": {
-        "Error": {
-          "Request blocked - received 403 status code.": {
-            "count": 44
-          }
-        }
-      }
-    }
-  }
+  "errors": {},
+  "retryErrors": {}
 }
