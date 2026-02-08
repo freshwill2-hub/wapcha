@@ -1,11 +1,12 @@
 {
   "date": "2026-02-08",
-  "dailyCalls": 7,
+  "dailyCalls": 40,
   "dailyLimit": 1500,
-  "remaining": 1493,
-  "sessionCalls": 7,
+  "remaining": 1460,
+  "sessionCalls": 33,
   "byFunction": {
-    "analyzeImage": 7
+    "analyzeImage": 39,
+    "getBadgeCropCoordinates": 1
   },
   "callHistory": [
     {
@@ -42,7 +43,172 @@
       "function": "analyzeImage",
       "time": "2026-02-08T01:08:03.486Z",
       "dailyTotal": 7
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-08T01:46:13.194Z",
+      "dailyTotal": 8
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-08T01:46:20.874Z",
+      "dailyTotal": 9
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-08T01:46:28.554Z",
+      "dailyTotal": 10
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-08T01:46:40.712Z",
+      "dailyTotal": 11
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-08T01:46:45.279Z",
+      "dailyTotal": 12
+    },
+    {
+      "function": "getBadgeCropCoordinates",
+      "time": "2026-02-08T01:46:47.058Z",
+      "dailyTotal": 13
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-08T01:46:55.069Z",
+      "dailyTotal": 14
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-08T01:46:59.746Z",
+      "dailyTotal": 15
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-08T01:47:12.221Z",
+      "dailyTotal": 16
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-08T01:47:20.291Z",
+      "dailyTotal": 17
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-08T01:47:24.908Z",
+      "dailyTotal": 18
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-08T01:47:36.958Z",
+      "dailyTotal": 19
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-08T01:47:41.701Z",
+      "dailyTotal": 20
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-08T01:47:46.516Z",
+      "dailyTotal": 21
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-08T01:47:58.811Z",
+      "dailyTotal": 22
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-08T01:48:04.091Z",
+      "dailyTotal": 23
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-08T01:48:09.177Z",
+      "dailyTotal": 24
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-08T01:48:14.217Z",
+      "dailyTotal": 25
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-08T01:48:19.235Z",
+      "dailyTotal": 26
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-08T01:48:24.109Z",
+      "dailyTotal": 27
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-08T01:48:31.850Z",
+      "dailyTotal": 28
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-08T01:48:44.031Z",
+      "dailyTotal": 29
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-08T01:48:49.309Z",
+      "dailyTotal": 30
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-08T01:49:01.261Z",
+      "dailyTotal": 31
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-08T01:49:08.788Z",
+      "dailyTotal": 32
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-08T01:49:13.208Z",
+      "dailyTotal": 33
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-08T01:49:24.996Z",
+      "dailyTotal": 34
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-08T01:49:29.931Z",
+      "dailyTotal": 35
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-08T01:49:34.614Z",
+      "dailyTotal": 36
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-08T01:49:39.265Z",
+      "dailyTotal": 37
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-08T01:49:51.630Z",
+      "dailyTotal": 38
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-08T01:49:56.311Z",
+      "dailyTotal": 39
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-08T01:50:00.912Z",
+      "dailyTotal": 40
     }
   ],
-  "lastUpdated": "2026-02-08T01:08:03.486Z"
+  "lastUpdated": "2026-02-08T01:50:00.912Z"
 }
