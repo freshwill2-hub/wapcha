@@ -1,6 +1,6 @@
 {
-  "usableSessionsCount": 22,
-  "retiredSessionsCount": 11,
+  "usableSessionsCount": 70,
+  "retiredSessionsCount": 29,
   "sessions": [
     {
       "id": "session_SyYJOpFiI9",
@@ -866,17 +866,17 @@
             "httpOnly": true,
             "hostOnly": false,
             "creation": "2026-02-08T01:17:49.173Z",
-            "lastAccessed": "2026-02-08T01:19:01.468Z"
+            "lastAccessed": "2026-02-08T01:19:23.335Z"
           },
           {
             "key": "productHistory",
-            "value": "[\"A000000245639\",\"A000000207225\",\"A000000211372\",\"A000000236422\"]",
-            "expires": "2026-03-10T01:19:00.000Z",
+            "value": "[\"A000000235243\",\"A000000245639\",\"A000000207225\",\"A000000211372\",\"A000000236422\"]",
+            "expires": "2026-03-10T01:19:22.000Z",
             "domain": "www.oliveyoung.co.kr",
             "path": "/",
             "hostOnly": false,
             "creation": "2026-02-08T01:17:49.173Z",
-            "lastAccessed": "2026-02-08T01:19:01.469Z"
+            "lastAccessed": "2026-02-08T01:19:23.336Z"
           },
           {
             "key": "_hackle_hid",
@@ -886,17 +886,17 @@
             "path": "/",
             "hostOnly": false,
             "creation": "2026-02-08T01:17:49.173Z",
-            "lastAccessed": "2026-02-08T01:19:01.468Z"
+            "lastAccessed": "2026-02-08T01:19:23.335Z"
           },
           {
             "key": "_hackle_did_Dy6RzDWaG255EUa7BVJ5nkdjjbflQ0zW",
             "value": "f79533e7-1915-45a0-bd48-91c85b7b6cb7",
-            "expires": "2027-03-15T01:19:00.608Z",
+            "expires": "2027-03-15T01:19:22.551Z",
             "domain": "oliveyoung.co.kr",
             "path": "/",
             "hostOnly": false,
             "creation": "2026-02-08T01:17:49.173Z",
-            "lastAccessed": "2026-02-08T01:19:01.468Z"
+            "lastAccessed": "2026-02-08T01:19:23.335Z"
           },
           {
             "key": "_hackle_session_id_G255EUa7BVJ5nkdjjbflQ0zW",
@@ -906,7 +906,7 @@
             "path": "/",
             "hostOnly": false,
             "creation": "2026-02-08T01:17:49.173Z",
-            "lastAccessed": "2026-02-08T01:19:01.468Z"
+            "lastAccessed": "2026-02-08T01:19:23.335Z"
           },
           {
             "key": "_hackle_mkt_Dy6RzDWa",
@@ -916,27 +916,27 @@
             "path": "/",
             "hostOnly": false,
             "creation": "2026-02-08T01:17:49.173Z",
-            "lastAccessed": "2026-02-08T01:19:01.468Z"
+            "lastAccessed": "2026-02-08T01:19:23.335Z"
           },
           {
             "key": "_dd_s",
-            "value": "aid=a858098f-dc30-4b9c-9f94-0d8eee040ab0&rum=0&expire=1770514440624",
-            "expires": "2027-02-08T01:19:00.000Z",
+            "value": "aid=a858098f-dc30-4b9c-9f94-0d8eee040ab0&rum=0&expire=1770514462557",
+            "expires": "2027-02-08T01:19:22.000Z",
             "domain": "www.oliveyoung.co.kr",
             "path": "/",
             "hostOnly": true,
             "creation": "2026-02-08T01:17:49.173Z",
-            "lastAccessed": "2026-02-08T01:19:01.469Z"
+            "lastAccessed": "2026-02-08T01:19:23.336Z"
           },
           {
             "key": "_fbp",
             "value": "fb.2.1770513465717.420810276949534765",
-            "expires": "2026-05-09T01:19:00.000Z",
+            "expires": "2026-05-09T01:19:22.000Z",
             "domain": "oliveyoung.co.kr",
             "path": "/",
             "hostOnly": false,
             "creation": "2026-02-08T01:17:49.173Z",
-            "lastAccessed": "2026-02-08T01:19:01.468Z"
+            "lastAccessed": "2026-02-08T01:19:23.335Z"
           },
           {
             "key": "RB_PCID",
@@ -946,109 +946,109 @@
             "path": "/",
             "hostOnly": false,
             "creation": "2026-02-08T01:17:49.173Z",
-            "lastAccessed": "2026-02-08T01:19:01.468Z"
+            "lastAccessed": "2026-02-08T01:19:23.335Z"
           },
           {
             "key": "RB_SSID",
             "value": "sWYK9rfybu",
-            "expires": "2026-02-08T07:19:00.000Z",
+            "expires": "2026-02-08T07:19:22.000Z",
             "domain": "oliveyoung.co.kr",
             "path": "/",
             "hostOnly": false,
             "creation": "2026-02-08T01:17:49.173Z",
-            "lastAccessed": "2026-02-08T01:19:01.475Z"
+            "lastAccessed": "2026-02-08T01:19:23.336Z"
           },
           {
             "key": "_ga_TTX3Z62VLN",
-            "value": "GS2.1.s1770513465$o1$g1$t1770513540$j60$l0$h0",
-            "expires": "2027-03-15T01:19:00.821Z",
+            "value": "GS2.1.s1770513465$o1$g1$t1770513562$j38$l0$h0",
+            "expires": "2027-03-15T01:19:22.789Z",
             "domain": "oliveyoung.co.kr",
             "path": "/",
             "hostOnly": false,
             "creation": "2026-02-08T01:17:49.173Z",
-            "lastAccessed": "2026-02-08T01:19:01.475Z"
+            "lastAccessed": "2026-02-08T01:19:23.336Z"
           },
           {
             "key": "AMP_7fbb263808",
             "value": "JTdCJTIyZGV2aWNlSWQlMjIlM0ElMjJlNzAyOGZkNS1mMTdlLTQzYmYtYjZhMC1kNThhYWZlMWI5YTYlMjIlMkMlMjJzZXNzaW9uSWQlMjIlM0ExNzcwNTEzNDY1NDkxJTJDJTIyb3B0T3V0JTIyJTNBZmFsc2UlMkMlMjJsYXN0RXZlbnRUaW1lJTIyJTNBMTc3MDUxMzUxNTQ4MiUyQyUyMmxhc3RFdmVudElkJTIyJTNBMiUyQyUyMnBhZ2VDb3VudGVyJTIyJTNBMCU3RA==",
-            "expires": "2027-02-08T01:19:00.000Z",
+            "expires": "2027-02-08T01:19:22.000Z",
             "domain": "oliveyoung.co.kr",
             "path": "/",
             "hostOnly": false,
             "creation": "2026-02-08T01:17:49.173Z",
-            "lastAccessed": "2026-02-08T01:19:01.475Z"
+            "lastAccessed": "2026-02-08T01:19:23.336Z"
           },
           {
             "key": "_ga",
             "value": "GA1.1.1140818541.1770513466",
-            "expires": "2027-03-15T01:19:00.821Z",
+            "expires": "2027-03-15T01:19:22.790Z",
             "domain": "oliveyoung.co.kr",
             "path": "/",
             "hostOnly": false,
             "creation": "2026-02-08T01:17:49.173Z",
-            "lastAccessed": "2026-02-08T01:19:01.475Z"
+            "lastAccessed": "2026-02-08T01:19:23.336Z"
           },
           {
             "key": "_gid",
             "value": "GA1.3.39554980.1770513466",
-            "expires": "2026-02-09T01:19:00.000Z",
+            "expires": "2026-02-09T01:19:22.000Z",
             "domain": "oliveyoung.co.kr",
             "path": "/",
             "hostOnly": false,
             "creation": "2026-02-08T01:17:49.174Z",
-            "lastAccessed": "2026-02-08T01:19:01.468Z"
+            "lastAccessed": "2026-02-08T01:19:23.335Z"
           },
           {
             "key": "__cf_bm",
-            "value": "FdNNf_QZIv2CmVV9P25X0o8pIPQOILQR5MpZIQpbwcY-1770513540.7209685-1.0.1.1-1bOPdnTXV6kpPSsEvahp21ZrinwxQDWyPnYDKxgE0_S12NyLsLDDzTxuLCwMII5ixEYhcYo0M824UjZ.hRmu8n6OPVspQGlqeut2C8Lj4ObMSlRi18SjlZVBa7gWXSU7",
-            "expires": "2026-02-08T01:49:01.446Z",
+            "value": "syOx6B7WKsZuPBuY.eJUUQ6PWNihf..QMPAAc_Y3Sj0-1770513562.6415813-1.0.1.1-J32Di3dlMu3SSbwEFr3wdNuIdf2qmm4YnuOZ4TCEW77wQR7C82qq0CEh54tGWqWrIZ6R4REDhVh2V9pLee.qyc5mAmf9v4MtDX3tMLZKWuJUEKkGVNwHt7I.b3KeBA57",
+            "expires": "2026-02-08T01:49:22.913Z",
             "domain": "oliveyoung.co.kr",
             "path": "/",
             "secure": true,
             "httpOnly": true,
             "hostOnly": false,
             "creation": "2026-02-08T01:17:49.174Z",
-            "lastAccessed": "2026-02-08T01:19:01.475Z"
+            "lastAccessed": "2026-02-08T01:19:23.336Z"
           },
           {
             "key": "_tt_enable_cookie",
             "value": "1",
-            "expires": "2026-05-09T01:19:00.000Z",
+            "expires": "2026-05-09T01:19:22.000Z",
             "domain": "oliveyoung.co.kr",
             "path": "/",
             "hostOnly": false,
             "creation": "2026-02-08T01:17:49.174Z",
-            "lastAccessed": "2026-02-08T01:19:01.469Z"
+            "lastAccessed": "2026-02-08T01:19:23.335Z"
           },
           {
             "key": "_ttp",
             "value": "01KGXD71C81QAQXPMVTNY68VAC_.tt.2",
-            "expires": "2026-05-09T01:19:00.000Z",
+            "expires": "2026-05-09T01:19:22.000Z",
             "domain": "oliveyoung.co.kr",
             "path": "/",
             "hostOnly": false,
             "creation": "2026-02-08T01:17:49.174Z",
-            "lastAccessed": "2026-02-08T01:19:01.469Z"
+            "lastAccessed": "2026-02-08T01:19:23.335Z"
           },
           {
             "key": "ttcsid",
-            "value": "1770513466763::OKNcjYTs1kwjXucRjt5x.1.1770513541171.0",
-            "expires": "2026-05-09T01:19:01.000Z",
+            "value": "1770513466763::OKNcjYTs1kwjXucRjt5x.1.1770513563137.0",
+            "expires": "2026-05-09T01:19:23.000Z",
             "domain": "oliveyoung.co.kr",
             "path": "/",
             "hostOnly": false,
             "creation": "2026-02-08T01:17:49.174Z",
-            "lastAccessed": "2026-02-08T01:19:01.475Z"
+            "lastAccessed": "2026-02-08T01:19:23.336Z"
           },
           {
             "key": "ttcsid_CMJ3CKJC77UBB48CH0CG",
-            "value": "1770513466763::cMJALI4sJALOIFcBsxpN.1.1770513541171.0",
-            "expires": "2026-05-09T01:19:01.000Z",
+            "value": "1770513466763::cMJALI4sJALOIFcBsxpN.1.1770513563137.0",
+            "expires": "2026-05-09T01:19:23.000Z",
             "domain": "oliveyoung.co.kr",
             "path": "/",
             "hostOnly": false,
             "creation": "2026-02-08T01:17:49.174Z",
-            "lastAccessed": "2026-02-08T01:19:01.475Z"
+            "lastAccessed": "2026-02-08T01:19:23.336Z"
           },
           {
             "key": "EG_GUID",
@@ -1058,17 +1058,17 @@
             "path": "/",
             "hostOnly": false,
             "creation": "2026-02-08T01:17:49.174Z",
-            "lastAccessed": "2026-02-08T01:19:01.469Z"
+            "lastAccessed": "2026-02-08T01:19:23.336Z"
           },
           {
             "key": "_hackle_last_event_ts_G255EUa7BVJ5nkdjjbflQ0zW",
-            "value": "1770513540622",
-            "expires": "2027-03-15T01:19:00.622Z",
+            "value": "1770513562555",
+            "expires": "2027-03-15T01:19:22.555Z",
             "domain": "oliveyoung.co.kr",
             "path": "/",
             "hostOnly": false,
             "creation": "2026-02-08T01:17:49.174Z",
-            "lastAccessed": "2026-02-08T01:19:01.469Z"
+            "lastAccessed": "2026-02-08T01:19:23.336Z"
           },
           {
             "key": "_trs_id",
@@ -1078,26 +1078,26 @@
             "path": "/",
             "hostOnly": true,
             "creation": "2026-02-08T01:17:49.174Z",
-            "lastAccessed": "2026-02-08T01:19:01.469Z"
+            "lastAccessed": "2026-02-08T01:19:23.336Z"
           },
           {
             "key": "_trs_sid",
             "value": "G%5B6462464%3C4553%5Bg%5B5%3C5%3C27530%3C1177",
-            "expires": "2026-02-08T01:49:00.000Z",
+            "expires": "2026-02-08T01:49:22.000Z",
             "domain": "www.oliveyoung.co.kr",
             "path": "/",
             "hostOnly": true,
             "creation": "2026-02-08T01:17:49.174Z",
-            "lastAccessed": "2026-02-08T01:19:01.469Z"
+            "lastAccessed": "2026-02-08T01:19:23.336Z"
           },
           {
             "key": "_trs_flow",
-            "expires": "2026-02-08T01:49:00.000Z",
+            "expires": "2026-02-08T01:49:22.000Z",
             "domain": "www.oliveyoung.co.kr",
             "path": "/",
             "hostOnly": true,
             "creation": "2026-02-08T01:17:49.174Z",
-            "lastAccessed": "2026-02-08T01:19:01.469Z"
+            "lastAccessed": "2026-02-08T01:19:23.336Z"
           },
           {
             "key": "_ga_P9V7281JHW",
@@ -1107,7 +1107,7 @@
             "path": "/",
             "hostOnly": false,
             "creation": "2026-02-08T01:18:16.703Z",
-            "lastAccessed": "2026-02-08T01:19:01.469Z"
+            "lastAccessed": "2026-02-08T01:19:23.336Z"
           },
           {
             "key": "_gat_UA-92021806-9",
@@ -1117,7 +1117,7 @@
             "path": "/",
             "hostOnly": false,
             "creation": "2026-02-08T01:19:01.475Z",
-            "lastAccessed": "2026-02-08T01:19:01.475Z"
+            "lastAccessed": "2026-02-08T01:19:23.336Z"
           }
         ]
       },
@@ -1126,7 +1126,7 @@
       "errorScoreDecrement": 0.5,
       "expiresAt": "2026-02-08T02:07:42.152Z",
       "createdAt": "2026-02-08T01:17:42.152Z",
-      "usageCount": 3,
+      "usageCount": 5,
       "maxUsageCount": 50,
       "errorScore": 0
     },
@@ -1186,6 +1186,2646 @@
       "errorScoreDecrement": 0.5,
       "expiresAt": "2026-02-08T02:08:59.376Z",
       "createdAt": "2026-02-08T01:18:59.376Z",
+      "usageCount": 0,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    },
+    {
+      "id": "session_wEdRKdjjJy",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:09:21.627Z",
+      "createdAt": "2026-02-08T01:19:21.627Z",
+      "usageCount": 0,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    },
+    {
+      "id": "session_8W4S5RGo0D",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:09:45.837Z",
+      "createdAt": "2026-02-08T01:19:45.837Z",
+      "usageCount": 0,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    },
+    {
+      "id": "session_jhqMR7MA9F",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": [
+          {
+            "key": "_cfuvid",
+            "value": "YRZEHm4t35wD1Jg66_vne5nyU42v3udmbEtXi3SBews-1770513586.4136767-1.0.1.1-dlRQl4AgKtQaCaCxoLGARKhuEvu0L7zey2r0bS7txSU",
+            "expires": "2026-02-08T02:09:53.350Z",
+            "domain": "www.oliveyoung.co.kr",
+            "path": "/",
+            "secure": true,
+            "httpOnly": true,
+            "hostOnly": false,
+            "creation": "2026-02-08T01:19:53.350Z",
+            "lastAccessed": "2026-02-08T01:21:21.936Z"
+          },
+          {
+            "key": "productHistory",
+            "value": "[\"A000000245471\",\"A000000242720\",\"A000000219717\"]",
+            "expires": "2026-03-10T01:21:21.000Z",
+            "domain": "www.oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:19:53.351Z",
+            "lastAccessed": "2026-02-08T01:21:21.936Z"
+          },
+          {
+            "key": "_hackle_hid",
+            "value": "8e095cab-036e-4973-8d5d-041c901a4f29",
+            "expires": "2027-02-08T01:19:50.000Z",
+            "domain": "www.oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:19:53.351Z",
+            "lastAccessed": "2026-02-08T01:21:21.936Z"
+          },
+          {
+            "key": "_hackle_did_Dy6RzDWaG255EUa7BVJ5nkdjjbflQ0zW",
+            "value": "8e095cab-036e-4973-8d5d-041c901a4f29",
+            "expires": "2027-03-15T01:21:21.460Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:19:53.351Z",
+            "lastAccessed": "2026-02-08T01:21:21.936Z"
+          },
+          {
+            "key": "_hackle_session_id_G255EUa7BVJ5nkdjjbflQ0zW",
+            "value": "1770513590439.15ee25e7",
+            "expires": "2027-03-15T01:19:50.440Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:19:53.351Z",
+            "lastAccessed": "2026-02-08T01:21:21.936Z"
+          },
+          {
+            "key": "_hackle_last_event_ts_G255EUa7BVJ5nkdjjbflQ0zW",
+            "value": "1770513681468",
+            "expires": "2027-03-15T01:21:21.469Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:19:53.351Z",
+            "lastAccessed": "2026-02-08T01:21:21.936Z"
+          },
+          {
+            "key": "_hackle_mkt_Dy6RzDWa",
+            "value": "%7B%7D",
+            "expires": "2027-03-15T01:19:50.441Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:19:53.351Z",
+            "lastAccessed": "2026-02-08T01:21:21.936Z"
+          },
+          {
+            "key": "_dd_s",
+            "value": "aid=504e0bae-d2cd-474d-b990-4d270c02090b&rum=0&expire=1770514581470",
+            "expires": "2027-02-08T01:21:21.000Z",
+            "domain": "www.oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": true,
+            "creation": "2026-02-08T01:19:53.351Z",
+            "lastAccessed": "2026-02-08T01:21:21.936Z"
+          },
+          {
+            "key": "_fbp",
+            "value": "fb.2.1770513590834.29807700116835637",
+            "expires": "2026-05-09T01:21:21.000Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:19:53.351Z",
+            "lastAccessed": "2026-02-08T01:21:21.936Z"
+          },
+          {
+            "key": "RB_PCID",
+            "value": "1770513590858339294",
+            "expires": "2027-03-15T01:19:50.858Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:19:53.351Z",
+            "lastAccessed": "2026-02-08T01:21:21.936Z"
+          },
+          {
+            "key": "_ga",
+            "value": "GA1.1.1693048040.1770513591",
+            "expires": "2027-03-15T01:21:21.680Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:19:53.351Z",
+            "lastAccessed": "2026-02-08T01:21:21.936Z"
+          },
+          {
+            "key": "_gid",
+            "value": "GA1.3.492587119.1770513591",
+            "expires": "2026-02-09T01:21:21.000Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:19:53.351Z",
+            "lastAccessed": "2026-02-08T01:21:21.936Z"
+          },
+          {
+            "key": "RB_SSID",
+            "value": "up9PBczTka",
+            "expires": "2026-02-08T07:21:21.000Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:19:53.351Z",
+            "lastAccessed": "2026-02-08T01:21:21.936Z"
+          },
+          {
+            "key": "_ga_TTX3Z62VLN",
+            "value": "GS2.1.s1770513590$o1$g1$t1770513681$j38$l0$h0",
+            "expires": "2027-03-15T01:21:21.678Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:19:53.351Z",
+            "lastAccessed": "2026-02-08T01:21:21.936Z"
+          },
+          {
+            "key": "AMP_7fbb263808",
+            "value": "JTdCJTIyZGV2aWNlSWQlMjIlM0ElMjI1YWY0MjIxMi03YjAyLTRiZjYtYjE1NC1kYzU4ZjJlZTBlODclMjIlMkMlMjJzZXNzaW9uSWQlMjIlM0ExNzcwNTEzNTkwNTgyJTJDJTIyb3B0T3V0JTIyJTNBZmFsc2UlMkMlMjJsYXN0RXZlbnRUaW1lJTIyJTNBMTc3MDUxMzU5MTUwMSUyQyUyMmxhc3RFdmVudElkJTIyJTNBMCUyQyUyMnBhZ2VDb3VudGVyJTIyJTNBMCU3RA==",
+            "expires": "2027-02-08T01:21:21.000Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:19:53.351Z",
+            "lastAccessed": "2026-02-08T01:21:21.936Z"
+          },
+          {
+            "key": "_tt_enable_cookie",
+            "value": "1",
+            "expires": "2026-05-09T01:21:21.000Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:19:53.351Z",
+            "lastAccessed": "2026-02-08T01:21:21.936Z"
+          },
+          {
+            "key": "_ttp",
+            "value": "01KGXDAVCGSNTV1D1VTTH3NKC6_.tt.2",
+            "expires": "2026-05-09T01:21:21.000Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:19:53.351Z",
+            "lastAccessed": "2026-02-08T01:21:21.936Z"
+          },
+          {
+            "key": "ttcsid",
+            "value": "1770513591699::Imi660V7hLai2U2gyYgy.1.1770513681757.0",
+            "expires": "2026-05-09T01:21:21.000Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:19:53.351Z",
+            "lastAccessed": "2026-02-08T01:21:21.936Z"
+          },
+          {
+            "key": "ttcsid_CMJ3CKJC77UBB48CH0CG",
+            "value": "1770513591698::lBA5nRLkzAZVad2vq0Tb.1.1770513681756.0",
+            "expires": "2026-05-09T01:21:21.000Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:19:53.351Z",
+            "lastAccessed": "2026-02-08T01:21:21.936Z"
+          },
+          {
+            "key": "__cf_bm",
+            "value": "A272uZRtObTbjz988W0pGiHMLi0AiHJI2VQQ5895xf4-1770513680.6121595-1.0.1.1-HUIJX8ApHG0zfsTVW7cbp.nKp_8C5TcgvfaYDgpHvcDt7LS8NzRTcqZFKmJdwf.hHgeaRtJF_H5QJxB3coWzMfrBkkn8eJftLqP.jAwq3hHnZoRSD6lNG_FLVPSQdKRv",
+            "expires": "2026-02-08T01:51:21.108Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "secure": true,
+            "httpOnly": true,
+            "hostOnly": false,
+            "creation": "2026-02-08T01:19:53.351Z",
+            "lastAccessed": "2026-02-08T01:21:21.936Z"
+          },
+          {
+            "key": "_trs_id",
+            "value": "eY7%3E73147%3F343701",
+            "expires": "2027-03-15T01:19:52.572Z",
+            "domain": "www.oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": true,
+            "creation": "2026-02-08T01:19:53.351Z",
+            "lastAccessed": "2026-02-08T01:21:21.936Z"
+          },
+          {
+            "key": "_trs_sid",
+            "value": "G%5B6462464%3C455%3D%5Bg%5B5%3C51365%3D161523",
+            "expires": "2026-02-08T01:51:21.000Z",
+            "domain": "www.oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": true,
+            "creation": "2026-02-08T01:19:53.351Z",
+            "lastAccessed": "2026-02-08T01:21:21.936Z"
+          },
+          {
+            "key": "_trs_flow",
+            "expires": "2026-02-08T01:51:21.000Z",
+            "domain": "www.oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": true,
+            "creation": "2026-02-08T01:19:53.351Z",
+            "lastAccessed": "2026-02-08T01:21:21.936Z"
+          },
+          {
+            "key": "EG_GUID",
+            "value": "55c76278-654c-45d8-9084-164f9319b6c6",
+            "expires": "2027-03-15T01:19:52.985Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:19:53.351Z",
+            "lastAccessed": "2026-02-08T01:21:21.936Z"
+          },
+          {
+            "key": "_ga_P9V7281JHW",
+            "value": "GS2.1.s1770513611$o1$g0$t1770513611$j60$l0$h0",
+            "expires": "2027-03-15T01:20:11.924Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:20:13.009Z",
+            "lastAccessed": "2026-02-08T01:21:21.936Z"
+          },
+          {
+            "key": "_gat_UA-92021806-9",
+            "value": "1",
+            "expires": "2026-02-08T01:21:59.000Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:21:00.113Z",
+            "lastAccessed": "2026-02-08T01:21:21.936Z"
+          }
+        ]
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:09:45.838Z",
+      "createdAt": "2026-02-08T01:19:45.838Z",
+      "usageCount": 5,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    },
+    {
+      "id": "session_35SAViR2IV",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:10:11.987Z",
+      "createdAt": "2026-02-08T01:20:11.987Z",
+      "usageCount": 0,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    },
+    {
+      "id": "session_pvhULwsWzw",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:10:35.800Z",
+      "createdAt": "2026-02-08T01:20:35.800Z",
+      "usageCount": 0,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    },
+    {
+      "id": "session_h2nQrTSyvO",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:10:58.234Z",
+      "createdAt": "2026-02-08T01:20:58.234Z",
+      "usageCount": 0,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    },
+    {
+      "id": "session_yiMlr2BCym",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:11:20.565Z",
+      "createdAt": "2026-02-08T01:21:20.565Z",
+      "usageCount": 0,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    },
+    {
+      "id": "session_fg3NEw7uSd",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:11:39.893Z",
+      "createdAt": "2026-02-08T01:21:39.893Z",
+      "usageCount": 0,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    },
+    {
+      "id": "session_UFLMWwhoTb",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:11:39.893Z",
+      "createdAt": "2026-02-08T01:21:39.893Z",
+      "usageCount": 3,
+      "maxUsageCount": 50,
+      "errorScore": 7
+    },
+    {
+      "id": "session_IMRVptB7xe",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:11:40.424Z",
+      "createdAt": "2026-02-08T01:21:40.424Z",
+      "usageCount": 0,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    },
+    {
+      "id": "session_TyYViD9vh6",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:11:40.425Z",
+      "createdAt": "2026-02-08T01:21:40.425Z",
+      "usageCount": 3,
+      "maxUsageCount": 50,
+      "errorScore": 7
+    },
+    {
+      "id": "session_u0HLknb65u",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:11:41.103Z",
+      "createdAt": "2026-02-08T01:21:41.103Z",
+      "usageCount": 0,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    },
+    {
+      "id": "session_82PoFB2bYJ",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:11:41.105Z",
+      "createdAt": "2026-02-08T01:21:41.105Z",
+      "usageCount": 3,
+      "maxUsageCount": 50,
+      "errorScore": 7
+    },
+    {
+      "id": "session_QqkpwAiz0w",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:11:41.651Z",
+      "createdAt": "2026-02-08T01:21:41.651Z",
+      "usageCount": 0,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    },
+    {
+      "id": "session_8JZBRoCZhu",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:11:41.652Z",
+      "createdAt": "2026-02-08T01:21:41.652Z",
+      "usageCount": 3,
+      "maxUsageCount": 50,
+      "errorScore": 7
+    },
+    {
+      "id": "session_yDXWjRkyyd",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:11:42.252Z",
+      "createdAt": "2026-02-08T01:21:42.252Z",
+      "usageCount": 0,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    },
+    {
+      "id": "session_Wtv4Erq0su",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:11:42.253Z",
+      "createdAt": "2026-02-08T01:21:42.253Z",
+      "usageCount": 3,
+      "maxUsageCount": 50,
+      "errorScore": 7
+    },
+    {
+      "id": "session_PcMkRRn8gy",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:11:42.887Z",
+      "createdAt": "2026-02-08T01:21:42.887Z",
+      "usageCount": 0,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    },
+    {
+      "id": "session_d7ENI7C5Jz",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:11:42.888Z",
+      "createdAt": "2026-02-08T01:21:42.888Z",
+      "usageCount": 3,
+      "maxUsageCount": 50,
+      "errorScore": 7
+    },
+    {
+      "id": "session_5nBAP4rZ89",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:11:43.448Z",
+      "createdAt": "2026-02-08T01:21:43.448Z",
+      "usageCount": 0,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    },
+    {
+      "id": "session_spIKpOm9pJ",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:11:43.454Z",
+      "createdAt": "2026-02-08T01:21:43.454Z",
+      "usageCount": 3,
+      "maxUsageCount": 50,
+      "errorScore": 7
+    },
+    {
+      "id": "session_eNgmV41aFz",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:11:44.049Z",
+      "createdAt": "2026-02-08T01:21:44.049Z",
+      "usageCount": 0,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    },
+    {
+      "id": "session_PHVTY8IN8f",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": [
+          {
+            "key": "_cfuvid",
+            "value": "OoZEXIanBmZM581RmNLZYMXcjSAQZqtjnbYAaEw5E3A-1770513704.302465-1.0.1.1-55H3hPaLXa7pinHuVrBk6eL0hCvKUJAi9E6bgFszlIk",
+            "expires": "2026-02-08T02:11:57.583Z",
+            "domain": "www.oliveyoung.co.kr",
+            "path": "/",
+            "secure": true,
+            "httpOnly": true,
+            "hostOnly": false,
+            "creation": "2026-02-08T01:21:57.584Z",
+            "lastAccessed": "2026-02-08T01:23:34.193Z"
+          },
+          {
+            "key": "productHistory",
+            "value": "[\"A000000236420\",\"A000000246897\",\"A000000245091\",\"A000000243435\"]",
+            "expires": "2026-03-10T01:23:32.000Z",
+            "domain": "www.oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:21:57.584Z",
+            "lastAccessed": "2026-02-08T01:23:34.194Z"
+          },
+          {
+            "key": "_hackle_hid",
+            "value": "6568400c-6260-4761-8d7d-6a9a06aaa6f9",
+            "expires": "2027-02-08T01:21:47.000Z",
+            "domain": "www.oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:21:57.584Z",
+            "lastAccessed": "2026-02-08T01:23:34.193Z"
+          },
+          {
+            "key": "_hackle_did_Dy6RzDWaG255EUa7BVJ5nkdjjbflQ0zW",
+            "value": "6568400c-6260-4761-8d7d-6a9a06aaa6f9",
+            "expires": "2027-03-15T01:23:32.562Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:21:57.584Z",
+            "lastAccessed": "2026-02-08T01:23:34.193Z"
+          },
+          {
+            "key": "_hackle_session_id_G255EUa7BVJ5nkdjjbflQ0zW",
+            "value": "1770513707085.77217f97",
+            "expires": "2027-03-15T01:21:47.086Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:21:57.584Z",
+            "lastAccessed": "2026-02-08T01:23:34.193Z"
+          },
+          {
+            "key": "_hackle_mkt_Dy6RzDWa",
+            "value": "%7B%7D",
+            "expires": "2027-03-15T01:21:47.091Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:21:57.584Z",
+            "lastAccessed": "2026-02-08T01:23:34.193Z"
+          },
+          {
+            "key": "_dd_s",
+            "value": "aid=e3e17890-6603-4d57-8091-f4a47df80090&rum=0&expire=1770514712570",
+            "expires": "2027-02-08T01:23:32.000Z",
+            "domain": "www.oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": true,
+            "creation": "2026-02-08T01:21:57.584Z",
+            "lastAccessed": "2026-02-08T01:23:34.194Z"
+          },
+          {
+            "key": "_fbp",
+            "value": "fb.2.1770513707445.66436419054151440",
+            "expires": "2026-05-09T01:23:32.000Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:21:57.584Z",
+            "lastAccessed": "2026-02-08T01:23:34.193Z"
+          },
+          {
+            "key": "RB_PCID",
+            "value": "1770513707474282627",
+            "expires": "2027-03-15T01:21:47.474Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:21:57.584Z",
+            "lastAccessed": "2026-02-08T01:23:34.193Z"
+          },
+          {
+            "key": "RB_SSID",
+            "value": "FOodrMBK76",
+            "expires": "2026-02-08T07:23:33.000Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:21:57.584Z",
+            "lastAccessed": "2026-02-08T01:23:34.194Z"
+          },
+          {
+            "key": "AMP_7fbb263808",
+            "value": "JTdCJTIyZGV2aWNlSWQlMjIlM0ElMjI1ZDc2ZjMyZS1hMmI0LTQyY2EtOGEzYi1iMjBjNTM4ZjEyZGUlMjIlMkMlMjJzZXNzaW9uSWQlMjIlM0ExNzcwNTEzNzA3MTkyJTJDJTIyb3B0T3V0JTIyJTNBZmFsc2UlMkMlMjJsYXN0RXZlbnRUaW1lJTIyJTNBMTc3MDUxMzgxMzYyMSUyQyUyMmxhc3RFdmVudElkJTIyJTNBMyUyQyUyMnBhZ2VDb3VudGVyJTIyJTNBMCU3RA==",
+            "expires": "2027-02-08T01:23:33.000Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:21:57.584Z",
+            "lastAccessed": "2026-02-08T01:23:34.194Z"
+          },
+          {
+            "key": "_ga_TTX3Z62VLN",
+            "value": "GS2.1.s1770513707$o1$g1$t1770513813$j37$l0$h0",
+            "expires": "2027-03-15T01:23:33.544Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:21:57.584Z",
+            "lastAccessed": "2026-02-08T01:23:34.194Z"
+          },
+          {
+            "key": "_ga",
+            "value": "GA1.3.930667094.1770513708",
+            "expires": "2027-03-15T01:23:33.525Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:21:57.584Z",
+            "lastAccessed": "2026-02-08T01:23:34.194Z"
+          },
+          {
+            "key": "_gid",
+            "value": "GA1.3.125956186.1770513708",
+            "expires": "2026-02-09T01:23:33.000Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:21:57.584Z",
+            "lastAccessed": "2026-02-08T01:23:34.193Z"
+          },
+          {
+            "key": "__cf_bm",
+            "value": "0i2GSB2cZIerDZAh4U7eSF_lpcSmq1iubPR_DVSuLlc-1770513812.6540303-1.0.1.1-iynvQOz99St0wwTntHJknoMhJegSXsgUowcn7enVMry3.BGvyV0fxqrow..jU463Ero7.FD9S0t43oN6MwCo872iNotE5UeZ3qKMZVcdaB13X5aP6G0qe5lhzVEKePxj",
+            "expires": "2026-02-08T01:53:33.452Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "secure": true,
+            "httpOnly": true,
+            "hostOnly": false,
+            "creation": "2026-02-08T01:21:57.584Z",
+            "lastAccessed": "2026-02-08T01:23:34.194Z"
+          },
+          {
+            "key": "_tt_enable_cookie",
+            "value": "1",
+            "expires": "2026-05-09T01:23:32.000Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:21:57.584Z",
+            "lastAccessed": "2026-02-08T01:23:34.193Z"
+          },
+          {
+            "key": "_ttp",
+            "value": "01KGXDEDTED65H7WWJMJZG6H9D_.tt.2",
+            "expires": "2026-05-09T01:23:32.000Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:21:57.584Z",
+            "lastAccessed": "2026-02-08T01:23:34.193Z"
+          },
+          {
+            "key": "_trs_id",
+            "value": "eY7%3E7%3E%3F%3E472%3E%3F351",
+            "expires": "2027-03-15T01:21:48.899Z",
+            "domain": "www.oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": true,
+            "creation": "2026-02-08T01:21:57.584Z",
+            "lastAccessed": "2026-02-08T01:23:34.193Z"
+          },
+          {
+            "key": "_trs_sid",
+            "value": "G%5B6462464%3C4565%5Bg%5B5%3C5%3C%3D%3C650%3C%3D173",
+            "expires": "2026-02-08T01:53:32.000Z",
+            "domain": "www.oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": true,
+            "creation": "2026-02-08T01:21:57.584Z",
+            "lastAccessed": "2026-02-08T01:23:34.194Z"
+          },
+          {
+            "key": "_trs_flow",
+            "expires": "2026-02-08T01:53:32.000Z",
+            "domain": "www.oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": true,
+            "creation": "2026-02-08T01:21:57.584Z",
+            "lastAccessed": "2026-02-08T01:23:34.194Z"
+          },
+          {
+            "key": "ttcsid",
+            "value": "1770513708881::hMwldIUTt58kaXCbcYKT.1.1770513813532.0",
+            "expires": "2026-05-09T01:23:33.000Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:21:57.584Z",
+            "lastAccessed": "2026-02-08T01:23:34.194Z"
+          },
+          {
+            "key": "ttcsid_CMJ3CKJC77UBB48CH0CG",
+            "value": "1770513708881::5qhgjz7Gc99rqX2rVcdG.1.1770513813532.1",
+            "expires": "2026-05-09T01:23:33.000Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:21:57.584Z",
+            "lastAccessed": "2026-02-08T01:23:34.194Z"
+          },
+          {
+            "key": "EG_GUID",
+            "value": "03165c2e-ec4d-4b42-8233-a49fe77614aa",
+            "expires": "2027-03-15T01:21:49.246Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:21:57.585Z",
+            "lastAccessed": "2026-02-08T01:23:34.194Z"
+          },
+          {
+            "key": "_hackle_last_event_ts_G255EUa7BVJ5nkdjjbflQ0zW",
+            "value": "1770513813446",
+            "expires": "2027-03-15T01:23:33.447Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:21:57.585Z",
+            "lastAccessed": "2026-02-08T01:23:34.194Z"
+          },
+          {
+            "key": "_ga_P9V7281JHW",
+            "value": "GS2.1.s1770513738$o1$g0$t1770513738$j60$l0$h0",
+            "expires": "2027-03-15T01:22:18.684Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:22:20.185Z",
+            "lastAccessed": "2026-02-08T01:23:34.194Z"
+          },
+          {
+            "key": "_gat_UA-92021806-9",
+            "value": "1",
+            "expires": "2026-02-08T01:24:10.000Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:23:11.927Z",
+            "lastAccessed": "2026-02-08T01:23:34.194Z"
+          }
+        ]
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:11:44.051Z",
+      "createdAt": "2026-02-08T01:21:44.051Z",
+      "usageCount": 5,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    },
+    {
+      "id": "session_hVLSb6QaAZ",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:12:18.731Z",
+      "createdAt": "2026-02-08T01:22:18.731Z",
+      "usageCount": 0,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    },
+    {
+      "id": "session_qez4dt9RmE",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:12:38.805Z",
+      "createdAt": "2026-02-08T01:22:38.805Z",
+      "usageCount": 0,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    },
+    {
+      "id": "session_hUpLAsRcCM",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:13:09.616Z",
+      "createdAt": "2026-02-08T01:23:09.616Z",
+      "usageCount": 0,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    },
+    {
+      "id": "session_aibiaNYagG",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:13:31.226Z",
+      "createdAt": "2026-02-08T01:23:31.226Z",
+      "usageCount": 0,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    },
+    {
+      "id": "session_QGF0KE7e5h",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:13:55.370Z",
+      "createdAt": "2026-02-08T01:23:55.370Z",
+      "usageCount": 0,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    },
+    {
+      "id": "session_up4YFRu3tP",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:13:55.374Z",
+      "createdAt": "2026-02-08T01:23:55.374Z",
+      "usageCount": 3,
+      "maxUsageCount": 50,
+      "errorScore": 7
+    },
+    {
+      "id": "session_CZgzP2gqWP",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:13:55.945Z",
+      "createdAt": "2026-02-08T01:23:55.945Z",
+      "usageCount": 0,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    },
+    {
+      "id": "session_vfrSc776IB",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:13:55.946Z",
+      "createdAt": "2026-02-08T01:23:55.946Z",
+      "usageCount": 3,
+      "maxUsageCount": 50,
+      "errorScore": 7
+    },
+    {
+      "id": "session_sqEEj7pJtv",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:13:56.516Z",
+      "createdAt": "2026-02-08T01:23:56.516Z",
+      "usageCount": 0,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    },
+    {
+      "id": "session_9nFgaeJgiu",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:13:56.517Z",
+      "createdAt": "2026-02-08T01:23:56.517Z",
+      "usageCount": 3,
+      "maxUsageCount": 50,
+      "errorScore": 7
+    },
+    {
+      "id": "session_X86aLlAVUP",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:13:57.008Z",
+      "createdAt": "2026-02-08T01:23:57.008Z",
+      "usageCount": 0,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    },
+    {
+      "id": "session_7aZVzxfgkx",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:13:57.009Z",
+      "createdAt": "2026-02-08T01:23:57.009Z",
+      "usageCount": 3,
+      "maxUsageCount": 50,
+      "errorScore": 7
+    },
+    {
+      "id": "session_HncC7MflMr",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:13:57.503Z",
+      "createdAt": "2026-02-08T01:23:57.503Z",
+      "usageCount": 0,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    },
+    {
+      "id": "session_edDv06xywj",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": [
+          {
+            "key": "_cfuvid",
+            "value": "htz9CpgknDpwHorBPimNnxwIhOBebdwVE9g_I3FgjT0-1770513837.7302408-1.0.1.1-ATM1ORDKE51tf0C0JQxMcBUImEx4tWo9_BxBqVOTudQ",
+            "expires": "2026-02-08T02:14:03.568Z",
+            "domain": "www.oliveyoung.co.kr",
+            "path": "/",
+            "secure": true,
+            "httpOnly": true,
+            "hostOnly": false,
+            "creation": "2026-02-08T01:24:03.568Z",
+            "lastAccessed": "2026-02-08T01:25:29.479Z"
+          },
+          {
+            "key": "productHistory",
+            "value": "[\"A000000243070\",\"A000000158615\",\"A000000226201\",\"A000000231293\"]",
+            "expires": "2026-03-10T01:25:28.000Z",
+            "domain": "www.oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:24:03.568Z",
+            "lastAccessed": "2026-02-08T01:25:29.480Z"
+          },
+          {
+            "key": "_hackle_hid",
+            "value": "869e3442-01cf-4c7c-abc5-9afd2f0efff5",
+            "expires": "2027-02-08T01:24:01.000Z",
+            "domain": "www.oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:24:03.568Z",
+            "lastAccessed": "2026-02-08T01:25:29.479Z"
+          },
+          {
+            "key": "_hackle_did_Dy6RzDWaG255EUa7BVJ5nkdjjbflQ0zW",
+            "value": "869e3442-01cf-4c7c-abc5-9afd2f0efff5",
+            "expires": "2027-03-15T01:25:28.065Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:24:03.568Z",
+            "lastAccessed": "2026-02-08T01:25:29.479Z"
+          },
+          {
+            "key": "_hackle_session_id_G255EUa7BVJ5nkdjjbflQ0zW",
+            "value": "1770513841258.df644c31",
+            "expires": "2027-03-15T01:24:01.258Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:24:03.568Z",
+            "lastAccessed": "2026-02-08T01:25:29.479Z"
+          },
+          {
+            "key": "_hackle_last_event_ts_G255EUa7BVJ5nkdjjbflQ0zW",
+            "value": "1770513928945",
+            "expires": "2027-03-15T01:25:28.946Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:24:03.568Z",
+            "lastAccessed": "2026-02-08T01:25:29.480Z"
+          },
+          {
+            "key": "_hackle_mkt_Dy6RzDWa",
+            "value": "%7B%7D",
+            "expires": "2027-03-15T01:24:01.262Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:24:03.568Z",
+            "lastAccessed": "2026-02-08T01:25:29.479Z"
+          },
+          {
+            "key": "_dd_s",
+            "value": "aid=66a5d057-e215-4db6-9ee8-552d7db0859f&rum=0&expire=1770514828079",
+            "expires": "2027-02-08T01:25:28.000Z",
+            "domain": "www.oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": true,
+            "creation": "2026-02-08T01:24:03.568Z",
+            "lastAccessed": "2026-02-08T01:25:29.480Z"
+          },
+          {
+            "key": "RB_PCID",
+            "value": "1770513841473946180",
+            "expires": "2027-03-15T01:24:01.473Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:24:03.568Z",
+            "lastAccessed": "2026-02-08T01:25:29.479Z"
+          },
+          {
+            "key": "_fbp",
+            "value": "fb.2.1770513841739.201621015119339674",
+            "expires": "2026-05-09T01:25:28.000Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:24:03.568Z",
+            "lastAccessed": "2026-02-08T01:25:29.479Z"
+          },
+          {
+            "key": "_ga",
+            "value": "GA1.3.1132685766.1770513842",
+            "expires": "2027-03-15T01:25:29.039Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:24:03.568Z",
+            "lastAccessed": "2026-02-08T01:25:29.480Z"
+          },
+          {
+            "key": "_gid",
+            "value": "GA1.3.1952332822.1770513842",
+            "expires": "2026-02-09T01:25:29.000Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:24:03.568Z",
+            "lastAccessed": "2026-02-08T01:25:29.479Z"
+          },
+          {
+            "key": "RB_SSID",
+            "value": "SEcsBG9D94",
+            "expires": "2026-02-08T07:25:29.000Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:24:03.569Z",
+            "lastAccessed": "2026-02-08T01:25:29.480Z"
+          },
+          {
+            "key": "_ga_TTX3Z62VLN",
+            "value": "GS2.1.s1770513841$o1$g1$t1770513929$j40$l0$h0",
+            "expires": "2027-03-15T01:25:29.073Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:24:03.569Z",
+            "lastAccessed": "2026-02-08T01:25:29.480Z"
+          },
+          {
+            "key": "AMP_7fbb263808",
+            "value": "JTdCJTIyZGV2aWNlSWQlMjIlM0ElMjI5MDU0NDVkMS0zYmI0LTQ4MGUtOWEzMy01ZWJhMDRmZDQzYTElMjIlMkMlMjJzZXNzaW9uSWQlMjIlM0ExNzcwNTEzODQxNDAxJTJDJTIyb3B0T3V0JTIyJTNBZmFsc2UlMkMlMjJsYXN0RXZlbnRUaW1lJTIyJTNBMTc3MDUxMzkyOTEzOSUyQyUyMmxhc3RFdmVudElkJTIyJTNBMiUyQyUyMnBhZ2VDb3VudGVyJTIyJTNBMCU3RA==",
+            "expires": "2027-02-08T01:25:29.000Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:24:03.569Z",
+            "lastAccessed": "2026-02-08T01:25:29.480Z"
+          },
+          {
+            "key": "_tt_enable_cookie",
+            "value": "1",
+            "expires": "2026-05-09T01:25:28.000Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:24:03.569Z",
+            "lastAccessed": "2026-02-08T01:25:29.479Z"
+          },
+          {
+            "key": "_ttp",
+            "value": "01KGXDJG8HMA3MV39S8Z5CNV4H_.tt.2",
+            "expires": "2026-05-09T01:25:28.000Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:24:03.569Z",
+            "lastAccessed": "2026-02-08T01:25:29.480Z"
+          },
+          {
+            "key": "__cf_bm",
+            "value": "A219.EjHgAdIkWtRl.qwk_1Ty91q9nza3uYIVQKe5ks-1770513928.1624925-1.0.1.1-6tc9TaQ6Ws.ETwkOHY71g4K96MJaudzZWUbgmfeGRxrbjvcm3nOrG.lGYPlJhU33op_NIDW3InmDw3dq6iRNu0O8SoPhLrNzOKJZF76YBJtohGNtsuTQKju59ksbJQCE",
+            "expires": "2026-02-08T01:55:28.961Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "secure": true,
+            "httpOnly": true,
+            "hostOnly": false,
+            "creation": "2026-02-08T01:24:03.569Z",
+            "lastAccessed": "2026-02-08T01:25:29.480Z"
+          },
+          {
+            "key": "ttcsid",
+            "value": "1770513842456::qDwlpjEwj6-51-vVlnPC.1.1770513929049.0",
+            "expires": "2026-05-09T01:25:29.000Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:24:03.569Z",
+            "lastAccessed": "2026-02-08T01:25:29.480Z"
+          },
+          {
+            "key": "ttcsid_CMJ3CKJC77UBB48CH0CG",
+            "value": "1770513842454::BNZn18MSE_5QF1eFuJS3.1.1770513929049.0",
+            "expires": "2026-05-09T01:25:29.000Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:24:03.569Z",
+            "lastAccessed": "2026-02-08T01:25:29.480Z"
+          },
+          {
+            "key": "EG_GUID",
+            "value": "8eddc872-ee30-4461-8ac4-0a27983f651b",
+            "expires": "2027-03-15T01:24:02.891Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:24:03.569Z",
+            "lastAccessed": "2026-02-08T01:25:29.480Z"
+          },
+          {
+            "key": "_trs_id",
+            "value": "eY7%3E74542555%3F1",
+            "expires": "2027-03-15T01:24:03.026Z",
+            "domain": "www.oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": true,
+            "creation": "2026-02-08T01:24:03.569Z",
+            "lastAccessed": "2026-02-08T01:25:29.480Z"
+          },
+          {
+            "key": "_trs_sid",
+            "value": "G%5B6462464%3C4560%5Bg%5B5%3C56760777%3D3",
+            "expires": "2026-02-08T01:55:28.000Z",
+            "domain": "www.oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": true,
+            "creation": "2026-02-08T01:24:03.569Z",
+            "lastAccessed": "2026-02-08T01:25:29.480Z"
+          },
+          {
+            "key": "_trs_flow",
+            "expires": "2026-02-08T01:55:28.000Z",
+            "domain": "www.oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": true,
+            "creation": "2026-02-08T01:24:03.569Z",
+            "lastAccessed": "2026-02-08T01:25:29.480Z"
+          },
+          {
+            "key": "_ga_P9V7281JHW",
+            "value": "GS2.1.s1770513862$o1$g0$t1770513862$j60$l0$h0",
+            "expires": "2027-03-15T01:24:22.230Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:24:23.775Z",
+            "lastAccessed": "2026-02-08T01:25:29.480Z"
+          },
+          {
+            "key": "_gat_UA-92021806-9",
+            "value": "1",
+            "expires": "2026-02-08T01:26:09.000Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:25:10.509Z",
+            "lastAccessed": "2026-02-08T01:25:29.480Z"
+          }
+        ]
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:13:57.504Z",
+      "createdAt": "2026-02-08T01:23:57.504Z",
+      "usageCount": 5,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    },
+    {
+      "id": "session_ZK8OL3hgcM",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:14:22.263Z",
+      "createdAt": "2026-02-08T01:24:22.263Z",
+      "usageCount": 0,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    },
+    {
+      "id": "session_3kHU2UUYCI",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:14:44.300Z",
+      "createdAt": "2026-02-08T01:24:44.300Z",
+      "usageCount": 0,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    },
+    {
+      "id": "session_N2UkUwD9le",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:15:06.971Z",
+      "createdAt": "2026-02-08T01:25:06.971Z",
+      "usageCount": 0,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    },
+    {
+      "id": "session_7kdqiaZEUa",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:15:26.688Z",
+      "createdAt": "2026-02-08T01:25:26.688Z",
+      "usageCount": 0,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    },
+    {
+      "id": "session_CPeU90XJdk",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:15:50.126Z",
+      "createdAt": "2026-02-08T01:25:50.126Z",
+      "usageCount": 0,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    },
+    {
+      "id": "session_5B7m8Dy5zr",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:15:50.127Z",
+      "createdAt": "2026-02-08T01:25:50.127Z",
+      "usageCount": 3,
+      "maxUsageCount": 50,
+      "errorScore": 7
+    },
+    {
+      "id": "session_zDYhir5LUX",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:15:50.782Z",
+      "createdAt": "2026-02-08T01:25:50.782Z",
+      "usageCount": 0,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    },
+    {
+      "id": "session_LyL01b3rIg",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:15:50.783Z",
+      "createdAt": "2026-02-08T01:25:50.783Z",
+      "usageCount": 3,
+      "maxUsageCount": 50,
+      "errorScore": 7
+    },
+    {
+      "id": "session_prhAtjIiwv",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:15:51.385Z",
+      "createdAt": "2026-02-08T01:25:51.385Z",
+      "usageCount": 0,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    },
+    {
+      "id": "session_46NkCL9jvo",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:15:51.390Z",
+      "createdAt": "2026-02-08T01:25:51.390Z",
+      "usageCount": 3,
+      "maxUsageCount": 50,
+      "errorScore": 7
+    },
+    {
+      "id": "session_RnQQhrKELu",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:15:51.968Z",
+      "createdAt": "2026-02-08T01:25:51.968Z",
+      "usageCount": 0,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    },
+    {
+      "id": "session_dF9lhsUHsc",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": [
+          {
+            "key": "_cfuvid",
+            "value": "qf_yE4Vzl6MrDKrAx7YpM3vHF9_VtUY7PLfWEWdH0H4-1770513952.236565-1.0.1.1-VxVX8pYst85wMGrMIQVSwEm23ShgsNnE4sARMArFFwU",
+            "expires": "2026-02-08T02:15:59.375Z",
+            "domain": "www.oliveyoung.co.kr",
+            "path": "/",
+            "secure": true,
+            "httpOnly": true,
+            "hostOnly": false,
+            "creation": "2026-02-08T01:25:59.375Z",
+            "lastAccessed": "2026-02-08T01:27:23.018Z"
+          },
+          {
+            "key": "productHistory",
+            "value": "[\"A000000245634\",\"A000000188004\",\"A000000245672\",\"A000000222698\"]",
+            "expires": "2026-03-10T01:27:22.000Z",
+            "domain": "www.oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:25:59.375Z",
+            "lastAccessed": "2026-02-08T01:27:23.026Z"
+          },
+          {
+            "key": "_hackle_hid",
+            "value": "35ec9c6f-a21b-4a92-a19c-438f23eba096",
+            "expires": "2027-02-08T01:25:55.000Z",
+            "domain": "www.oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:25:59.375Z",
+            "lastAccessed": "2026-02-08T01:27:23.018Z"
+          },
+          {
+            "key": "_hackle_did_Dy6RzDWaG255EUa7BVJ5nkdjjbflQ0zW",
+            "value": "35ec9c6f-a21b-4a92-a19c-438f23eba096",
+            "expires": "2027-03-15T01:27:22.186Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:25:59.375Z",
+            "lastAccessed": "2026-02-08T01:27:23.019Z"
+          },
+          {
+            "key": "_hackle_session_id_G255EUa7BVJ5nkdjjbflQ0zW",
+            "value": "1770513955869.820bc0ab",
+            "expires": "2027-03-15T01:25:55.869Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:25:59.375Z",
+            "lastAccessed": "2026-02-08T01:27:23.019Z"
+          },
+          {
+            "key": "_hackle_mkt_Dy6RzDWa",
+            "value": "%7B%7D",
+            "expires": "2027-03-15T01:25:55.870Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:25:59.375Z",
+            "lastAccessed": "2026-02-08T01:27:23.019Z"
+          },
+          {
+            "key": "_dd_s",
+            "value": "aid=b3841a00-24e2-4f6d-ab4b-1f43c38bd893&rum=0&expire=1770514942195",
+            "expires": "2027-02-08T01:27:22.000Z",
+            "domain": "www.oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": true,
+            "creation": "2026-02-08T01:25:59.375Z",
+            "lastAccessed": "2026-02-08T01:27:23.026Z"
+          },
+          {
+            "key": "AMP_7fbb263808",
+            "value": "JTdCJTIyZGV2aWNlSWQlMjIlM0ElMjIxZDhkZTdiNS05N2NkLTQyMDQtOTVkMC1hYmVlNGZmYjJmN2ElMjIlMkMlMjJzZXNzaW9uSWQlMjIlM0ExNzcwNTEzOTU1OTYyJTJDJTIyb3B0T3V0JTIyJTNBZmFsc2UlMkMlMjJsYXN0RXZlbnRUaW1lJTIyJTNBMTc3MDUxMzk1NjgyMCUyQyUyMmxhc3RFdmVudElkJTIyJTNBMCUyQyUyMnBhZ2VDb3VudGVyJTIyJTNBMCU3RA==",
+            "expires": "2027-02-08T01:27:22.000Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:25:59.375Z",
+            "lastAccessed": "2026-02-08T01:27:23.026Z"
+          },
+          {
+            "key": "_fbp",
+            "value": "fb.2.1770513957298.176680657520993228",
+            "expires": "2026-05-09T01:27:22.000Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:25:59.375Z",
+            "lastAccessed": "2026-02-08T01:27:23.019Z"
+          },
+          {
+            "key": "_ga_TTX3Z62VLN",
+            "value": "GS2.1.s1770513957$o1$g1$t1770514042$j36$l0$h0",
+            "expires": "2027-03-15T01:27:22.385Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:25:59.375Z",
+            "lastAccessed": "2026-02-08T01:27:23.026Z"
+          },
+          {
+            "key": "RB_PCID",
+            "value": "1770513957433895372",
+            "expires": "2027-03-15T01:25:57.436Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:25:59.375Z",
+            "lastAccessed": "2026-02-08T01:27:23.019Z"
+          },
+          {
+            "key": "RB_SSID",
+            "value": "C7aFQdEtld",
+            "expires": "2026-02-08T07:27:22.000Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:25:59.375Z",
+            "lastAccessed": "2026-02-08T01:27:23.026Z"
+          },
+          {
+            "key": "__cf_bm",
+            "value": "4IjCEaUEDTb8yTHyJjJpb03_UY0Mk6JReu6WB6I1QpU-1770514042.2870057-1.0.1.1-xTf5GgH_LvEbU7gPINRPJTSXLkuiEUGsZ8Vi.zGpFHWvAXKWHpd7RnA_HmOBn5JSIPSwr6_b_bcRTTdguCOH3XWf5Rj_0YJNb4SZB7tBYHZL1GFH7qP89CKHsMpyH.ws",
+            "expires": "2026-02-08T01:57:22.997Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "secure": true,
+            "httpOnly": true,
+            "hostOnly": false,
+            "creation": "2026-02-08T01:25:59.375Z",
+            "lastAccessed": "2026-02-08T01:27:23.026Z"
+          },
+          {
+            "key": "_ga",
+            "value": "GA1.3.510816497.1770513957",
+            "expires": "2027-03-15T01:27:22.388Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:25:59.375Z",
+            "lastAccessed": "2026-02-08T01:27:23.026Z"
+          },
+          {
+            "key": "_gid",
+            "value": "GA1.3.1193005434.1770513958",
+            "expires": "2026-02-09T01:27:22.000Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:25:59.375Z",
+            "lastAccessed": "2026-02-08T01:27:23.019Z"
+          },
+          {
+            "key": "_tt_enable_cookie",
+            "value": "1",
+            "expires": "2026-05-09T01:27:22.000Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:25:59.376Z",
+            "lastAccessed": "2026-02-08T01:27:23.019Z"
+          },
+          {
+            "key": "_ttp",
+            "value": "01KGXDP18VBN83A3HPETVMVS7Q_.tt.2",
+            "expires": "2026-05-09T01:27:22.000Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:25:59.376Z",
+            "lastAccessed": "2026-02-08T01:27:23.019Z"
+          },
+          {
+            "key": "ttcsid",
+            "value": "1770513958174::btXRkRrx-c6w82QfHldv.1.1770514042706.0",
+            "expires": "2026-05-09T01:27:22.000Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:25:59.376Z",
+            "lastAccessed": "2026-02-08T01:27:23.026Z"
+          },
+          {
+            "key": "ttcsid_CMJ3CKJC77UBB48CH0CG",
+            "value": "1770513958174::Uh-wVQ068ZizIeaMDFp_.1.1770514042707.0",
+            "expires": "2026-05-09T01:27:22.000Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:25:59.376Z",
+            "lastAccessed": "2026-02-08T01:27:23.026Z"
+          },
+          {
+            "key": "_hackle_last_event_ts_G255EUa7BVJ5nkdjjbflQ0zW",
+            "value": "1770514042194",
+            "expires": "2027-03-15T01:27:22.194Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:25:59.376Z",
+            "lastAccessed": "2026-02-08T01:27:23.026Z"
+          },
+          {
+            "key": "_trs_id",
+            "value": "eY7%3E704433%3F0743",
+            "expires": "2027-03-15T01:25:59.063Z",
+            "domain": "www.oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": true,
+            "creation": "2026-02-08T01:25:59.376Z",
+            "lastAccessed": "2026-02-08T01:27:23.019Z"
+          },
+          {
+            "key": "_trs_sid",
+            "value": "G%5B6462464%3C4561%5Bg%5B5%3C526611%3D2561",
+            "expires": "2026-02-08T01:57:22.000Z",
+            "domain": "www.oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": true,
+            "creation": "2026-02-08T01:25:59.376Z",
+            "lastAccessed": "2026-02-08T01:27:23.019Z"
+          },
+          {
+            "key": "_trs_flow",
+            "expires": "2026-02-08T01:57:22.000Z",
+            "domain": "www.oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": true,
+            "creation": "2026-02-08T01:25:59.376Z",
+            "lastAccessed": "2026-02-08T01:27:23.019Z"
+          },
+          {
+            "key": "EG_GUID",
+            "value": "6ed80dde-cc70-4360-a59d-cec516370a3a",
+            "expires": "2027-03-15T01:25:59.278Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:25:59.376Z",
+            "lastAccessed": "2026-02-08T01:27:23.026Z"
+          },
+          {
+            "key": "_ga_P9V7281JHW",
+            "value": "GS2.1.s1770513978$o1$g0$t1770513978$j60$l0$h0",
+            "expires": "2027-03-15T01:26:18.031Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:26:19.136Z",
+            "lastAccessed": "2026-02-08T01:27:23.026Z"
+          },
+          {
+            "key": "_gat_UA-92021806-9",
+            "value": "1",
+            "expires": "2026-02-08T01:27:58.000Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:26:58.881Z",
+            "lastAccessed": "2026-02-08T01:27:23.026Z"
+          }
+        ]
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:15:51.972Z",
+      "createdAt": "2026-02-08T01:25:51.972Z",
+      "usageCount": 5,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    },
+    {
+      "id": "session_Xa8rCPaQfS",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:16:18.065Z",
+      "createdAt": "2026-02-08T01:26:18.065Z",
+      "usageCount": 0,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    },
+    {
+      "id": "session_4xMNVVJJe1",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:16:38.265Z",
+      "createdAt": "2026-02-08T01:26:38.265Z",
+      "usageCount": 0,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    },
+    {
+      "id": "session_seZtjvgNVV",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:16:57.329Z",
+      "createdAt": "2026-02-08T01:26:57.329Z",
+      "usageCount": 0,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    },
+    {
+      "id": "session_jYBdP4uMKM",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:17:21.196Z",
+      "createdAt": "2026-02-08T01:27:21.196Z",
+      "usageCount": 0,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    },
+    {
+      "id": "session_4RbHnmjs7g",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:17:39.760Z",
+      "createdAt": "2026-02-08T01:27:39.760Z",
+      "usageCount": 0,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    },
+    {
+      "id": "session_40I7ssTGnW",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:17:39.761Z",
+      "createdAt": "2026-02-08T01:27:39.761Z",
+      "usageCount": 3,
+      "maxUsageCount": 50,
+      "errorScore": 7
+    },
+    {
+      "id": "session_ggz9dcqACC",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:17:40.323Z",
+      "createdAt": "2026-02-08T01:27:40.323Z",
+      "usageCount": 0,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    },
+    {
+      "id": "session_yS2hwjl7wx",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:17:40.325Z",
+      "createdAt": "2026-02-08T01:27:40.325Z",
+      "usageCount": 3,
+      "maxUsageCount": 50,
+      "errorScore": 7
+    },
+    {
+      "id": "session_exc7K0NrKA",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:17:40.907Z",
+      "createdAt": "2026-02-08T01:27:40.907Z",
+      "usageCount": 0,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    },
+    {
+      "id": "session_VDq1SicGbw",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:17:40.909Z",
+      "createdAt": "2026-02-08T01:27:40.909Z",
+      "usageCount": 3,
+      "maxUsageCount": 50,
+      "errorScore": 7
+    },
+    {
+      "id": "session_Mtkngq33ad",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:17:41.418Z",
+      "createdAt": "2026-02-08T01:27:41.418Z",
+      "usageCount": 0,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    },
+    {
+      "id": "session_61rAnLAhnB",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:17:41.421Z",
+      "createdAt": "2026-02-08T01:27:41.421Z",
+      "usageCount": 3,
+      "maxUsageCount": 50,
+      "errorScore": 7
+    },
+    {
+      "id": "session_dD2VLrRdAb",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:17:42.041Z",
+      "createdAt": "2026-02-08T01:27:42.041Z",
+      "usageCount": 0,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    },
+    {
+      "id": "session_gfa3oiJGtx",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": [
+          {
+            "key": "_cfuvid",
+            "value": "QLE5gviQPXDevCQWKoE0v.jpf0goUXjIYJv33FNG5UI-1770514062.3259394-1.0.1.1-z4znPDa0KFAdervI.r94w.4NsXzt38xHrAqRc45Od18",
+            "expires": "2026-02-08T02:17:47.766Z",
+            "domain": "www.oliveyoung.co.kr",
+            "path": "/",
+            "secure": true,
+            "httpOnly": true,
+            "hostOnly": false,
+            "creation": "2026-02-08T01:27:47.767Z",
+            "lastAccessed": "2026-02-08T01:29:00.672Z"
+          },
+          {
+            "key": "productHistory",
+            "value": "[\"A000000246218\",\"A000000242341\",\"A000000244831\",\"A000000203971\"]",
+            "expires": "2026-03-10T01:28:59.000Z",
+            "domain": "www.oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:27:47.767Z",
+            "lastAccessed": "2026-02-08T01:29:00.672Z"
+          },
+          {
+            "key": "_hackle_hid",
+            "value": "0085ed32-5713-4f81-bbc9-05bccccf8f34",
+            "expires": "2027-02-08T01:27:45.000Z",
+            "domain": "www.oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:27:47.767Z",
+            "lastAccessed": "2026-02-08T01:29:00.672Z"
+          },
+          {
+            "key": "_hackle_did_Dy6RzDWaG255EUa7BVJ5nkdjjbflQ0zW",
+            "value": "0085ed32-5713-4f81-bbc9-05bccccf8f34",
+            "expires": "2027-03-15T01:28:59.356Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:27:47.767Z",
+            "lastAccessed": "2026-02-08T01:29:00.672Z"
+          },
+          {
+            "key": "_hackle_session_id_G255EUa7BVJ5nkdjjbflQ0zW",
+            "value": "1770514065353.2a91a9d1",
+            "expires": "2027-03-15T01:27:45.353Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:27:47.767Z",
+            "lastAccessed": "2026-02-08T01:29:00.672Z"
+          },
+          {
+            "key": "_hackle_last_event_ts_G255EUa7BVJ5nkdjjbflQ0zW",
+            "value": "1770514140304",
+            "expires": "2027-03-15T01:29:00.307Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:27:47.767Z",
+            "lastAccessed": "2026-02-08T01:29:00.672Z"
+          },
+          {
+            "key": "_hackle_mkt_Dy6RzDWa",
+            "value": "%7B%7D",
+            "expires": "2027-03-15T01:27:45.354Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:27:47.767Z",
+            "lastAccessed": "2026-02-08T01:29:00.672Z"
+          },
+          {
+            "key": "_dd_s",
+            "value": "aid=fd15bf4e-04cc-4110-9882-54f03a47c085&rum=2&id=7849f78a-9cef-4f19-8eb0-563c1df656c8&created=1770514065360&expire=1770515039361",
+            "expires": "2027-02-08T01:28:59.000Z",
+            "domain": "www.oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": true,
+            "creation": "2026-02-08T01:27:47.767Z",
+            "lastAccessed": "2026-02-08T01:29:00.672Z"
+          },
+          {
+            "key": "_fbp",
+            "value": "fb.2.1770514065710.634249749352616291",
+            "expires": "2026-05-09T01:28:59.000Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:27:47.767Z",
+            "lastAccessed": "2026-02-08T01:29:00.672Z"
+          },
+          {
+            "key": "RB_PCID",
+            "value": "1770514065730427479",
+            "expires": "2027-03-15T01:27:45.731Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:27:47.767Z",
+            "lastAccessed": "2026-02-08T01:29:00.672Z"
+          },
+          {
+            "key": "_ga",
+            "value": "GA1.3.881488264.1770514066",
+            "expires": "2027-03-15T01:29:00.244Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:27:47.769Z",
+            "lastAccessed": "2026-02-08T01:29:00.672Z"
+          },
+          {
+            "key": "_gid",
+            "value": "GA1.3.1004120290.1770514066",
+            "expires": "2026-02-09T01:29:00.000Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:27:47.769Z",
+            "lastAccessed": "2026-02-08T01:29:00.672Z"
+          },
+          {
+            "key": "RB_SSID",
+            "value": "AIk0WOiKYX",
+            "expires": "2026-02-08T07:29:00.000Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:27:47.769Z",
+            "lastAccessed": "2026-02-08T01:29:00.672Z"
+          },
+          {
+            "key": "_ga_TTX3Z62VLN",
+            "value": "GS2.1.s1770514065$o1$g1$t1770514140$j59$l0$h0",
+            "expires": "2027-03-15T01:29:00.256Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:27:47.769Z",
+            "lastAccessed": "2026-02-08T01:29:00.672Z"
+          },
+          {
+            "key": "AMP_7fbb263808",
+            "value": "JTdCJTIyZGV2aWNlSWQlMjIlM0ElMjJhN2QwNGY1ZS0xZTM2LTQzNjMtOGQwYy0wZTRkM2EzMmVhMDglMjIlMkMlMjJzZXNzaW9uSWQlMjIlM0ExNzcwNTE0MDY1NDU2JTJDJTIyb3B0T3V0JTIyJTNBZmFsc2UlMkMlMjJsYXN0RXZlbnRUaW1lJTIyJTNBMTc3MDUxNDE0MDI4NyUyQyUyMmxhc3RFdmVudElkJTIyJTNBMyUyQyUyMnBhZ2VDb3VudGVyJTIyJTNBMCU3RA==",
+            "expires": "2027-02-08T01:29:00.000Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:27:47.769Z",
+            "lastAccessed": "2026-02-08T01:29:00.672Z"
+          },
+          {
+            "key": "__cf_bm",
+            "value": "MQy3yIraItMY69XYMmlxLrT9gT7B8..K.YB2Q8w.VF0-1770514139.8238525-1.0.1.1-IABS5w1TZueUWlP2SAGXAV8v5bAw7NMDat5IjXTzGtglZLcgnc_K5vq.jirV3aE.LWiyzcX.fes_Dzea2psJwzUSIP8U4gpBzrRC6p.k4T716TLfM3g.cHkklULvHOXN",
+            "expires": "2026-02-08T01:59:00.668Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "secure": true,
+            "httpOnly": true,
+            "hostOnly": false,
+            "creation": "2026-02-08T01:27:47.769Z",
+            "lastAccessed": "2026-02-08T01:29:00.672Z"
+          },
+          {
+            "key": "_tt_enable_cookie",
+            "value": "1",
+            "expires": "2026-05-09T01:28:59.000Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:27:47.769Z",
+            "lastAccessed": "2026-02-08T01:29:00.672Z"
+          },
+          {
+            "key": "_ttp",
+            "value": "01KGXDSBNWYVNME9HB7474G5GG_.tt.2",
+            "expires": "2026-05-09T01:28:59.000Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:27:47.769Z",
+            "lastAccessed": "2026-02-08T01:29:00.672Z"
+          },
+          {
+            "key": "EG_GUID",
+            "value": "335d0386-6f60-4802-a434-f555b9752d70",
+            "expires": "2027-03-15T01:27:47.207Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:27:47.769Z",
+            "lastAccessed": "2026-02-08T01:29:00.672Z"
+          },
+          {
+            "key": "ttcsid",
+            "value": "1770514067143::GO0T3hP31IPhRDK8b7VH.1.1770514140247.0",
+            "expires": "2026-05-09T01:29:00.000Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:27:47.769Z",
+            "lastAccessed": "2026-02-08T01:29:00.672Z"
+          },
+          {
+            "key": "ttcsid_CMJ3CKJC77UBB48CH0CG",
+            "value": "1770514067143::freE4NeJOUci33v_F5f5.1.1770514140247.0",
+            "expires": "2026-05-09T01:29:00.000Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:27:47.769Z",
+            "lastAccessed": "2026-02-08T01:29:00.672Z"
+          },
+          {
+            "key": "_trs_id",
+            "value": "eY7%3E72354121%3E%3F%3F",
+            "expires": "2027-03-15T01:27:47.453Z",
+            "domain": "www.oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": true,
+            "creation": "2026-02-08T01:27:47.769Z",
+            "lastAccessed": "2026-02-08T01:29:00.672Z"
+          },
+          {
+            "key": "_trs_sid",
+            "value": "G%5B6462464%3C4563%5Bg%5B5%3C50176303%3C%3D%3D",
+            "expires": "2026-02-08T01:58:59.000Z",
+            "domain": "www.oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": true,
+            "creation": "2026-02-08T01:27:47.769Z",
+            "lastAccessed": "2026-02-08T01:29:00.672Z"
+          },
+          {
+            "key": "_trs_flow",
+            "expires": "2026-02-08T01:58:59.000Z",
+            "domain": "www.oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": true,
+            "creation": "2026-02-08T01:27:47.769Z",
+            "lastAccessed": "2026-02-08T01:29:00.672Z"
+          },
+          {
+            "key": "_ga_P9V7281JHW",
+            "value": "GS2.1.s1770514089$o1$g0$t1770514089$j60$l0$h0",
+            "expires": "2027-03-15T01:28:09.980Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:28:13.854Z",
+            "lastAccessed": "2026-02-08T01:29:00.672Z"
+          },
+          {
+            "key": "_gat_UA-92021806-9",
+            "value": "1",
+            "expires": "2026-02-08T01:29:59.000Z",
+            "domain": "oliveyoung.co.kr",
+            "path": "/",
+            "hostOnly": false,
+            "creation": "2026-02-08T01:29:00.672Z",
+            "lastAccessed": "2026-02-08T01:29:00.672Z"
+          }
+        ]
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:17:42.042Z",
+      "createdAt": "2026-02-08T01:27:42.042Z",
+      "usageCount": 3,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    },
+    {
+      "id": "session_GBERiePNRu",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:18:10.042Z",
+      "createdAt": "2026-02-08T01:28:10.042Z",
+      "usageCount": 0,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    },
+    {
+      "id": "session_oOpWrselsk",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:18:32.652Z",
+      "createdAt": "2026-02-08T01:28:32.652Z",
+      "usageCount": 0,
+      "maxUsageCount": 50,
+      "errorScore": 0
+    },
+    {
+      "id": "session_2lSw4EkHZS",
+      "cookieJar": {
+        "version": "tough-cookie@6.0.0",
+        "storeType": "MemoryCookieStore",
+        "rejectPublicSuffixes": true,
+        "enableLooseMode": false,
+        "allowSpecialUseDomain": true,
+        "prefixSecurity": "silent",
+        "cookies": []
+      },
+      "userData": {},
+      "maxErrorScore": 3,
+      "errorScoreDecrement": 0.5,
+      "expiresAt": "2026-02-08T02:18:58.410Z",
+      "createdAt": "2026-02-08T01:28:58.410Z",
       "usageCount": 0,
       "maxUsageCount": 50,
       "errorScore": 0
