@@ -118,18 +118,26 @@ const genAI = new GoogleGenerativeAI(GOOGLE_GEMINI_API_KEY);
 // ==================== 설정 ====================
 const TARGET_SIZE = 1200;
 const PRODUCT_RATIO = 0.75;
-const MIN_SCORE_FOR_GALLERY = 50;  // ✅ v9: 70 → 50으로 완화
+const MIN_SCORE_FOR_GALLERY = 60;  // ✅ v12: 50 → 60으로 강화
+const MIN_SCORE_FOR_MAIN = 35;     // ✅ v12: 메인 이미지 최소 점수 추가
 
-log('🚀 Phase 4: 최고 이미지 선별 + 네이버 보충 (v11 개선 버전)');
+log('🚀 Phase 4: 최고 이미지 선별 + 네이버 보충 (v12 머지 버전)');
 log('='.repeat(70));
 log(`⚙️  설정:`);
 log(`   - Shopify Table: ${SHOPIFY_TABLE_ID}`);
 log(`   - 최종 크기: ${TARGET_SIZE}x${TARGET_SIZE}px`);
 log(`   - 제품 비율: ${PRODUCT_RATIO * 100}%`);
 log(`   - Gallery 최소 점수: ${MIN_SCORE_FOR_GALLERY}점`);
-log(`\n✨ v11 핵심 변경:`);
-log(`   ✅ v10 유지: 용량 50%+ 차이 -30점, 품질 12점 미만 -20점`);
-log(`   ✅ 여러 제품 감지: -20점 → -40점 (개별 제품에 다른 제품 포함 방지)\n`);
+log(`   - Main 최소 점수: ${MIN_SCORE_FOR_MAIN}점`);
+log(`\n✨ v12 핵심 변경 (v11 최적화 유지):`);
+log(`   ✅ Gemini API 통합: 6→2회 (analyzeImageBasics + evaluateImageDetails)`);
+log(`   ✅ Gallery 최소 점수: 50 → 60`);
+log(`   ✅ Main 최소 점수: 35 (신규)`);
+log(`   ✅ 미확인 항목 동정점수: 5 → 2`);
+log(`   ✅ 개별제품 포장박스: -15 → -30 (하드 감점)`);
+log(`   ✅ 이미 처리된 제품 재처리 방지`);
+log(`   ✅ 네이버 이미지 rembg 후 10KB 미만 건너뛰기`);
+log(`   ✅ 용량 불일치: 하드탈락 → -30 감점\n`);
 
 // ==================== 유틸리티 ====================
 const cleanupFiles = (...files) => {
@@ -168,12 +176,14 @@ async function getProductsFromNocoDB() {
         {
             headers: { 'xc-token': NOCODB_API_TOKEN },
             params: {
-                limit: parseInt(process.env.PRODUCT_LIMIT) || 1000
+                limit: parseInt(process.env.PRODUCT_LIMIT) || 1000,
+                // ✅ v12: 이미 처리된 제품 재처리 방지
+                where: '~and(validated_images,notnull)~and(main_image,is,null)'
             }
         }
     );
 
-    // NocoDB notnull 필터가 attachment 필드에서 불안정하므로 JS에서 필터링
+    // ✅ v11: NocoDB notnull 필터가 attachment 필드에서 불안정하므로 JS에서 필터링
     return response.data.list.filter(product =>
         product.validated_images &&
         Array.isArray(product.validated_images) &&
@@ -235,7 +245,7 @@ function extractProductInfo(productTitle) {
         isSetProduct: false
     };
     
-    // ✅ v11.1: 영문 + 한국어 브랜드 모두 인식
+    // ✅ v11: 영문 + 한국어 + 확장 라틴 브랜드 모두 인식
     const brandMatch = productTitle.match(/^([A-Za-z\u00C0-\u024F]+)/);
     if (brandMatch) {
         info.brandName = brandMatch[1].toLowerCase();
@@ -613,10 +623,10 @@ VOLUME: [읽은 용량 또는 UNKNOWN]`;
                     score += 3;
                     log(`      ⚠️  용량 차이: ${detectedVolume} ≠ ${productInfo.volume} (+3점)`);
                 } else {
-                    // 50% 이상 차이는 완전히 다른 제품!
+                    // ✅ v10: 50% 이상 차이는 완전히 다른 제품! 강력 감점!
+                    volumePenalty = -30;
                     log(`      ❌ 용량 크게 불일치: ${detectedVolume} ≠ ${productInfo.volume}`);
-                    log(`      🚫 다른 제품 → 하드 탈락 시그널`);
-                    return { score: -1, isWrongProduct: true };
+                    log(`      📉 다른 제품 감점: -30점`);
                 }
             }
         } else {
@@ -830,12 +840,12 @@ IS_COMPLETE: [YES/NO]`;
             }
         }
 
-        // 포장박스 감점
+        // ✅ v12: 포장박스 감점 - 개별 제품은 -30, 세트 제품은 -15
         let packagingPenalty = 0;
         if (hasPackaging) {
-            packagingPenalty = -15;
+            packagingPenalty = isSetProduct ? -15 : -30;
             log(`      ⚠️  포장박스 감지됨`);
-            log(`      📉 감점: -15점 (탈락 아님!)`);
+            log(`      📉 감점: ${packagingPenalty}점 ${!isSetProduct ? '(개별 제품 하드 감점!)' : '(탈락 아님!)'}`);
         } else {
             log(`      ✅ 포장박스 없음`);
         }
@@ -958,21 +968,21 @@ QUALITY: [0-20 숫자]${setFormat}`;
         const targetBrand = (productInfo.brandName || '').toLowerCase();
         const targetLine = (productInfo.productLineName || '').toLowerCase();
 
-        // 브랜드 확인
+        // ✅ v12: 브랜드 확인 (동정점수 5→2)
         if (detectedBrand !== 'unknown' && targetBrand) {
             if (detectedBrand.includes(targetBrand) || targetBrand.includes(detectedBrand)) {
                 titleMatchScore += 10;
                 log(`      ✅ 브랜드 일치: ${detectedBrand} (+10점)`);
             } else {
-                titleMatchScore += 5;
-                log(`      ⚠️  브랜드 불일치: ${detectedBrand} ≠ ${targetBrand} (+5점)`);
+                titleMatchScore += 2;  // ✅ v12: 5 → 2
+                log(`      ⚠️  브랜드 불일치: ${detectedBrand} ≠ ${targetBrand} (+2점)`);
             }
         } else {
-            titleMatchScore += 5;
-            log(`      ⚠️  브랜드 미확인 (+5점)`);
+            titleMatchScore += 2;  // ✅ v12: 5 → 2
+            log(`      ⚠️  브랜드 미확인 (+2점)`);
         }
 
-        // 제품 라인 확인
+        // ✅ v12: 제품 라인 확인 (동정점수 5→2)
         if (detectedProductLine !== 'unknown' && targetLine) {
             const targetWords = targetLine.split(' ').slice(0, 2).join(' ');
             const detectedWords = detectedProductLine.split(' ').slice(0, 2).join(' ');
@@ -982,15 +992,15 @@ QUALITY: [0-20 숫자]${setFormat}`;
                 titleMatchScore += 10;
                 log(`      ✅ 제품 라인 일치 (+10점)`);
             } else {
-                titleMatchScore += 5;
-                log(`      ⚠️  제품 라인 불일치 (+5점)`);
+                titleMatchScore += 2;  // ✅ v12: 5 → 2
+                log(`      ⚠️  제품 라인 불일치 (+2점)`);
             }
         } else {
-            titleMatchScore += 5;
-            log(`      ⚠️  제품 라인 미확인 (+5점)`);
+            titleMatchScore += 2;  // ✅ v12: 5 → 2
+            log(`      ⚠️  제품 라인 미확인 (+2점)`);
         }
 
-        // 용량 확인
+        // ✅ v12: 용량 확인 (하드탈락 → -30 감점)
         let volumePenalty = 0;
         if (detectedVolume !== 'unknown' && productInfo.volume) {
             const detectedNum = parseInt(detectedVolume.match(/\d+/)?.[0] || '0');
@@ -1009,19 +1019,15 @@ QUALITY: [0-20 숫자]${setFormat}`;
                     titleMatchScore += 3;
                     log(`      ⚠️  용량 차이: ${detectedVolume} ≠ ${productInfo.volume} (+3점)`);
                 } else {
-                    // 50% 이상 차이는 완전히 다른 제품!
+                    // ✅ v12: 하드탈락 대신 -30 감점
+                    volumePenalty = -30;
                     log(`      ❌ 용량 크게 불일치: ${detectedVolume} ≠ ${productInfo.volume}`);
-                    log(`      🚫 다른 제품 → 하드 탈락 시그널`);
-                    return {
-                        titleMatchScore: { score: -1, isWrongProduct: true },
-                        setCompositionScore: 0,
-                        qualityScore: 0
-                    };
+                    log(`      📉 다른 제품 감점: -30점`);
                 }
             }
         } else {
-            titleMatchScore += 5;
-            log(`      ⚠️  용량 미확인 (+5점)`);
+            titleMatchScore += 2;  // ✅ v12: 5 → 2
+            log(`      ⚠️  용량 미확인 (+2점)`);
         }
 
         titleMatchScore += volumePenalty;
@@ -1085,7 +1091,7 @@ QUALITY: [0-20 숫자]${setFormat}`;
     }
 }
 
-// ==================== v9: 이미지 점수 계산 (탈락 없음!) ====================
+// ==================== v12 머지: 이미지 점수 계산 (통합 API 사용) ====================
 async function scoreImage(imageData, imagePath, productTitle, productInfo, index) {
     log(`\n   이미지 ${index + 1} 평가:`);
     log(`   ${'─'.repeat(66)}`);
@@ -1096,20 +1102,20 @@ async function scoreImage(imageData, imagePath, productTitle, productInfo, index
         titleMatch: 0,
         setComposition: 0,
         quality: 0,
-        penalties: 0  // ✅ v9: 감점 항목 추가
+        penalties: 0
     };
     
     const resolution = getImageResolution(imagePath);
     scores.resolution = calculateResolutionScore(resolution);
     log(`      📐 해상도: ${scores.resolution}/30점 (${resolution?.width}x${resolution?.height})`);
     
-    // ✅ 통합 API 1: 기본 분석 (여러제품 + 포장박스 + 완성도)
+    // ✅ 통합 API 1: 기본 분석 (여러제품 + 포장박스 + 완성도) - API 1회
     const basics = await analyzeImageBasics(imagePath, productTitle, productInfo);
     scores.penalties += basics.multipleProductsPenalty;
     scores.penalties += basics.packagingPenalty;
     scores.completeness = basics.completenessScore;
 
-    // ✅ 통합 API 2: 상세 평가 (타이틀매칭 + 세트구성 + 품질)
+    // ✅ 통합 API 2: 상세 평가 (타이틀매칭 + 세트구성 + 품질) - API 1회
     const details = await evaluateImageDetails(imagePath, productTitle, productInfo, imageData.originalUrl || null);
     scores.titleMatch = details.titleMatchScore.score;
     scores.setComposition = details.setCompositionScore;
@@ -1121,7 +1127,7 @@ async function scoreImage(imageData, imagePath, productTitle, productInfo, index
         log(`      📉 품질 저하 감점: -20점 (품질 ${scores.quality}점 < 12점)`);
     }
     
-    // ✅ v9: 총점 계산 (감점 포함)
+    // ✅ 총점 계산 (감점 포함)
     let totalScore = Math.max(0,
         scores.resolution + scores.completeness + scores.titleMatch +
         scores.setComposition + scores.quality + scores.penalties
@@ -1133,7 +1139,7 @@ async function scoreImage(imageData, imagePath, productTitle, productInfo, index
         totalScore = 0;
     }
 
-    // 하드 탈락: 용량 크게 불일치 → 총점 0점
+    // 하드 탈락: 용량 크게 불일치 (titleMatch가 음수) → 총점 0점
     if (scores.titleMatch < 0) {
         log(`      🚫 하드 탈락: 용량 크게 불일치 → 0점`);
         totalScore = 0;
@@ -1574,7 +1580,7 @@ async function processProduct(product, productIndex, totalProducts) {
     try {
         await axios.patch(
             `${NOCODB_API_URL}/api/v2/tables/${SHOPIFY_TABLE_ID}/records`,
-            [{ Id: Id, main_image: null, gallery_images: null }],  // ✅ 배열
+            [{ Id: Id, main_image: null, gallery_images: null }],  // ✅ v11: 배열 래퍼
             { headers: { 'xc-token': NOCODB_API_TOKEN, 'Content-Type': 'application/json' } }
         );
         log(`   ✅ 초기화 완료!\n`);
@@ -1611,7 +1617,7 @@ async function processProduct(product, productIndex, totalProducts) {
     
     log(`📸 검증된 이미지: ${validated_images.length}개\n`);
     
-    log(`📊 Step 2: 이미지 평가 (v9 완화 버전)`);
+    log(`📊 Step 2: 이미지 평가 (v12 통합 API 버전)`);
     log(`${'─'.repeat(70)}`);
     
     const scoredImages = [];
@@ -1650,7 +1656,6 @@ async function processProduct(product, productIndex, totalProducts) {
         return;
     }
     
-    // ✅ v9: 모든 이미지가 점수를 받으므로 필터링 없이 정렬만!
     scoredImages.sort((a, b) => b.totalScore - a.totalScore);
     
     log(`\n📊 평가 결과 (점수순):`);
@@ -1660,9 +1665,27 @@ async function processProduct(product, productIndex, totalProducts) {
     
     log(`\n✂️  Step 3: 상위 3개 선별`);
     
-    const selectedForSave = scoredImages.slice(0, 3);  // ✅ v9: 상위 3개 선택
+    // ✅ v12: 점수 기반 선별 (MIN_SCORE_FOR_MAIN, MIN_SCORE_FOR_GALLERY)
+    if (scoredImages[0].totalScore < MIN_SCORE_FOR_MAIN) {
+        log(`   ⚠️  최고점 ${scoredImages[0].totalScore}점 < 최소 ${MIN_SCORE_FOR_MAIN}점 → 품질 미달`);
+    }
     
-    log(`   선별됨: ${selectedForSave.length}개`);
+    const selectedForSave = [];
+    for (const img of scoredImages.slice(0, 3)) {
+        if (selectedForSave.length === 0) {
+            // 메인 이미지: MIN_SCORE_FOR_MAIN 이상
+            if (img.totalScore >= MIN_SCORE_FOR_MAIN) {
+                selectedForSave.push(img);
+            }
+        } else {
+            // 갤러리 이미지: MIN_SCORE_FOR_GALLERY 이상
+            if (img.totalScore >= MIN_SCORE_FOR_GALLERY) {
+                selectedForSave.push(img);
+            }
+        }
+    }
+    
+    log(`   선별됨: ${selectedForSave.length}개 (메인 최소: ${MIN_SCORE_FOR_MAIN}점, 갤러리 최소: ${MIN_SCORE_FOR_GALLERY}점)`);
     
     log(`\n📐 Step 4: 정규화 + 업로드`);
     
@@ -1716,7 +1739,7 @@ async function processProduct(product, productIndex, totalProducts) {
     try {
         await axios.patch(
             `${NOCODB_API_URL}/api/v2/tables/${SHOPIFY_TABLE_ID}/records`,
-            [{  // ✅ 배열
+            [{  // ✅ v11: 배열 래퍼
                 Id: Id,
                 main_image: [mainImage],
                 gallery_images: galleryImages.length > 0 ? galleryImages : null,
@@ -1771,7 +1794,7 @@ async function processProduct(product, productIndex, totalProducts) {
     log(`\n⚠️  부족함! (${totalCount}/3개) → 네이버 보충`);
     const needed = 3 - totalCount;
     
-    // 네이버 보충 로직 (간소화)
+    // 네이버 보충 로직
     log(`\n🌐 Step 7: 네이버 검색`);
     
     const naverUrls = await searchNaverImages(titleKr, needed === 1 ? 10 : 15);
@@ -1818,14 +1841,14 @@ async function processProduct(product, productIndex, totalProducts) {
             let processPath = inputPath;
 
             if (coords && coords.found) {
-                // 크롭 좌표 검증: width/height가 원본의 20% 미만이면 크롭 건너뛰고 원본 사용
+                // ✅ v11: 크롭 좌표 검증 - 원본의 20% 미만이면 건너뛰기
                 if (coords.width < dimensions.width * 0.2 || coords.height < dimensions.height * 0.2) {
                     log(`      ⚠️  크롭 좌표가 원본의 20% 미만 (${coords.width}x${coords.height} vs ${dimensions.width}x${dimensions.height}) → 원본 그대로 사용`);
                 } else {
                     const expanded = expandCoordinates(coords, dimensions.width, dimensions.height, 0.2);
                     const cropSuccess = await cropImage(inputPath, croppedPath, expanded.x, expanded.y, expanded.width, expanded.height);
                     if (cropSuccess) {
-                        // 크롭 후 크기 검증
+                        // ✅ v11: 크롭 후 크기 검증
                         const croppedDimensions = await getImageDimensions(croppedPath);
                         if (croppedDimensions) {
                             const widthRatio = croppedDimensions.width / dimensions.width;
@@ -1849,7 +1872,7 @@ async function processProduct(product, productIndex, totalProducts) {
             const rembgSuccess = await removeBackgroundAndAddWhite(processPath, finalPath);
 
             if (rembgSuccess) {
-                // ✅ 기본 품질 검증: 파일 크기 10KB 미만이면 빈 이미지로 간주
+                // ✅ v12: rembg 후 파일 크기 10KB 미만이면 건너뛰기
                 const fileSize = fs.statSync(finalPath).size;
                 if (fileSize < 10240) {
                     log(`      ⚠️  파일 크기 너무 작음 (${(fileSize/1024).toFixed(1)}KB) → 건너뛰기`);
@@ -1857,7 +1880,7 @@ async function processProduct(product, productIndex, totalProducts) {
                     continue;
                 }
 
-                // ✅ 네이버 이미지 기본 검증: Gemini로 브랜드/용량 확인
+                // ✅ v11: 네이버 이미지 기본 검증
                 const naverCheck = await quickNaverImageCheck(finalPath, productInfo);
                 if (!naverCheck.pass) {
                     log(`      ❌ 네이버 이미지 검증 실패: ${naverCheck.reason}`);
@@ -1880,6 +1903,7 @@ async function processProduct(product, productIndex, totalProducts) {
         
         if (naverProcessed.length >= needed) break;
         
+        // ✅ 네이버 이미지 간 대기 6초
         await new Promise(resolve => setTimeout(resolve, 6000));
     }
 
@@ -1908,7 +1932,7 @@ async function processProduct(product, productIndex, totalProducts) {
     try {
         await axios.patch(
             `${NOCODB_API_URL}/api/v2/tables/${SHOPIFY_TABLE_ID}/records`,
-            [{ Id: Id, gallery_images: updatedGallery }],  // ✅ 배열
+            [{ Id: Id, gallery_images: updatedGallery }],  // ✅ v11: 배열 래퍼
             { headers: { 'xc-token': NOCODB_API_TOKEN, 'Content-Type': 'application/json' } }
         );
         
@@ -1922,7 +1946,7 @@ async function processProduct(product, productIndex, totalProducts) {
 // ==================== 메인 ====================
 async function main() {
     try {
-        log('\n📥 NocoDB에서 3개 제품 가져오는 중...\n');
+        log('\n📥 NocoDB에서 제품 가져오는 중...\n');
         
         const products = await getProductsFromNocoDB();
         
@@ -1948,11 +1972,17 @@ async function main() {
         }
         
         log(`\n${'='.repeat(70)}`);
-        log('🎉 Phase 4 v11 완료!');
+        log('🎉 Phase 4 v12 머지 완료!');
         log('='.repeat(70));
-        log(`\n✨ v11 핵심 변경:`);
-        log('   ✅ v10 유지: 용량 50%+ 차이 -30점, 품질 12점 미만 -20점');
-        log('   ✅ 여러 제품 감지: -40점 (개별 제품에 다른 제품 포함 방지)\n');
+        log(`\n✨ v12 핵심 변경 (v11 최적화 유지):`);
+        log('   ✅ Gemini API 통합: 6→2회');
+        log('   ✅ Gallery 최소 점수: 50 → 60');
+        log('   ✅ Main 최소 점수: 35 (신규)');
+        log('   ✅ 미확인 항목 동정점수: 5 → 2');
+        log('   ✅ 개별제품 포장박스: -15 → -30');
+        log('   ✅ 이미 처리된 제품 재처리 방지');
+        log('   ✅ 네이버 rembg 10KB 미만 건너뛰기');
+        log('   ✅ 용량 불일치: 하드탈락 → -30 감점\n');
         
         // Gemini API 호출 통계 출력
         geminiCounter.printSummary();
