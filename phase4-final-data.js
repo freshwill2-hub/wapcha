@@ -275,7 +275,7 @@ function extractProductInfo(productTitle) {
     }
     
     if (!info.isSetProduct) {
-        info.isSetProduct = /세트|set|기획|듀오|duo|트윈|twin|패키지/i.test(productTitle);
+        info.isSetProduct = /세트|set|듀오|duo|트윈|twin/i.test(productTitle);
     }
     
     return info;
@@ -1142,6 +1142,12 @@ async function scoreImage(imageData, imagePath, productTitle, productInfo, index
     // 하드 탈락: 용량 크게 불일치 (titleMatch가 음수) → 총점 0점
     if (scores.titleMatch < 0) {
         log(`      🚫 하드 탈락: 용량 크게 불일치 → 0점`);
+        totalScore = 0;
+    }
+
+    // 하드 탈락: 개별 제품인데 포장박스 포함 → 총점 0점
+    if (!productInfo.isSetProduct && basics.packagingPenalty < 0) {
+        log(`      🚫 하드 탈락: 개별 제품인데 포장박스 포함 → 0점`);
         totalScore = 0;
     }
 

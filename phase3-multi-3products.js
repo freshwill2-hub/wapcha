@@ -290,14 +290,14 @@ REASON: [한 줄 설명]`;
 
         // 추가 검증: 개별/세트 로직 적용
         if (!isSetProduct && productCount >= 2 && action === 'PASS') {
-            // ✅ v2.2: 프로모션 힌트가 있으면 SKIP_BANNER
-            if (hasPromoHint) {
-                action = 'SKIP_BANNER';
-                log(`      🔄 자동 변경: PASS → SKIP_BANNER (프로모션 힌트 + ${productCount}개 감지)`);
-            } else {
-                action = 'CROP_SINGLE';
-                log(`      🔄 자동 변경: PASS → CROP_SINGLE (개별 제품인데 ${productCount}개 감지)`);
-            }
+            action = 'SKIP_BANNER';
+            log(`      🔄 자동 변경: PASS → SKIP_BANNER (개별 제품인데 ${productCount}개 감지)`);
+        }
+
+        // 개별 제품인데 CROP_SINGLE 판정 + 2개 이상 → SKIP_BANNER로 격상
+        if (!isSetProduct && productCount >= 2 && action === 'CROP_SINGLE') {
+            action = 'SKIP_BANNER';
+            log(`      🔄 자동 변경: CROP_SINGLE → SKIP_BANNER (개별 제품 ${productCount}개)`);
         }
         
         if (isSetProduct && productCount === 1 && action === 'PASS') {
@@ -632,7 +632,8 @@ async function processProduct(product, productIndex, totalProducts) {
             log(`⚠️  프로모션 키워드 감지 → 개별 제품으로 처리 (세트 아님!)`);
         } else {
             // 프로모션이 아닌 경우에만 세트 판단
-            isSetProduct = /set of \d+|세트|\d+개입|\d+개 세트|(\d+)\s*pcs?|듀오|duo|트윈|twin/i.test(productTitle);
+            const titleForSetCheck = `${productTitle} ${oliveyoungProduct?.title_kr || ''}`;
+            isSetProduct = /set of \d+|세트|\d+개입|\d+개 세트|(\d+)\s*pcs?|듀오|duo|트윈|twin|\d+개$|\d+매$|\d+입$/i.test(titleForSetCheck);
         }
         
         log(`✅ 제품명: ${productTitle}`);
