@@ -938,6 +938,13 @@ async function processBatch(productsToProcess) {
     // Crawlee 스토리지 초기화 (이전 실행 큐 제거 → 무한루프 방지)
     await purgeDefaultStorages();
 
+    // storage 디렉토리 물리적 삭제 (이전 배치 잔여 데이터 제거)
+    const storageDir = path.join(process.cwd(), 'storage');
+    if (fs.existsSync(storageDir)) {
+        fs.rmSync(storageDir, { recursive: true, force: true });
+        log('🧹 storage 디렉토리 삭제 완료');
+    }
+
     // 배치별 카운터 초기화
     processedCount = 0;
     successCount = 0;
@@ -969,7 +976,7 @@ async function processBatch(productsToProcess) {
         
         browserPoolOptions: {
             maxOpenPagesPerBrowser: 1,
-            retireBrowserAfterPageCount: 5,
+            // retireBrowserAfterPageCount 제거 (배치마다 크롤러 재생성하므로 불필요)
         },
         
         requestHandler: async ({ page, request }) => {
@@ -1593,7 +1600,7 @@ async function processBatch(productsToProcess) {
     try {
         await crawler.run(requests);
     } finally {
-        await crawler.teardown();
+        try { await crawler.teardown(); } catch (e) { log('⚠️  Crawler teardown 오류 (무시):', e.message); }
     }
     
     return { processedCount, successCount, failedCount, skippedCount };
