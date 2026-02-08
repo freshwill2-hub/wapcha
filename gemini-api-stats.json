@@ -1,11 +1,11 @@
 {
   "date": "2026-02-08",
-  "dailyCalls": 247,
+  "dailyCalls": 250,
   "dailyLimit": 1500,
-  "remaining": 1253,
-  "sessionCalls": 78,
+  "remaining": 1250,
+  "sessionCalls": 3,
   "byFunction": {
-    "analyzeImage": 166,
+    "analyzeImage": 169,
     "getBadgeCropCoordinates": 3,
     "analyzeImageBasics": 37,
     "evaluateImageDetails": 37,
@@ -13,21 +13,6 @@
     "quickNaverImageCheck": 2
   },
   "callHistory": [
-    {
-      "function": "analyzeImage",
-      "time": "2026-02-08T02:02:10.563Z",
-      "dailyTotal": 148
-    },
-    {
-      "function": "analyzeImage",
-      "time": "2026-02-08T02:02:18.404Z",
-      "dailyTotal": 149
-    },
-    {
-      "function": "analyzeImage",
-      "time": "2026-02-08T02:02:30.237Z",
-      "dailyTotal": 150
-    },
     {
       "function": "analyzeImage",
       "time": "2026-02-08T02:02:35.079Z",
@@ -512,7 +497,22 @@
       "function": "evaluateImageDetails",
       "time": "2026-02-08T02:12:42.533Z",
       "dailyTotal": 247
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-08T04:19:04.851Z",
+      "dailyTotal": 248
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-08T04:19:12.613Z",
+      "dailyTotal": 249
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-08T04:19:20.392Z",
+      "dailyTotal": 250
     }
   ],
-  "lastUpdated": "2026-02-08T02:12:42.533Z"
+  "lastUpdated": "2026-02-08T04:19:20.392Z"
 }
