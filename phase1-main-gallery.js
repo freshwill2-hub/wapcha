@@ -111,7 +111,7 @@ const MEMORY_CHECK_INTERVAL = 5;
 
 const openai = OPENAI_API_KEY ? new OpenAI({ apiKey: OPENAI_API_KEY }) : null;
 
-log('🚀 Phase 1: 제품 상세 스크래핑 (v2.9.1 - product_url null 필터링 추가)');
+log('🚀 Phase 1: 제품 상세 스크래핑 (v2.9.2 - 배치 반복 처리 추가)');
 log('='.repeat(70));
 log('🔧 설정 확인:');
 log(`- NocoDB URL: ${NOCODB_API_URL}`);
@@ -124,10 +124,11 @@ if (deletedLogs.length > 0) {
     log(`🧹 오래된 로그 ${deletedLogs.length}개 삭제됨 (${LOG_RETENTION_DAYS}일 이상)`);
 }
 log('');
-log('🆕 v2.9.1 수정 사항:');
-log('   ✅ product_url이 null인 제품 필터링 추가');
-log('   ✅ noUrlSkipped 통계 추가');
-log('   ✅ v2.9 용량 제한 기능 유지');
+log('🆕 v2.9.2 수정 사항:');
+log('   ✅ 배치 반복 처리: 미처리 제품이 없을 때까지 자동 반복');
+log('   ✅ 배치마다 크롤러 재생성 (메모리 관리)');
+log('   ✅ PRODUCT_LIMIT = 배치 크기 (기본 20)');
+log('   ✅ v2.9.1 기능 모두 유지');
 log('');
 
 // ==================== 전역 변수 ====================
@@ -265,12 +266,10 @@ function cleanProductTitle(rawTitle) {
     cleaned = cleaned.replace(/^\s*올리브영\s*[\|｜\-–—]\s*/g, '');
     
     // ==================== STEP 1.4: ✅ v2.11 대괄호 내 세트 패턴 먼저 감지 ====================
-    // [1+1], [2+1], [더블기획] 등이 STEP 1.5에서 삭제되기 전에 세트 정보 추출
     const bracketContents = cleaned.match(/\[([^\]]*)\]/g) || [];
     for (const bracket of bracketContents) {
-        const inner = bracket.slice(1, -1); // 대괄호 제거
+        const inner = bracket.slice(1, -1);
 
-        // 1+1, 2+1, 3+1 패턴
         const nplusMatch = inner.match(/(\d)\s*\+\s*(\d)/);
         if (nplusMatch) {
             const n1 = parseInt(nplusMatch[1]);
@@ -283,7 +282,6 @@ function cleanProductTitle(rawTitle) {
             }
         }
 
-        // 더블, 트리플 키워드
         if (!setInfo && /더블|듀블/i.test(inner)) {
             setInfo = { volume: null, count: 2, type: 'bracket_double' };
             log(`   ✅ 세트 감지 (대괄호 내 더블): 2개`);
@@ -415,11 +413,10 @@ function cleanProductTitle(rawTitle) {
     cleaned = cleaned.replace(/\[[^\]]*\]/g, '');
     // ✅ v2.11: 단독 용량 정보 (50ml), (200g) 등은 보존
     cleaned = cleaned.replace(/\(([^)]*)\)/g, (match, inner) => {
-        // 괄호 안이 순수 용량만인 경우 (예: "50ml", "200g") → 용량 보존
         if (/^\s*\d+\s*(ml|mL|ML|g|G)\s*$/.test(inner)) {
-            return inner.trim();  // 괄호만 제거, 내용 보존
+            return inner.trim();
         }
-        return '';  // 나머지는 전부 제거
+        return '';
     });
     cleaned = cleaned.replace(/【[^】]*】/g, '');
     cleaned = cleaned.replace(/〔[^〕]*〕/g, '');
@@ -458,7 +455,7 @@ function cleanProductTitle(rawTitle) {
     // STEP 8.5: "외 N종" 패턴 제거
     cleaned = cleaned.replace(/외\s*\d+\s*종/gi, '');
 
-    // STEP 8.6: 범용 프로모션 키워드 패턴 제거 (GPT 번역 전 1차 필터)
+    // STEP 8.6: 범용 프로모션 키워드 패턴 제거
     cleaned = cleaned.replace(/\s*(리필\s*기획|기획\s*세트|스페셜\s*에디션|한정판|콜라보\s*에디션)\s*/gi, ' ');
 
     // STEP 9: 공백 정리
@@ -934,714 +931,756 @@ async function processProductImages(product, imageUrls) {
     }
 }
 
-// ==================== 메인 ====================
+// ==================== ✅ v2.9.2: 배치 단위 크롤링 함수 ====================
+async function processBatch(productsToProcess) {
+    const totalProducts = productsToProcess.length;
+    
+    // 배치별 카운터 초기화
+    processedCount = 0;
+    successCount = 0;
+    skippedCount = 0;
+    failedCount = 0;
+    
+    const crawler = new PlaywrightCrawler({
+        launchContext: {
+            launchOptions: {
+                headless: true,
+                args: [
+                    '--no-sandbox',
+                    '--disable-setuid-sandbox',
+                    '--disable-dev-shm-usage',
+                    '--disable-gpu',
+                    '--single-process',
+                    '--disable-extensions',
+                    '--disable-background-networking',
+                    '--disable-default-apps',
+                    '--disable-sync',
+                    '--disable-translate',
+                    '--metrics-recording-only',
+                    '--no-first-run',
+                    '--safebrowsing-disable-auto-update',
+                    '--js-flags=--max-old-space-size=512'
+                ]
+            }
+        },
+        
+        browserPoolOptions: {
+            maxOpenPagesPerBrowser: 1,
+            retireBrowserAfterPageCount: 5,
+        },
+        
+        requestHandler: async ({ page, request }) => {
+            const product = request.userData.product;
+            const index = request.userData.index;
+            const missingFields = request.userData.missingFields;
+            
+            log('');
+            log('='.repeat(70));
+            log(`📦 [${index + 1}/${totalProducts}] 제품 ID: ${product.Id}`);
+            log(`🔗 URL: ${request.url.substring(0, 80)}...`);
+            log(`📋 필요한 필드: ${[
+                missingFields.needsTitleKr ? 'title_kr' : null,
+                missingFields.needsPriceOriginal ? 'price' : null,
+                missingFields.needsDescription ? 'description' : null,
+                missingFields.needsImages ? 'images' : null
+            ].filter(Boolean).join(', ')}`);
+            log('='.repeat(70));
+            
+            if ((index + 1) % MEMORY_CHECK_INTERVAL === 0) {
+                logMemoryUsage(`[${index + 1}/${totalProducts}]`);
+            }
+            
+            try {
+                log(`📄 페이지 로딩 중...`);
+                await page.waitForLoadState('domcontentloaded', { timeout: 30000 });
+                
+                // JavaScript 렌더링 대기
+                await page.waitForTimeout(3000);
+                
+                // 제품명 요소가 나타날 때까지 추가 대기
+                try {
+                    await page.waitForSelector('p.prd_name, .prd_name, [class*="goods_name"], [class*="title_name_unity"]', { 
+                        timeout: 5000 
+                    });
+                    log(`   ✅ 제품명 요소 감지됨`);
+                } catch (e) {
+                    log(`   ⚠️  제품명 요소 대기 시간 초과 (계속 진행)`);
+                }
+                
+                const updateData = {};
+                let hasUpdates = false;
+                
+                if (missingFields.needsTitleKr || missingFields.needsPriceOriginal || missingFields.needsDescription || missingFields.needsImages) {
+                    log(`📊 웹페이지에서 정보 추출 중...`);
+                    
+                    // 상품정보 제공고시 클릭해서 펼치기
+                    try {
+                        const infoToggle = await page.$('text=상품정보 제공고시');
+                        if (infoToggle) {
+                            await infoToggle.click();
+                            log(`   ✅ 상품정보 제공고시 섹션 펼침`);
+                            await page.waitForTimeout(1000);
+                        }
+                    } catch (e) {
+                        log(`   ⚠️  상품정보 제공고시 클릭 실패 (무시하고 계속)`);
+                    }
+                    
+                    const productData = await page.evaluate(() => {
+                        const result = {
+                            rawTitle: '',
+                            priceOriginal: 0,
+                            priceDiscount: 0,
+                            infoTable: {
+                                volume: '',
+                                skinType: '',
+                                expiry: '',
+                                usage: '',
+                                ingredients: ''
+                            },
+                            imageUrls: [],
+                            expectedImageCount: 0,
+                            debugInfo: ''
+                        };
+                        
+                        // ===== 타이틀 추출 =====
+                        const titleSelectors = [
+                            '.goodsDetailInfo_title_name_unity',
+                            '[class*="title_name_unity"]',
+                            '[data-ref="prod-product-title"]',
+                            'p.prd_name',
+                            '.prd_name',
+                            '.goods-name',
+                            '.prd-info p.prd_name',
+                            '.prd_detail_box .prd_name',
+                            '.goods_detail_box .prd_name',
+                            '[class*="goodsName"]',
+                            '[class*="goods_name"]',
+                            '.pdtInfoWrap .prd_name',
+                            '.prd_info_area .prd_name',
+                            '#Contents .prd_name',
+                            '[class*="title_name"]',
+                            '[class*="product_name"]',
+                            '[class*="productName"]',
+                            'h1',
+                            'h2.prd_name',
+                        ];
+                        
+                        for (const selector of titleSelectors) {
+                            try {
+                                const el = document.querySelector(selector);
+                                if (el) {
+                                    const text = el.textContent.trim();
+                                    if (text.length > 5 && text.length < 150) {
+                                        result.rawTitle = text;
+                                        break;
+                                    }
+                                }
+                            } catch (e) {}
+                        }
+                        
+                        // 타이틀 fallback: meta 태그
+                        if (!result.rawTitle) {
+                            const ogTitle = document.querySelector('meta[property="og:title"]');
+                            if (ogTitle && ogTitle.content) {
+                                result.rawTitle = ogTitle.content.trim();
+                            }
+                        }
+                        
+                        // 타이틀 fallback: JSON-LD
+                        if (!result.rawTitle) {
+                            const jsonLd = document.querySelector('script[type="application/ld+json"]');
+                            if (jsonLd) {
+                                try {
+                                    const data = JSON.parse(jsonLd.textContent);
+                                    if (data.name) {
+                                        result.rawTitle = data.name;
+                                    } else if (data['@graph']) {
+                                        const productItem = data['@graph'].find(item => item['@type'] === 'Product');
+                                        if (productItem && productItem.name) {
+                                            result.rawTitle = productItem.name;
+                                        }
+                                    }
+                                } catch (e) {}
+                            }
+                        }
+                        
+                        // ===== 가격 추출 =====
+                        const priceSelectors = [
+                            '[class*="GoodsDetailInfo_price"]',
+                            '[class*="price-area"]',
+                            '[class*="price_area"]',
+                            '[class*="prd_price"]',
+                            '[class*="goods_price"]',
+                            '.price-box',
+                            '.price_box',
+                            '[class*="price"]'
+                        ];
+                        
+                        for (const selector of priceSelectors) {
+                            try {
+                                const priceEl = document.querySelector(selector);
+                                if (priceEl) {
+                                    const priceText = priceEl.textContent;
+                                    const prices = priceText.match(/[\d,]+원/g);
+                                    
+                                    if (prices && prices.length >= 2) {
+                                        result.priceOriginal = parseInt(prices[0].replace(/[^0-9]/g, ''));
+                                        result.priceDiscount = parseInt(prices[1].replace(/[^0-9]/g, ''));
+                                        break;
+                                    } else if (prices && prices.length === 1) {
+                                        result.priceOriginal = parseInt(prices[0].replace(/[^0-9]/g, ''));
+                                        result.priceDiscount = result.priceOriginal;
+                                        break;
+                                    }
+                                }
+                            } catch (e) {}
+                        }
+                        
+                        if (result.priceOriginal && result.priceDiscount && 
+                            result.priceOriginal < result.priceDiscount) {
+                            const temp = result.priceOriginal;
+                            result.priceOriginal = result.priceDiscount;
+                            result.priceDiscount = temp;
+                        }
+                        
+                        // ===== 메인 갤러리 이미지 추출 =====
+                        const seenUrls = new Set();
+                        const mainGalleryImages = [];
+                        
+                        const paginationEl = document.querySelector('.swiper-pagination, [class*="pagination"]');
+                        if (paginationEl) {
+                            const paginationText = paginationEl.textContent.trim();
+                            const countMatch = paginationText.match(/\d+\s*\/\s*(\d+)/);
+                            if (countMatch) {
+                                result.expectedImageCount = parseInt(countMatch[1]);
+                            }
+                        }
+                        
+                        const mainGallerySelectors = [
+                            '.vis-swiper .swiper-slide img',
+                            '.vis-swiper [data-swiper-slide-index] img',
+                            '[class*="vis-swiper"] .swiper-slide img',
+                            '[class*="GoodsDetail_Carousel"] img',
+                            '[class*="Carousel_content"] img',
+                            '.swiper-slide[data-swiper-slide-index] img',
+                            '.prd-img .swiper-slide img',
+                            '.goods-img .swiper-slide img',
+                        ];
+                        
+                        let foundMethod = '';
+                        
+                        for (const selector of mainGallerySelectors) {
+                            try {
+                                const imgs = document.querySelectorAll(selector);
+                                
+                                if (imgs.length > 0) {
+                                    foundMethod = selector;
+                                    
+                                    imgs.forEach(img => {
+                                        let src = img.getAttribute('data-src') ||
+                                                  img.getAttribute('data-origin') ||
+                                                  img.getAttribute('data-lazy') ||
+                                                  img.getAttribute('data-original') ||
+                                                  img.src ||
+                                                  img.getAttribute('src');
+                                        
+                                        if (!src) return;
+                                        
+                                        if (src.startsWith('//')) {
+                                            src = 'https:' + src;
+                                        }
+                                        
+                                        if (!src.includes('oliveyoung.co.kr')) return;
+                                        
+                                        if (src.includes('/gdasEditor/')) return;
+                                        if (src.includes('/display/')) return;
+                                        if (src.includes('/icon/')) return;
+                                        if (src.includes('/badge/')) return;
+                                        if (src.includes('/banner/')) return;
+                                        if (src.includes('/event/')) return;
+                                        if (src.includes('/logo/')) return;
+                                        if (src.includes('/btn/')) return;
+                                        if (src.includes('/common/')) return;
+                                        if (src.includes('/review/')) return;
+                                        if (src.includes('/point/')) return;
+                                        if (src.includes('/coupon/')) return;
+                                        
+                                        if (seenUrls.has(src)) return;
+                                        
+                                        seenUrls.add(src);
+                                        mainGalleryImages.push(src);
+                                    });
+                                    
+                                    if (mainGalleryImages.length > 0) {
+                                        break;
+                                    }
+                                }
+                            } catch (e) {}
+                        }
+                        
+                        if (mainGalleryImages.length === 0) {
+                            foundMethod = 'fallback: large images';
+                            
+                            const allSlides = document.querySelectorAll('[data-swiper-slide-index]');
+                            
+                            allSlides.forEach(slide => {
+                                const img = slide.querySelector('img');
+                                if (!img) return;
+                                
+                                let src = img.getAttribute('data-src') ||
+                                          img.getAttribute('data-origin') ||
+                                          img.src;
+                                
+                                if (!src || !src.includes('oliveyoung.co.kr')) return;
+                                
+                                if (src.startsWith('//')) {
+                                    src = 'https:' + src;
+                                }
+                                
+                                if (src.includes('/gdasEditor/')) return;
+                                if (src.includes('/display/')) return;
+                                if (src.includes('/banner/')) return;
+                                
+                                if (seenUrls.has(src)) return;
+                                seenUrls.add(src);
+                                mainGalleryImages.push(src);
+                            });
+                        }
+                        
+                        if (mainGalleryImages.length === 0) {
+                            foundMethod = 'fallback: all large oliveyoung images';
+                            
+                            const allImages = document.querySelectorAll('img');
+                            allImages.forEach(img => {
+                                let src = img.getAttribute('data-src') ||
+                                          img.getAttribute('data-origin') ||
+                                          img.src;
+                                
+                                if (!src || !src.includes('oliveyoung.co.kr')) return;
+                                if (seenUrls.has(src)) return;
+                                
+                                if (src.startsWith('//')) {
+                                    src = 'https:' + src;
+                                }
+                                
+                                if (src.includes('/gdasEditor/')) return;
+                                if (src.includes('/display/')) return;
+                                if (src.includes('/icon/')) return;
+                                if (src.includes('/badge/')) return;
+                                if (src.includes('/banner/')) return;
+                                if (src.includes('/review/')) return;
+                                
+                                const width = img.naturalWidth || img.width;
+                                const height = img.naturalHeight || img.height;
+                                
+                                if (width >= 400 && height >= 400) {
+                                    seenUrls.add(src);
+                                    mainGalleryImages.push(src);
+                                }
+                            });
+                        }
+                        
+                        result.debugInfo = `Method: ${foundMethod}, Found: ${mainGalleryImages.length}`;
+                        result.imageUrls = mainGalleryImages.slice(0, 10);
+                        
+                        // ===== 상품정보 제공고시 추출 =====
+                        const EXCLUDE_KEYWORDS = [
+                            '제조업자', '수입업자', '판매업자', '책임판매업자',
+                            '맞춤형화장품판매업자', '품질보증', '소비자상담', 
+                            '전화', '고객센터', '080', '1588', '1577',
+                            '협력사', '본 상품 정보', '공정거래', 
+                            '㈜', '주식회사', '제조국', '원산지',
+                            'A/S', '교환', '반품', '대한민국', 
+                            '분쟁해결', '보상해드립니다', '위원회 고시'
+                        ];
+                        
+                        const allRows = document.querySelectorAll('tr');
+                        
+                        allRows.forEach(row => {
+                            const cells = row.querySelectorAll('th, td');
+                            if (cells.length < 2) return;
+                            
+                            const label = (cells[0].textContent || '').trim();
+                            const value = (cells[1].textContent || '').trim();
+                            
+                            const fullText = label + value;
+                            if (EXCLUDE_KEYWORDS.some(kw => fullText.includes(kw))) {
+                                return;
+                            }
+                            
+                            if ((label.includes('용량') || label.includes('중량') || label.includes('내용물')) && !result.infoTable.volume) {
+                                const volumeMatch = value.match(/(\d+\s*[mMlLgG]+(?:\s*[×x+]\s*\d+\s*[mMlLgG]*)*(?:\s*\+\s*\d+\s*[mMlLgG]+)*)/);
+                                if (volumeMatch) {
+                                    result.infoTable.volume = volumeMatch[1].trim();
+                                } else if (value.length < 50) {
+                                    result.infoTable.volume = value;
+                                }
+                            }
+                            
+                            if ((label.includes('주요') || label.includes('사양') || label.includes('피부')) && !result.infoTable.skinType) {
+                                if (value.length > 2 && value.length < 100) {
+                                    result.infoTable.skinType = value;
+                                }
+                            }
+                            
+                            if ((label.includes('사용기한') || label.includes('개봉')) && !result.infoTable.expiry) {
+                                if (value.length > 5 && value.length < 100) {
+                                    result.infoTable.expiry = value;
+                                }
+                            }
+                            
+                            if (label.includes('사용방법') && !result.infoTable.usage) {
+                                let usage = value
+                                    .split(/화장품제조업자|제조업자|판매업자|㈜|주식회사/)[0]
+                                    .trim();
+                                
+                                if (usage.length > 10 && usage.length < 500) {
+                                    result.infoTable.usage = usage;
+                                }
+                            }
+                            
+                            if ((label.includes('모든 성분') || label.includes('전성분') || label.includes('화장품법')) && !result.infoTable.ingredients) {
+                                let ingredients = value
+                                    .split(/화장품제조업자|제조업자|기능성|품질/)[0]
+                                    .replace(/\s+/g, ' ')
+                                    .trim();
+                                
+                                if (ingredients.length > 30) {
+                                    result.infoTable.ingredients = ingredients;
+                                }
+                            }
+                        });
+                        
+                        // div 구조에서도 추출 시도
+                        if (!result.infoTable.volume || !result.infoTable.usage) {
+                            const allDivs = document.querySelectorAll('div[class*="info"], div[class*="spec"], dl');
+                            
+                            allDivs.forEach(div => {
+                                const text = div.textContent || '';
+                                
+                                if (EXCLUDE_KEYWORDS.some(kw => text.includes(kw))) {
+                                    return;
+                                }
+                                
+                                if (!result.infoTable.volume && (text.includes('용량') || text.includes('내용물'))) {
+                                    const match = text.match(/(\d+\s*[mMlLgG]+(?:\s*[×x+]\s*\d+)?)/);
+                                    if (match) {
+                                        result.infoTable.volume = match[1];
+                                    }
+                                }
+                                
+                                if (!result.infoTable.usage && text.includes('사용방법')) {
+                                    const match = text.match(/사용방법\s*[:\s]*(.{20,300}?)(?=\.|화장품|제조|$)/);
+                                    if (match) {
+                                        result.infoTable.usage = match[1].trim();
+                                    }
+                                }
+                            });
+                        }
+                        
+                        return result;
+                    });
+                    
+                    log(`📋 추출된 정보:`);
+                    log(`   타이틀: ${productData.rawTitle ? productData.rawTitle.substring(0, 60) + '...' : '❌ 없음'}`);
+                    log(`   정가: ${productData.priceOriginal ? '₩' + productData.priceOriginal.toLocaleString() : '❌ 없음'}`);
+                    log(`   할인가: ${productData.priceDiscount ? '₩' + productData.priceDiscount.toLocaleString() : '❌ 없음'}`);
+                    log(`   🖼️  메인 갤러리 이미지: ${productData.imageUrls.length}개 (예상: ${productData.expectedImageCount || '?'}개)`);
+                    log(`   🔍 추출 방법: ${productData.debugInfo}`);
+                    log(`   📦 상품정보 제공고시:`);
+                    log(`      용량: ${productData.infoTable.volume || '❌ 없음'}`);
+                    log(`      피부타입: ${productData.infoTable.skinType || '❌ 없음'}`);
+                    log(`      사용기한: ${productData.infoTable.expiry || '❌ 없음'}`);
+                    log(`      사용방법: ${productData.infoTable.usage ? productData.infoTable.usage.substring(0, 40) + '...' : '❌ 없음'}`);
+                    log(`      성분: ${productData.infoTable.ingredients ? productData.infoTable.ingredients.substring(0, 40) + '...' : '❌ 없음'}`);
+                    
+                    // 1. 타이틀 처리
+                    let cleanedTitle = '';
+                    if (missingFields.needsTitleKr && productData.rawTitle) {
+                        cleanedTitle = cleanProductTitle(productData.rawTitle);
+                        updateData.title_kr = cleanedTitle;
+                        hasUpdates = true;
+                        stats.titleKrFilled++;
+                        
+                        log(`📝 타이틀 클리닝 (v2.9):`);
+                        log(`   원본: "${productData.rawTitle.substring(0, 60)}"`);
+                        log(`   정제: "${cleanedTitle}"`);
+                        
+                        // v2.9: 용량 제한 체크
+                        if (MAX_VOLUME_LIMIT > 0) {
+                            let totalVolume = calculateTotalVolume(cleanedTitle);
+                            let volumeSource = '타이틀';
+                            
+                            if (totalVolume === 0 && productData.infoTable.volume) {
+                                totalVolume = calculateTotalVolume(productData.infoTable.volume);
+                                volumeSource = '상세설명';
+                                
+                                if (totalVolume > 0 && totalVolume <= MAX_VOLUME_LIMIT) {
+                                    const volumeMatch = productData.infoTable.volume.match(/(\d+)\s*(ml|mL|ML|g|G)/i);
+                                    if (volumeMatch) {
+                                        const volumeStr = `${volumeMatch[1]}${volumeMatch[2].toLowerCase()}`;
+                                        cleanedTitle = `${cleanedTitle} ${volumeStr}`;
+                                        updateData.title_kr = cleanedTitle;
+                                        log(`   ✅ 타이틀에 용량 추가: "${cleanedTitle}"`);
+                                    }
+                                }
+                            }
+                            
+                            log(`   📦 용량 계산 (${volumeSource}): ${totalVolume}ml (제한: ${MAX_VOLUME_LIMIT}ml)`);
+                            
+                            if (totalVolume > MAX_VOLUME_LIMIT) {
+                                log(`   ⚠️  용량 초과! ${totalVolume}ml > ${MAX_VOLUME_LIMIT}ml → 스킵`);
+                                stats.volumeExceededSkipped++;
+                                skippedCount++;
+                                processedCount++;
+                                return;
+                            }
+                        }
+
+                        if (missingFields.needsTitleEn) {
+                            const englishTitle = await translateToEnglish(cleanedTitle);
+                            if (englishTitle) {
+                                updateData.title_en = englishTitle;
+                                stats.titleEnFilled++;
+                            }
+                        }
+                    } else if (!missingFields.needsTitleKr) {
+                        log(`📝 타이틀: 이미 있음 → 스킵`);
+                        stats.titleKrSkipped++;
+                        cleanedTitle = product.title_kr || '';
+                        
+                        if (MAX_VOLUME_LIMIT > 0 && cleanedTitle) {
+                            const totalVolume = calculateTotalVolume(cleanedTitle);
+                            log(`   📦 용량 계산 (기존 타이틀): ${totalVolume}ml (제한: ${MAX_VOLUME_LIMIT}ml)`);
+                            
+                            if (totalVolume > MAX_VOLUME_LIMIT) {
+                                log(`   ⚠️  용량 초과! ${totalVolume}ml > ${MAX_VOLUME_LIMIT}ml → 스킵`);
+                                stats.volumeExceededSkipped++;
+                                skippedCount++;
+                                processedCount++;
+                                return;
+                            }
+                        }
+                        
+                        if (missingFields.needsTitleEn && product.title_kr) {
+                            const englishTitle = await translateToEnglish(product.title_kr);
+                            if (englishTitle) {
+                                updateData.title_en = englishTitle;
+                                hasUpdates = true;
+                                stats.titleEnFilled++;
+                            }
+                        }
+                    }
+                    
+                    // 2. 가격 처리
+                    if (missingFields.needsPriceOriginal && productData.priceOriginal) {
+                        updateData.price_original = productData.priceOriginal;
+                        hasUpdates = true;
+                        stats.priceFilled++;
+                        
+                        if (productData.priceDiscount && productData.priceDiscount < productData.priceOriginal) {
+                            updateData.price_discount = productData.priceDiscount;
+                        } else {
+                            updateData.price_discount = productData.priceOriginal;
+                        }
+                        
+                        log(`💰 가격:`);
+                        log(`   정가 (price_original): ₩${updateData.price_original.toLocaleString()}`);
+                        log(`   할인가 (price_discount): ₩${updateData.price_discount.toLocaleString()}`);
+                    } else if (!missingFields.needsPriceOriginal) {
+                        log(`💰 가격: 이미 있음 → 스킵`);
+                        stats.priceSkipped++;
+                    }
+                    
+                    // 3. 설명 처리
+                    if (missingFields.needsDescription) {
+                        const titleToUse = cleanedTitle || product.title_kr || '';
+                        const formattedDesc = formatDescriptionForShopify(productData.infoTable, titleToUse);
+                        
+                        if (formattedDesc && formattedDesc.length > 10) {
+                            updateData.description = formattedDesc;
+                            hasUpdates = true;
+                            stats.descriptionFilled++;
+                            
+                            log(`📄 설명 (쇼핑몰 포맷):`);
+                            formattedDesc.split('\n').slice(0, 5).forEach(line => {
+                                if (line.trim()) log(`   ${line}`);
+                            });
+                            
+                            if (missingFields.needsDescriptionEn) {
+                                const englishDesc = await translateDescriptionToEnglish(formattedDesc);
+                                if (englishDesc) {
+                                    updateData.description_en = englishDesc;
+                                }
+                            }
+                        } else {
+                            log(`⚠️  상세설명 추출 실패`);
+                        }
+                    } else if (!missingFields.needsDescription) {
+                        log(`📄 설명: 이미 있음 → 스킵`);
+                        stats.descriptionSkipped++;
+                    }
+                    
+                    // 4. 이미지 처리
+                    if (missingFields.needsImages && productData.imageUrls.length > 0) {
+                        log(`🖼️  메인 갤러리 이미지 처리 중...`);
+                        
+                        const attachments = await processProductImages(product, productData.imageUrls);
+                        
+                        if (attachments.length > 0) {
+                            updateData.product_images = attachments;
+                            hasUpdates = true;
+                            stats.imagesFilled++;
+                            log(`✅ ${attachments.length}개 메인 갤러리 이미지 처리 완료`);
+                        }
+                    } else if (!missingFields.needsImages) {
+                        log(`🖼️  이미지: 이미 있음 → 스킵`);
+                        stats.imagesSkipped++;
+                    }
+                }
+                
+                // NocoDB 업데이트
+                if (hasUpdates) {
+                    const success = await updateProduct(product.Id, updateData);
+                    if (success) {
+                        successCount++;
+                    } else {
+                        failedCount++;
+                    }
+                } else {
+                    log(`ℹ️  업데이트할 내용 없음`);
+                    skippedCount++;
+                }
+                
+                processedCount++;
+                
+            } catch (pageError) {
+                log('⚠️  페이지 처리 오류:', pageError.message);
+                failedCount++;
+                processedCount++;
+            }
+            
+            // 메모리 정리
+            if ((index + 1) % BATCH_SIZE === 0) {
+                log(`\n🧹 메모리 정리 중... (${index + 1}개 처리 완료)`);
+                await forceGarbageCollection();
+                logMemoryUsage('정리 후');
+            }
+        },
+        
+        maxRequestsPerCrawl: 1000,
+        maxConcurrency: 1,
+        requestHandlerTimeoutSecs: 180,
+        maxRequestRetries: 2,
+        navigationTimeoutSecs: 60,
+    });
+    
+    const requests = productsToProcess.map((product, index) => ({
+        url: product.product_url,
+        userData: {
+            product: product,
+            index: index,
+            missingFields: checkMissingFields(product)
+        }
+    }));
+    
+    log(`🌐 Crawler 시작 - ${productsToProcess.length}개 제품 처리`);
+    log('');
+    
+    try {
+        await crawler.run(requests);
+    } finally {
+        await crawler.teardown();
+    }
+    
+    return { processedCount, successCount, failedCount, skippedCount };
+}
+
+// ==================== ✅ v2.9.2: 배치 반복 메인 함수 ====================
 async function main() {
-    log('🚀 Phase 1: 메인 갤러리 이미지 + 타이틀/가격/설명 추출 (v2.9.1)');
+    log('🚀 Phase 1: 메인 갤러리 이미지 + 타이틀/가격/설명 추출 (v2.9.2)');
     log('='.repeat(70));
     log('');
     
     logMemoryUsage('시작');
     
-    let crawler = null;
+    // ✅ v2.9.2: PRODUCT_LIMIT을 배치 크기로 사용 (기본 20)
+    const BATCH_LIMIT = parseInt(process.env.PRODUCT_LIMIT) || 20;
+    
+    let totalProcessed = 0;
+    let totalSuccess = 0;
+    let totalFailed = 0;
+    let totalSkipped = 0;
+    let batchNumber = 0;
     
     try {
-        const products = await getOliveyoungProducts(
-            parseInt(process.env.PRODUCT_LIMIT) || 3, 
-            0
-        );
-        
-        if (products.length === 0) {
-            log('⚠️  처리할 제품이 없습니다.');
-            return;
-        }
-        
-        // ✅ v2.9.1: product_url 필터링 추가
-        const productsToProcess = products.filter(p => {
-            // ✅ v2.9.1: product_url이 null이거나 빈 문자열인 경우 스킵
-            if (!p.product_url || p.product_url.trim() === '') {
-                stats.noUrlSkipped++;
-                log(`⚠️  제품 ID ${p.Id}: product_url이 없음 → 스킵`);
-                return false;
+        // ✅ v2.9.2: 미처리 제품이 없을 때까지 배치 반복
+        while (true) {
+            batchNumber++;
+            log(`\n${'═'.repeat(70)}`);
+            log(`🔄 배치 ${batchNumber} 시작 (${BATCH_LIMIT}개씩 처리)`);
+            log(`${'═'.repeat(70)}`);
+            
+            // 미처리 제품 가져오기 (where: title_kr is null)
+            const products = await getOliveyoungProducts(BATCH_LIMIT, 0);
+            
+            if (products.length === 0) {
+                log('✅ 더 이상 미처리 제품이 없습니다. 종료합니다.');
+                break;
             }
             
-            const missing = checkMissingFields(p);
-            return missing.needsPageVisit;
-        });
-        
-        log(`📋 페이지 방문 필요: ${productsToProcess.length}/${products.length}개`);
-        if (stats.noUrlSkipped > 0) {
-            log(`⚠️  product_url 없음으로 스킵: ${stats.noUrlSkipped}개`);
-        }
-        log('');
-        
-        if (productsToProcess.length === 0) {
-            log('✅ 모든 제품이 이미 완전합니다.');
-            return;
-        }
-        
-        const totalProducts = productsToProcess.length;
-        
-        crawler = new PlaywrightCrawler({
-            launchContext: {
-                launchOptions: {
-                    headless: true,
-                    args: [
-                        '--no-sandbox',
-                        '--disable-setuid-sandbox',
-                        '--disable-dev-shm-usage',
-                        '--disable-gpu',
-                        '--single-process',
-                        '--disable-extensions',
-                        '--disable-background-networking',
-                        '--disable-default-apps',
-                        '--disable-sync',
-                        '--disable-translate',
-                        '--metrics-recording-only',
-                        '--no-first-run',
-                        '--safebrowsing-disable-auto-update',
-                        '--js-flags=--max-old-space-size=512'
-                    ]
+            // product_url 필터링
+            const productsToProcess = products.filter(p => {
+                if (!p.product_url || p.product_url.trim() === '') {
+                    stats.noUrlSkipped++;
+                    log(`⚠️  제품 ID ${p.Id}: product_url이 없음 → 스킵`);
+                    return false;
                 }
-            },
+                const missing = checkMissingFields(p);
+                return missing.needsPageVisit;
+            });
             
-            browserPoolOptions: {
-                maxOpenPagesPerBrowser: 1,
-                retireBrowserAfterPageCount: 5,
-            },
-            
-            requestHandler: async ({ page, request }) => {
-                const product = request.userData.product;
-                const index = request.userData.index;
-                const missingFields = request.userData.missingFields;
-                
-                log('');
-                log('='.repeat(70));
-                log(`📦 [${index + 1}/${totalProducts}] 제품 ID: ${product.Id}`);
-                log(`🔗 URL: ${request.url.substring(0, 80)}...`);
-                log(`📋 필요한 필드: ${[
-                    missingFields.needsTitleKr ? 'title_kr' : null,
-                    missingFields.needsPriceOriginal ? 'price' : null,
-                    missingFields.needsDescription ? 'description' : null,
-                    missingFields.needsImages ? 'images' : null
-                ].filter(Boolean).join(', ')}`);
-                log('='.repeat(70));
-                
-                if ((index + 1) % MEMORY_CHECK_INTERVAL === 0) {
-                    logMemoryUsage(`[${index + 1}/${totalProducts}]`);
-                }
-                
-                try {
-                    log(`📄 페이지 로딩 중...`);
-                    await page.waitForLoadState('domcontentloaded', { timeout: 30000 });
-                    
-                    // JavaScript 렌더링 대기
-                    await page.waitForTimeout(3000);
-                    
-                    // 제품명 요소가 나타날 때까지 추가 대기
-                    try {
-                        await page.waitForSelector('p.prd_name, .prd_name, [class*="goods_name"], [class*="title_name_unity"]', { 
-                            timeout: 5000 
-                        });
-                        log(`   ✅ 제품명 요소 감지됨`);
-                    } catch (e) {
-                        log(`   ⚠️  제품명 요소 대기 시간 초과 (계속 진행)`);
-                    }
-                    
-                    const updateData = {};
-                    let hasUpdates = false;
-                    
-                    if (missingFields.needsTitleKr || missingFields.needsPriceOriginal || missingFields.needsDescription || missingFields.needsImages) {
-                        log(`📊 웹페이지에서 정보 추출 중...`);
-                        
-                        // 상품정보 제공고시 클릭해서 펼치기
-                        try {
-                            const infoToggle = await page.$('text=상품정보 제공고시');
-                            if (infoToggle) {
-                                await infoToggle.click();
-                                log(`   ✅ 상품정보 제공고시 섹션 펼침`);
-                                await page.waitForTimeout(1000);
-                            }
-                        } catch (e) {
-                            log(`   ⚠️  상품정보 제공고시 클릭 실패 (무시하고 계속)`);
-                        }
-                        
-                        const productData = await page.evaluate(() => {
-                            const result = {
-                                rawTitle: '',
-                                priceOriginal: 0,
-                                priceDiscount: 0,
-                                infoTable: {
-                                    volume: '',
-                                    skinType: '',
-                                    expiry: '',
-                                    usage: '',
-                                    ingredients: ''
-                                },
-                                imageUrls: [],
-                                expectedImageCount: 0,
-                                debugInfo: ''
-                            };
-                            
-                            // ===== 타이틀 추출 =====
-                            const titleSelectors = [
-                                '.goodsDetailInfo_title_name_unity',
-                                '[class*="title_name_unity"]',
-                                '[data-ref="prod-product-title"]',
-                                'p.prd_name',
-                                '.prd_name',
-                                '.goods-name',
-                                '.prd-info p.prd_name',
-                                '.prd_detail_box .prd_name',
-                                '.goods_detail_box .prd_name',
-                                '[class*="goodsName"]',
-                                '[class*="goods_name"]',
-                                '.pdtInfoWrap .prd_name',
-                                '.prd_info_area .prd_name',
-                                '#Contents .prd_name',
-                                '[class*="title_name"]',
-                                '[class*="product_name"]',
-                                '[class*="productName"]',
-                                'h1',
-                                'h2.prd_name',
-                            ];
-                            
-                            for (const selector of titleSelectors) {
-                                try {
-                                    const el = document.querySelector(selector);
-                                    if (el) {
-                                        const text = el.textContent.trim();
-                                        if (text.length > 5 && text.length < 150) {
-                                            result.rawTitle = text;
-                                            break;
-                                        }
-                                    }
-                                } catch (e) {}
-                            }
-                            
-                            // 타이틀 fallback: meta 태그
-                            if (!result.rawTitle) {
-                                const ogTitle = document.querySelector('meta[property="og:title"]');
-                                if (ogTitle && ogTitle.content) {
-                                    result.rawTitle = ogTitle.content.trim();
-                                }
-                            }
-                            
-                            // 타이틀 fallback: JSON-LD
-                            if (!result.rawTitle) {
-                                const jsonLd = document.querySelector('script[type="application/ld+json"]');
-                                if (jsonLd) {
-                                    try {
-                                        const data = JSON.parse(jsonLd.textContent);
-                                        if (data.name) {
-                                            result.rawTitle = data.name;
-                                        } else if (data['@graph']) {
-                                            const productItem = data['@graph'].find(item => item['@type'] === 'Product');
-                                            if (productItem && productItem.name) {
-                                                result.rawTitle = productItem.name;
-                                            }
-                                        }
-                                    } catch (e) {}
-                                }
-                            }
-                            
-                            // ===== 가격 추출 =====
-                            const priceSelectors = [
-                                '[class*="GoodsDetailInfo_price"]',
-                                '[class*="price-area"]',
-                                '[class*="price_area"]',
-                                '[class*="prd_price"]',
-                                '[class*="goods_price"]',
-                                '.price-box',
-                                '.price_box',
-                                '[class*="price"]'
-                            ];
-                            
-                            for (const selector of priceSelectors) {
-                                try {
-                                    const priceEl = document.querySelector(selector);
-                                    if (priceEl) {
-                                        const priceText = priceEl.textContent;
-                                        const prices = priceText.match(/[\d,]+원/g);
-                                        
-                                        if (prices && prices.length >= 2) {
-                                            result.priceOriginal = parseInt(prices[0].replace(/[^0-9]/g, ''));
-                                            result.priceDiscount = parseInt(prices[1].replace(/[^0-9]/g, ''));
-                                            break;
-                                        } else if (prices && prices.length === 1) {
-                                            result.priceOriginal = parseInt(prices[0].replace(/[^0-9]/g, ''));
-                                            result.priceDiscount = result.priceOriginal;
-                                            break;
-                                        }
-                                    }
-                                } catch (e) {}
-                            }
-                            
-                            if (result.priceOriginal && result.priceDiscount && 
-                                result.priceOriginal < result.priceDiscount) {
-                                const temp = result.priceOriginal;
-                                result.priceOriginal = result.priceDiscount;
-                                result.priceDiscount = temp;
-                            }
-                            
-                            // ===== 메인 갤러리 이미지 추출 =====
-                            const seenUrls = new Set();
-                            const mainGalleryImages = [];
-                            
-                            const paginationEl = document.querySelector('.swiper-pagination, [class*="pagination"]');
-                            if (paginationEl) {
-                                const paginationText = paginationEl.textContent.trim();
-                                const countMatch = paginationText.match(/\d+\s*\/\s*(\d+)/);
-                                if (countMatch) {
-                                    result.expectedImageCount = parseInt(countMatch[1]);
-                                }
-                            }
-                            
-                            const mainGallerySelectors = [
-                                '.vis-swiper .swiper-slide img',
-                                '.vis-swiper [data-swiper-slide-index] img',
-                                '[class*="vis-swiper"] .swiper-slide img',
-                                '[class*="GoodsDetail_Carousel"] img',
-                                '[class*="Carousel_content"] img',
-                                '.swiper-slide[data-swiper-slide-index] img',
-                                '.prd-img .swiper-slide img',
-                                '.goods-img .swiper-slide img',
-                            ];
-                            
-                            let foundMethod = '';
-                            
-                            for (const selector of mainGallerySelectors) {
-                                try {
-                                    const imgs = document.querySelectorAll(selector);
-                                    
-                                    if (imgs.length > 0) {
-                                        foundMethod = selector;
-                                        
-                                        imgs.forEach(img => {
-                                            let src = img.getAttribute('data-src') ||
-                                                      img.getAttribute('data-origin') ||
-                                                      img.getAttribute('data-lazy') ||
-                                                      img.getAttribute('data-original') ||
-                                                      img.src ||
-                                                      img.getAttribute('src');
-                                            
-                                            if (!src) return;
-                                            
-                                            if (src.startsWith('//')) {
-                                                src = 'https:' + src;
-                                            }
-                                            
-                                            if (!src.includes('oliveyoung.co.kr')) return;
-                                            
-                                            if (src.includes('/gdasEditor/')) return;
-                                            if (src.includes('/display/')) return;
-                                            if (src.includes('/icon/')) return;
-                                            if (src.includes('/badge/')) return;
-                                            if (src.includes('/banner/')) return;
-                                            if (src.includes('/event/')) return;
-                                            if (src.includes('/logo/')) return;
-                                            if (src.includes('/btn/')) return;
-                                            if (src.includes('/common/')) return;
-                                            if (src.includes('/review/')) return;
-                                            if (src.includes('/point/')) return;
-                                            if (src.includes('/coupon/')) return;
-                                            
-                                            if (seenUrls.has(src)) return;
-                                            
-                                            seenUrls.add(src);
-                                            mainGalleryImages.push(src);
-                                        });
-                                        
-                                        if (mainGalleryImages.length > 0) {
-                                            break;
-                                        }
-                                    }
-                                } catch (e) {}
-                            }
-                            
-                            if (mainGalleryImages.length === 0) {
-                                foundMethod = 'fallback: large images';
-                                
-                                const allSlides = document.querySelectorAll('[data-swiper-slide-index]');
-                                
-                                allSlides.forEach(slide => {
-                                    const img = slide.querySelector('img');
-                                    if (!img) return;
-                                    
-                                    let src = img.getAttribute('data-src') ||
-                                              img.getAttribute('data-origin') ||
-                                              img.src;
-                                    
-                                    if (!src || !src.includes('oliveyoung.co.kr')) return;
-                                    
-                                    if (src.startsWith('//')) {
-                                        src = 'https:' + src;
-                                    }
-                                    
-                                    if (src.includes('/gdasEditor/')) return;
-                                    if (src.includes('/display/')) return;
-                                    if (src.includes('/banner/')) return;
-                                    
-                                    if (seenUrls.has(src)) return;
-                                    seenUrls.add(src);
-                                    mainGalleryImages.push(src);
-                                });
-                            }
-                            
-                            if (mainGalleryImages.length === 0) {
-                                foundMethod = 'fallback: all large oliveyoung images';
-                                
-                                const allImages = document.querySelectorAll('img');
-                                allImages.forEach(img => {
-                                    let src = img.getAttribute('data-src') ||
-                                              img.getAttribute('data-origin') ||
-                                              img.src;
-                                    
-                                    if (!src || !src.includes('oliveyoung.co.kr')) return;
-                                    if (seenUrls.has(src)) return;
-                                    
-                                    if (src.startsWith('//')) {
-                                        src = 'https:' + src;
-                                    }
-                                    
-                                    if (src.includes('/gdasEditor/')) return;
-                                    if (src.includes('/display/')) return;
-                                    if (src.includes('/icon/')) return;
-                                    if (src.includes('/badge/')) return;
-                                    if (src.includes('/banner/')) return;
-                                    if (src.includes('/review/')) return;
-                                    
-                                    const width = img.naturalWidth || img.width;
-                                    const height = img.naturalHeight || img.height;
-                                    
-                                    if (width >= 400 && height >= 400) {
-                                        seenUrls.add(src);
-                                        mainGalleryImages.push(src);
-                                    }
-                                });
-                            }
-                            
-                            result.debugInfo = `Method: ${foundMethod}, Found: ${mainGalleryImages.length}`;
-                            result.imageUrls = mainGalleryImages.slice(0, 10);
-                            
-                            // ===== 상품정보 제공고시 추출 =====
-                            const EXCLUDE_KEYWORDS = [
-                                '제조업자', '수입업자', '판매업자', '책임판매업자',
-                                '맞춤형화장품판매업자', '품질보증', '소비자상담', 
-                                '전화', '고객센터', '080', '1588', '1577',
-                                '협력사', '본 상품 정보', '공정거래', 
-                                '㈜', '주식회사', '제조국', '원산지',
-                                'A/S', '교환', '반품', '대한민국', 
-                                '분쟁해결', '보상해드립니다', '위원회 고시'
-                            ];
-                            
-                            const allRows = document.querySelectorAll('tr');
-                            
-                            allRows.forEach(row => {
-                                const cells = row.querySelectorAll('th, td');
-                                if (cells.length < 2) return;
-                                
-                                const label = (cells[0].textContent || '').trim();
-                                const value = (cells[1].textContent || '').trim();
-                                
-                                const fullText = label + value;
-                                if (EXCLUDE_KEYWORDS.some(kw => fullText.includes(kw))) {
-                                    return;
-                                }
-                                
-                                if ((label.includes('용량') || label.includes('중량') || label.includes('내용물')) && !result.infoTable.volume) {
-                                    const volumeMatch = value.match(/(\d+\s*[mMlLgG]+(?:\s*[×x+]\s*\d+\s*[mMlLgG]*)*(?:\s*\+\s*\d+\s*[mMlLgG]+)*)/);
-                                    if (volumeMatch) {
-                                        result.infoTable.volume = volumeMatch[1].trim();
-                                    } else if (value.length < 50) {
-                                        result.infoTable.volume = value;
-                                    }
-                                }
-                                
-                                if ((label.includes('주요') || label.includes('사양') || label.includes('피부')) && !result.infoTable.skinType) {
-                                    if (value.length > 2 && value.length < 100) {
-                                        result.infoTable.skinType = value;
-                                    }
-                                }
-                                
-                                if ((label.includes('사용기한') || label.includes('개봉')) && !result.infoTable.expiry) {
-                                    if (value.length > 5 && value.length < 100) {
-                                        result.infoTable.expiry = value;
-                                    }
-                                }
-                                
-                                if (label.includes('사용방법') && !result.infoTable.usage) {
-                                    let usage = value
-                                        .split(/화장품제조업자|제조업자|판매업자|㈜|주식회사/)[0]
-                                        .trim();
-                                    
-                                    if (usage.length > 10 && usage.length < 500) {
-                                        result.infoTable.usage = usage;
-                                    }
-                                }
-                                
-                                if ((label.includes('모든 성분') || label.includes('전성분') || label.includes('화장품법')) && !result.infoTable.ingredients) {
-                                    let ingredients = value
-                                        .split(/화장품제조업자|제조업자|기능성|품질/)[0]
-                                        .replace(/\s+/g, ' ')
-                                        .trim();
-                                    
-                                    if (ingredients.length > 30) {
-                                        result.infoTable.ingredients = ingredients;
-                                    }
-                                }
-                            });
-                            
-                            // div 구조에서도 추출 시도
-                            if (!result.infoTable.volume || !result.infoTable.usage) {
-                                const allDivs = document.querySelectorAll('div[class*="info"], div[class*="spec"], dl');
-                                
-                                allDivs.forEach(div => {
-                                    const text = div.textContent || '';
-                                    
-                                    if (EXCLUDE_KEYWORDS.some(kw => text.includes(kw))) {
-                                        return;
-                                    }
-                                    
-                                    if (!result.infoTable.volume && (text.includes('용량') || text.includes('내용물'))) {
-                                        const match = text.match(/(\d+\s*[mMlLgG]+(?:\s*[×x+]\s*\d+)?)/);
-                                        if (match) {
-                                            result.infoTable.volume = match[1];
-                                        }
-                                    }
-                                    
-                                    if (!result.infoTable.usage && text.includes('사용방법')) {
-                                        const match = text.match(/사용방법\s*[:\s]*(.{20,300}?)(?=\.|화장품|제조|$)/);
-                                        if (match) {
-                                            result.infoTable.usage = match[1].trim();
-                                        }
-                                    }
-                                });
-                            }
-                            
-                            return result;
-                        });
-                        
-                        log(`📋 추출된 정보:`);
-                        log(`   타이틀: ${productData.rawTitle ? productData.rawTitle.substring(0, 60) + '...' : '❌ 없음'}`);
-                        log(`   정가: ${productData.priceOriginal ? '₩' + productData.priceOriginal.toLocaleString() : '❌ 없음'}`);
-                        log(`   할인가: ${productData.priceDiscount ? '₩' + productData.priceDiscount.toLocaleString() : '❌ 없음'}`);
-                        log(`   🖼️  메인 갤러리 이미지: ${productData.imageUrls.length}개 (예상: ${productData.expectedImageCount || '?'}개)`);
-                        log(`   🔍 추출 방법: ${productData.debugInfo}`);
-                        log(`   📦 상품정보 제공고시:`);
-                        log(`      용량: ${productData.infoTable.volume || '❌ 없음'}`);
-                        log(`      피부타입: ${productData.infoTable.skinType || '❌ 없음'}`);
-                        log(`      사용기한: ${productData.infoTable.expiry || '❌ 없음'}`);
-                        log(`      사용방법: ${productData.infoTable.usage ? productData.infoTable.usage.substring(0, 40) + '...' : '❌ 없음'}`);
-                        log(`      성분: ${productData.infoTable.ingredients ? productData.infoTable.ingredients.substring(0, 40) + '...' : '❌ 없음'}`);
-                        
-                        // 1. 타이틀 처리
-                        let cleanedTitle = '';
-                        if (missingFields.needsTitleKr && productData.rawTitle) {
-                            cleanedTitle = cleanProductTitle(productData.rawTitle);
-                            updateData.title_kr = cleanedTitle;
-                            hasUpdates = true;
-                            stats.titleKrFilled++;
-                            
-                            log(`📝 타이틀 클리닝 (v2.9):`);
-                            log(`   원본: "${productData.rawTitle.substring(0, 60)}"`);
-                            log(`   정제: "${cleanedTitle}"`);
-                            
-                            // v2.9: 용량 제한 체크
-                            if (MAX_VOLUME_LIMIT > 0) {
-                                let totalVolume = calculateTotalVolume(cleanedTitle);
-                                let volumeSource = '타이틀';
-                                
-                                if (totalVolume === 0 && productData.infoTable.volume) {
-                                    totalVolume = calculateTotalVolume(productData.infoTable.volume);
-                                    volumeSource = '상세설명';
-                                    
-                                    if (totalVolume > 0 && totalVolume <= MAX_VOLUME_LIMIT) {
-                                        const volumeMatch = productData.infoTable.volume.match(/(\d+)\s*(ml|mL|ML|g|G)/i);
-                                        if (volumeMatch) {
-                                            const volumeStr = `${volumeMatch[1]}${volumeMatch[2].toLowerCase()}`;
-                                            cleanedTitle = `${cleanedTitle} ${volumeStr}`;
-                                            updateData.title_kr = cleanedTitle;
-                                            log(`   ✅ 타이틀에 용량 추가: "${cleanedTitle}"`);
-                                        }
-                                    }
-                                }
-                                
-                                log(`   📦 용량 계산 (${volumeSource}): ${totalVolume}ml (제한: ${MAX_VOLUME_LIMIT}ml)`);
-                                
-                                if (totalVolume > MAX_VOLUME_LIMIT) {
-                                    log(`   ⚠️  용량 초과! ${totalVolume}ml > ${MAX_VOLUME_LIMIT}ml → 스킵`);
-                                    stats.volumeExceededSkipped++;
-                                    skippedCount++;
-                                    processedCount++;
-                                    return;
-                                }
-                            }
-
-                            if (missingFields.needsTitleEn) {
-                                const englishTitle = await translateToEnglish(cleanedTitle);
-                                if (englishTitle) {
-                                    updateData.title_en = englishTitle;
-                                    stats.titleEnFilled++;
-                                }
-                            }
-                        } else if (!missingFields.needsTitleKr) {
-                            log(`📝 타이틀: 이미 있음 → 스킵`);
-                            stats.titleKrSkipped++;
-                            cleanedTitle = product.title_kr || '';
-                            
-                            if (MAX_VOLUME_LIMIT > 0 && cleanedTitle) {
-                                const totalVolume = calculateTotalVolume(cleanedTitle);
-                                log(`   📦 용량 계산 (기존 타이틀): ${totalVolume}ml (제한: ${MAX_VOLUME_LIMIT}ml)`);
-                                
-                                if (totalVolume > MAX_VOLUME_LIMIT) {
-                                    log(`   ⚠️  용량 초과! ${totalVolume}ml > ${MAX_VOLUME_LIMIT}ml → 스킵`);
-                                    stats.volumeExceededSkipped++;
-                                    skippedCount++;
-                                    processedCount++;
-                                    return;
-                                }
-                            }
-                            
-                            if (missingFields.needsTitleEn && product.title_kr) {
-                                const englishTitle = await translateToEnglish(product.title_kr);
-                                if (englishTitle) {
-                                    updateData.title_en = englishTitle;
-                                    hasUpdates = true;
-                                    stats.titleEnFilled++;
-                                }
-                            }
-                        }
-                        
-                        // 2. 가격 처리
-                        if (missingFields.needsPriceOriginal && productData.priceOriginal) {
-                            updateData.price_original = productData.priceOriginal;
-                            hasUpdates = true;
-                            stats.priceFilled++;
-                            
-                            if (productData.priceDiscount && productData.priceDiscount < productData.priceOriginal) {
-                                updateData.price_discount = productData.priceDiscount;
-                            } else {
-                                updateData.price_discount = productData.priceOriginal;
-                            }
-                            
-                            log(`💰 가격:`);
-                            log(`   정가 (price_original): ₩${updateData.price_original.toLocaleString()}`);
-                            log(`   할인가 (price_discount): ₩${updateData.price_discount.toLocaleString()}`);
-                        } else if (!missingFields.needsPriceOriginal) {
-                            log(`💰 가격: 이미 있음 → 스킵`);
-                            stats.priceSkipped++;
-                        }
-                        
-                        // 3. 설명 처리
-                        if (missingFields.needsDescription) {
-                            const titleToUse = cleanedTitle || product.title_kr || '';
-                            const formattedDesc = formatDescriptionForShopify(productData.infoTable, titleToUse);
-                            
-                            if (formattedDesc && formattedDesc.length > 10) {
-                                updateData.description = formattedDesc;
-                                hasUpdates = true;
-                                stats.descriptionFilled++;
-                                
-                                log(`📄 설명 (쇼핑몰 포맷):`);
-                                formattedDesc.split('\n').slice(0, 5).forEach(line => {
-                                    if (line.trim()) log(`   ${line}`);
-                                });
-                                
-                                if (missingFields.needsDescriptionEn) {
-                                    const englishDesc = await translateDescriptionToEnglish(formattedDesc);
-                                    if (englishDesc) {
-                                        updateData.description_en = englishDesc;
-                                    }
-                                }
-                            } else {
-                                log(`⚠️  상세설명 추출 실패`);
-                            }
-                        } else if (!missingFields.needsDescription) {
-                            log(`📄 설명: 이미 있음 → 스킵`);
-                            stats.descriptionSkipped++;
-                        }
-                        
-                        // 4. 이미지 처리
-                        if (missingFields.needsImages && productData.imageUrls.length > 0) {
-                            log(`🖼️  메인 갤러리 이미지 처리 중...`);
-                            
-                            const attachments = await processProductImages(product, productData.imageUrls);
-                            
-                            if (attachments.length > 0) {
-                                updateData.product_images = attachments;
-                                hasUpdates = true;
-                                stats.imagesFilled++;
-                                log(`✅ ${attachments.length}개 메인 갤러리 이미지 처리 완료`);
-                            }
-                        } else if (!missingFields.needsImages) {
-                            log(`🖼️  이미지: 이미 있음 → 스킵`);
-                            stats.imagesSkipped++;
-                        }
-                    }
-                    
-                    // NocoDB 업데이트
-                    if (hasUpdates) {
-                        const success = await updateProduct(product.Id, updateData);
-                        if (success) {
-                            successCount++;
-                        } else {
-                            failedCount++;
-                        }
-                    } else {
-                        log(`ℹ️  업데이트할 내용 없음`);
-                        skippedCount++;
-                    }
-                    
-                    processedCount++;
-                    
-                } catch (pageError) {
-                    log('⚠️  페이지 처리 오류:', pageError.message);
-                    failedCount++;
-                    processedCount++;
-                }
-                
-                // 메모리 정리
-                if ((index + 1) % BATCH_SIZE === 0) {
-                    log(`\n🧹 메모리 정리 중... (${index + 1}개 처리 완료)`);
-                    await forceGarbageCollection();
-                    logMemoryUsage('정리 후');
-                }
-            },
-            
-            maxRequestsPerCrawl: 1000,
-            maxConcurrency: 1,
-            requestHandlerTimeoutSecs: 180,
-            maxRequestRetries: 2,
-            navigationTimeoutSecs: 60,
-        });
-        
-        const requests = productsToProcess.map((product, index) => ({
-            url: product.product_url,
-            userData: {
-                product: product,
-                index: index,
-                missingFields: checkMissingFields(product)
+            log(`📋 이 배치에서 처리할 제품: ${productsToProcess.length}/${products.length}개`);
+            if (stats.noUrlSkipped > 0) {
+                log(`⚠️  product_url 없음으로 스킵 (누적): ${stats.noUrlSkipped}개`);
             }
-        }));
+            
+            if (productsToProcess.length === 0) {
+                log('✅ 이 배치에서 처리할 제품이 없습니다. 종료합니다.');
+                break;
+            }
+            
+            // ✅ 배치 단위로 크롤러 생성/실행/종료 (메모리 관리)
+            const batchResult = await processBatch(productsToProcess);
+            
+            totalProcessed += batchResult.processedCount;
+            totalSuccess += batchResult.successCount;
+            totalFailed += batchResult.failedCount;
+            totalSkipped += batchResult.skippedCount;
+            
+            log(`\n📊 배치 ${batchNumber} 결과: 성공 ${batchResult.successCount}, 실패 ${batchResult.failedCount}, 스킵 ${batchResult.skippedCount}`);
+            
+            // 메모리 정리
+            await forceGarbageCollection();
+            logMemoryUsage(`배치 ${batchNumber} 완료 후`);
+            
+            // 배치 간 대기 (서버 부하 방지)
+            log('⏳ 다음 배치 전 5초 대기...\n');
+            await new Promise(resolve => setTimeout(resolve, 5000));
+        }
         
-        log(`🌐 Crawler 시작 - ${productsToProcess.length}개 제품 처리`);
-        log('');
-        
-        await crawler.run(requests);
-        
-        await crawler.teardown();
-        await forceGarbageCollection();
-        
-        // 최종 결과
+        // ==================== 최종 결과 ====================
         log('');
         log('='.repeat(70));
         log('🎉 Phase 1 완료!');
         log('='.repeat(70));
-        log(`✅ 성공: ${successCount}/${totalProducts}개 제품`);
-        log(`⭕ 스킵: ${skippedCount}/${totalProducts}개 제품`);
-        log(`❌ 실패: ${failedCount}/${totalProducts}개 제품`);
+        log(`📦 총 배치 수: ${batchNumber}`);
+        log(`✅ 성공: ${totalSuccess}개 제품`);
+        log(`⭕ 스킵: ${totalSkipped}개 제품`);
+        log(`❌ 실패: ${totalFailed}개 제품`);
+        log(`📊 총 처리: ${totalProcessed}개 제품`);
         
-        log(`📊 필드별 통계:`);
+        log(`\n📊 필드별 통계:`);
         log(`   - title_kr: ${stats.titleKrFilled}개 채움, ${stats.titleKrSkipped}개 스킵`);
         log(`   - title_en: ${stats.titleEnFilled}개 채움, ${stats.titleEnSkipped}개 스킵`);
         log(`   - price: ${stats.priceFilled}개 채움, ${stats.priceSkipped}개 스킵`);
@@ -1652,7 +1691,7 @@ async function main() {
         log(`   - 세트 감지: ${stats.setDetected}개`);
         log(`   - 증정품 제거: ${stats.promotionalRemoved}개`);
         log(`   - 용량 초과 스킵: ${stats.volumeExceededSkipped}개`);
-        log(`   - ⚠️  product_url 없음 스킵: ${stats.noUrlSkipped}개`);  // ✅ v2.9.1 추가
+        log(`   - ⚠️  product_url 없음 스킵: ${stats.noUrlSkipped}개`);
         
         logMemoryUsage('최종');
         
@@ -1664,13 +1703,6 @@ async function main() {
         log('❌ 치명적 오류:', error.message);
         log(error.stack);
     } finally {
-        if (crawler) {
-            try {
-                await crawler.teardown();
-            } catch (e) {
-                // 이미 종료됨
-            }
-        }
         logStream.end();
     }
 }
