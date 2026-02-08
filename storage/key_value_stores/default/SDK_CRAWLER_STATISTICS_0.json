@@ -1,37 +1,49 @@
 {
-  "requestsFinished": 10,
-  "requestsFailed": 0,
-  "requestsRetries": 0,
-  "requestsFailedPerMinute": 0,
-  "requestsFinishedPerMinute": 2,
-  "requestMinDurationMillis": 19946,
-  "requestMaxDurationMillis": 26042,
-  "requestTotalFailedDurationMillis": 0,
-  "requestTotalFinishedDurationMillis": 221977,
+  "requestsFinished": 28,
+  "requestsFailed": 12,
+  "requestsRetries": 23,
+  "requestsFailedPerMinute": 1,
+  "requestsFinishedPerMinute": 3,
+  "requestMinDurationMillis": 17161,
+  "requestMaxDurationMillis": 30445,
+  "requestTotalFailedDurationMillis": 6663,
+  "requestTotalFinishedDurationMillis": 619299,
   "crawlerStartedAt": "2026-02-08T05:05:03.167Z",
-  "crawlerFinishedAt": null,
-  "statsPersistedAt": "2026-02-08T05:09:03.177Z",
-  "crawlerRuntimeMillis": 240226,
+  "crawlerFinishedAt": "2026-02-08T05:15:56.512Z",
+  "statsPersistedAt": "2026-02-08T05:15:56.512Z",
+  "crawlerRuntimeMillis": 653561,
   "crawlerLastStartTimestamp": 1770527102951,
   "requestRetryHistogram": [
-    10
+    17,
+    4,
+    19
   ],
   "statsId": 0,
-  "requestAvgFailedDurationMillis": null,
-  "requestAvgFinishedDurationMillis": 22198,
-  "requestTotalDurationMillis": 221977,
-  "requestsTotal": 10,
+  "requestAvgFailedDurationMillis": 555,
+  "requestAvgFinishedDurationMillis": 22118,
+  "requestTotalDurationMillis": 625962,
+  "requestsTotal": 40,
   "requestsWithStatusCode": {
-    "200": 10,
-    "403": 26
+    "200": 28,
+    "403": 54
   },
-  "errors": {},
+  "errors": {
+    "/root/copychu-scraper/node_modules/@crawlee/basic/internals/basic-crawler.js:903:19": {
+      "missing error code": {
+        "Error": {
+          "Request blocked - received 403 status code.": {
+            "count": 12
+          }
+        }
+      }
+    }
+  },
   "retryErrors": {
     "/root/copychu-scraper/node_modules/@crawlee/basic/internals/basic-crawler.js:903:19": {
       "missing error code": {
         "Error": {
           "Request blocked - received 403 status code.": {
-            "count": 26
+            "count": 42
           }
         }
       }
