@@ -80,21 +80,21 @@ if (UNIFIED_LOG_PATH) {
 }
 
 // ==================== 초기화 ====================
-console.log('🚀 Phase 5: Shopify 제품 업로드 (v2.1 - NocoDB 수정)');
-console.log('='.repeat(70));
-console.log('🔧 설정 확인:');
-console.log(`   - NocoDB URL: ${NOCODB_API_URL}`);
-console.log(`   - Shopify Store: ${SHOPIFY_STORE_URL}`);
-console.log(`   - Shopify API Version: ${SHOPIFY_API_VERSION}`);
-console.log(`   - Shopify Table ID: ${SHOPIFY_TABLE_ID}`);
-console.log(`   - 시간대: ${SYDNEY_TIMEZONE}`);
-console.log(`   - 로그 파일: ${LOG_PATH}`);
-console.log('');
-console.log('✨ v2.1 변경사항:');
-console.log('   ✅ 이미지를 Base64로 인코딩하여 Shopify에 직접 업로드');
-console.log('   ✅ NocoDB 업데이트 시 shopify_status 제외 (SingleSelect 타입 문제)');
-console.log('   ✅ NocoDB PATCH 요청을 배열로 감싸서 올바르게 업데이트');
-console.log('');
+log('🚀 Phase 5: Shopify 제품 업로드 (v2.1 - NocoDB 수정)');
+log('='.repeat(70));
+log('🔧 설정 확인:');
+log(`   - NocoDB URL: ${NOCODB_API_URL}`);
+log(`   - Shopify Store: ${SHOPIFY_STORE_URL}`);
+log(`   - Shopify API Version: ${SHOPIFY_API_VERSION}`);
+log(`   - Shopify Table ID: ${SHOPIFY_TABLE_ID}`);
+log(`   - 시간대: ${SYDNEY_TIMEZONE}`);
+log(`   - 로그 파일: ${LOG_PATH}`);
+log('');
+log('✨ v2.1 변경사항:');
+log('   ✅ 이미지를 Base64로 인코딩하여 Shopify에 직접 업로드');
+log('   ✅ NocoDB 업데이트 시 shopify_status 제외 (SingleSelect 타입 문제)');
+log('   ✅ NocoDB PATCH 요청을 배열로 감싸서 올바르게 업데이트');
+log('');
 
 // ==================== 통계 ====================
 const stats = {
