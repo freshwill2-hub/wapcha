@@ -6,8 +6,9 @@
       "name": "에센스/세럼/앰플",
       "maxProducts": 5,
       "maxPages": 1,
-      "status": "processing",
-      "createdAt": "2026-02-11T10:59:34.918Z"
+      "status": "completed",
+      "createdAt": "2026-02-11T10:59:34.918Z",
+      "completedAt": "2026-02-11T11:00:25.248Z"
     }
   ],
   "products": []
