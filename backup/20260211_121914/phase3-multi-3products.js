@@ -658,8 +658,8 @@ async function processProduct(product, productIndex, totalProducts) {
             if (analysis.action === 'SKIP_MODEL') {
                 skippedModelCount++;
                 if (i < ai_product_images.length - 1) {
-                    log(`\n      ⏳ 1초 대기 중...`);
-                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    log(`\n      ⏳ 3초 대기 중...`);
+                    await new Promise(resolve => setTimeout(resolve, 3000));
                 }
                 continue;
             }
@@ -667,8 +667,8 @@ async function processProduct(product, productIndex, totalProducts) {
             if (analysis.action === 'SKIP_BANNER') {
                 skippedBannerCount++;
                 if (i < ai_product_images.length - 1) {
-                    log(`\n      ⏳ 1초 대기 중...`);
-                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    log(`\n      ⏳ 3초 대기 중...`);
+                    await new Promise(resolve => setTimeout(resolve, 3000));
                 }
                 continue;
             }
@@ -676,8 +676,8 @@ async function processProduct(product, productIndex, totalProducts) {
             if (analysis.action === 'SKIP_SET_MISMATCH') {
                 skippedSetMismatchCount++;
                 if (i < ai_product_images.length - 1) {
-                    log(`\n      ⏳ 1초 대기 중...`);
-                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    log(`\n      ⏳ 3초 대기 중...`);
+                    await new Promise(resolve => setTimeout(resolve, 3000));
                 }
                 continue;
             }
@@ -802,8 +802,8 @@ async function processProduct(product, productIndex, totalProducts) {
         
         // API Rate Limiting
         if (i < ai_product_images.length - 1) {
-            log(`\n      ⏳ 4초 대기 중... (Gemini API Rate Limit)`);
-            await new Promise(resolve => setTimeout(resolve, 4000));
+            log(`\n      ⏳ 6초 대기 중... (Gemini API Rate Limit)`);
+            await new Promise(resolve => setTimeout(resolve, 6000));
         }
     }
 
@@ -858,8 +858,8 @@ async function processProducts() {
             
             if (i < products.length - 1) {
                 log(`\n${'='.repeat(70)}`);
-                log('⏳ 다음 제품 처리 전 7초 대기... (Gemini API Rate Limit)\n');
-                await new Promise(resolve => setTimeout(resolve, 7000));
+                log('⏳ 다음 제품 처리 전 10초 대기... (Gemini API Rate Limit)\n');
+                await new Promise(resolve => setTimeout(resolve, 10000));
             }
         }
         
