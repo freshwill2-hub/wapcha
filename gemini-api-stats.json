@@ -1,12 +1,12 @@
 {
   "date": "2026-02-11",
-  "dailyCalls": 122,
+  "dailyCalls": 144,
   "dailyLimit": 1500,
-  "remaining": 1378,
-  "sessionCalls": 33,
+  "remaining": 1356,
+  "sessionCalls": 22,
   "byFunction": {
-    "analyzeImage": 38,
-    "getBadgeCropCoordinates": 14,
+    "analyzeImage": 53,
+    "getBadgeCropCoordinates": 21,
     "getSingleProductCropCoordinates": 1,
     "analyzeImageBasics": 26,
     "evaluateImageDetails": 27,
@@ -14,116 +14,6 @@
     "quickNaverImageCheck": 8
   },
   "callHistory": [
-    {
-      "function": "analyzeImage",
-      "time": "2026-02-11T11:07:17.185Z",
-      "dailyTotal": 23
-    },
-    {
-      "function": "getBadgeCropCoordinates",
-      "time": "2026-02-11T11:07:19.116Z",
-      "dailyTotal": 24
-    },
-    {
-      "function": "analyzeImage",
-      "time": "2026-02-11T11:07:26.996Z",
-      "dailyTotal": 25
-    },
-    {
-      "function": "analyzeImage",
-      "time": "2026-02-11T11:07:38.997Z",
-      "dailyTotal": 26
-    },
-    {
-      "function": "analyzeImage",
-      "time": "2026-02-11T11:07:46.879Z",
-      "dailyTotal": 27
-    },
-    {
-      "function": "analyzeImage",
-      "time": "2026-02-11T11:07:54.638Z",
-      "dailyTotal": 28
-    },
-    {
-      "function": "analyzeImageBasics",
-      "time": "2026-02-11T11:07:59.961Z",
-      "dailyTotal": 29
-    },
-    {
-      "function": "evaluateImageDetails",
-      "time": "2026-02-11T11:08:01.605Z",
-      "dailyTotal": 30
-    },
-    {
-      "function": "getCropCoordinates_Naver",
-      "time": "2026-02-11T11:08:20.319Z",
-      "dailyTotal": 31
-    },
-    {
-      "function": "quickNaverImageCheck",
-      "time": "2026-02-11T11:08:26.484Z",
-      "dailyTotal": 32
-    },
-    {
-      "function": "getCropCoordinates_Naver",
-      "time": "2026-02-11T11:08:30.339Z",
-      "dailyTotal": 33
-    },
-    {
-      "function": "quickNaverImageCheck",
-      "time": "2026-02-11T11:08:36.164Z",
-      "dailyTotal": 34
-    },
-    {
-      "function": "getCropCoordinates_Naver",
-      "time": "2026-02-11T11:08:40.384Z",
-      "dailyTotal": 35
-    },
-    {
-      "function": "quickNaverImageCheck",
-      "time": "2026-02-11T11:08:46.272Z",
-      "dailyTotal": 36
-    },
-    {
-      "function": "getCropCoordinates_Naver",
-      "time": "2026-02-11T11:08:56.397Z",
-      "dailyTotal": 37
-    },
-    {
-      "function": "quickNaverImageCheck",
-      "time": "2026-02-11T11:09:02.140Z",
-      "dailyTotal": 38
-    },
-    {
-      "function": "analyzeImageBasics",
-      "time": "2026-02-11T11:09:14.141Z",
-      "dailyTotal": 39
-    },
-    {
-      "function": "evaluateImageDetails",
-      "time": "2026-02-11T11:09:15.959Z",
-      "dailyTotal": 40
-    },
-    {
-      "function": "analyzeImageBasics",
-      "time": "2026-02-11T11:09:23.829Z",
-      "dailyTotal": 41
-    },
-    {
-      "function": "evaluateImageDetails",
-      "time": "2026-02-11T11:09:25.600Z",
-      "dailyTotal": 42
-    },
-    {
-      "function": "analyzeImageBasics",
-      "time": "2026-02-11T11:09:33.622Z",
-      "dailyTotal": 43
-    },
-    {
-      "function": "evaluateImageDetails",
-      "time": "2026-02-11T11:09:35.601Z",
-      "dailyTotal": 44
-    },
     {
       "function": "analyzeImageBasics",
       "time": "2026-02-11T11:09:48.523Z",
@@ -513,7 +403,117 @@
       "function": "evaluateImageDetails",
       "time": "2026-02-11T13:02:10.197Z",
       "dailyTotal": 122
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-11T14:28:00.002Z",
+      "dailyTotal": 123
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-11T14:28:03.205Z",
+      "dailyTotal": 124
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-11T14:28:05.935Z",
+      "dailyTotal": 125
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-11T14:28:08.876Z",
+      "dailyTotal": 126
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-11T14:28:15.198Z",
+      "dailyTotal": 127
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-11T14:28:24.793Z",
+      "dailyTotal": 128
+    },
+    {
+      "function": "getBadgeCropCoordinates",
+      "time": "2026-02-11T14:28:27.070Z",
+      "dailyTotal": 129
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-11T14:28:33.382Z",
+      "dailyTotal": 130
+    },
+    {
+      "function": "getBadgeCropCoordinates",
+      "time": "2026-02-11T14:28:35.196Z",
+      "dailyTotal": 131
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-11T14:28:44.654Z",
+      "dailyTotal": 132
+    },
+    {
+      "function": "getBadgeCropCoordinates",
+      "time": "2026-02-11T14:28:46.869Z",
+      "dailyTotal": 133
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-11T14:28:53.598Z",
+      "dailyTotal": 134
+    },
+    {
+      "function": "getBadgeCropCoordinates",
+      "time": "2026-02-11T14:28:55.758Z",
+      "dailyTotal": 135
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-11T14:29:09.562Z",
+      "dailyTotal": 136
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-11T14:29:18.918Z",
+      "dailyTotal": 137
+    },
+    {
+      "function": "getBadgeCropCoordinates",
+      "time": "2026-02-11T14:29:22.114Z",
+      "dailyTotal": 138
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-11T14:29:28.139Z",
+      "dailyTotal": 139
+    },
+    {
+      "function": "getBadgeCropCoordinates",
+      "time": "2026-02-11T14:29:30.293Z",
+      "dailyTotal": 140
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-11T14:29:36.573Z",
+      "dailyTotal": 141
+    },
+    {
+      "function": "getBadgeCropCoordinates",
+      "time": "2026-02-11T14:29:40.519Z",
+      "dailyTotal": 142
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-11T14:29:46.565Z",
+      "dailyTotal": 143
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-11T14:29:55.742Z",
+      "dailyTotal": 144
     }
   ],
-  "lastUpdated": "2026-02-11T13:02:10.197Z"
+  "lastUpdated": "2026-02-11T14:29:55.742Z"
 }
