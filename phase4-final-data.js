@@ -1647,8 +1647,8 @@ async function processProduct(product, productIndex, totalProducts) {
             scoredImages.push(scored);
             
             if (i < validated_images.length - 1) {
-                log(`\n      ⏳ 6초 대기...`);
-                await new Promise(resolve => setTimeout(resolve, 6000));
+                log(`\n      ⏳ 4초 대기...`);
+                await new Promise(resolve => setTimeout(resolve, 4000));
             }
             
         } catch (error) {
@@ -1909,8 +1909,8 @@ async function processProduct(product, productIndex, totalProducts) {
         
         if (naverProcessed.length >= needed) break;
         
-        // ✅ 네이버 이미지 간 대기 6초
-        await new Promise(resolve => setTimeout(resolve, 6000));
+        // ✅ 네이버 이미지 간 대기 4초
+        await new Promise(resolve => setTimeout(resolve, 4000));
     }
 
     if (naverProcessed.length === 0) {
@@ -1969,8 +1969,8 @@ async function main() {
                 
                 if (i < products.length - 1) {
                     log(`\n${'='.repeat(70)}`);
-                    log('⏳ 다음 제품 10초 대기...\n');
-                    await new Promise(resolve => setTimeout(resolve, 10000));
+                    log('⏳ 다음 제품 7초 대기...\n');
+                    await new Promise(resolve => setTimeout(resolve, 7000));
                 }
             } catch (productError) {
                 log(`\n❌ 제품 ${i + 1} 오류:`, productError.message);

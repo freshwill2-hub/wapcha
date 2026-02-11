@@ -1239,7 +1239,7 @@ app.post('/api/url-queue/process-full', async (req, res) => {
                     writeUnifiedLog(unifiedLogPath, '═══════════════════════════════════════════════════════════════════════');
                     
                     addLog('info', '🔄 URL 수집 완료, 파이프라인 시작...');
-                    await new Promise(resolve => setTimeout(resolve, 3000));
+                    await new Promise(resolve => setTimeout(resolve, 1000));
                     
                     // 🔧 runPipeline에 기존 로그 경로 전달 (새 로그 파일 만들지 않음)
                     await runPipeline({
