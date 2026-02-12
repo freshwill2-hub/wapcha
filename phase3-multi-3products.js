@@ -234,24 +234,33 @@ async function analyzeImage(imageUrl, productTitle, isSetProduct) {
 
 2. CROP_BADGE (배지/잔여물 크롭해서 제거)
    - 제품 이미지이지만 코너에 배지/스티커가 있음
-   - 예: "Slow Aging", "NEW", "BEST", "HOT", "ONLY", "GLOWPICK" 등의 원형/사각형 배지
+   - 예: "Slow Aging", "NEW", "BEST", "HOT", "ONLY", "GLOWPICK", "올영 PICK", "OLIVE YOUNG PICK", "Awards", "HOT DEAL", "CLEAN BEAUTY" 등의 원형/사각형 배지
    - ⚠️ rembg 배경 제거 후 남은 잔여 그래픽도 포함:
      - 반투명 달, 별, 하트, 캐릭터 장식 잔해
      - 부분적으로 남은 프로모션 텍스트 (잘린 한국어 글자)
      - 모서리에 남은 색상 배지 조각이나 그라데이션 잔해
+     - 반투명 유령 잔상(ghost artifact): 다른 제품의 실루엣, 흐릿한 도형, 반투명 텍스트("PICK" 등)
+   - ⚠️ 제품 주위의 발광 아웃라인/네온 테두리(초록, 빨강, 노랑, 주황, 분홍)가 있으면 → CROP_BADGE
    - 이런 요소가 제품과 겹치지 않고 가장자리에 있으면 CROP_BADGE로 제거
+   - 반투명 유령 잔상이 이미지 면적 15% 이상이면 → SKIP_BANNER (크롭 불가)
    - 배지/잔여물 위치를 알려주세요
 
 3. CROP_SINGLE (개별 제품 1개만 크롭) - ⚠️ 개별 제품 전용!
    - ${isSetProduct ? '세트 제품에서는 사용하지 마세요!' : '개별 제품인데 이미지에 2개 이상의 제품이 보임'}
    - 가장 선명하고 중앙에 있는 1개만 크롭해야 함
    - ⚠️ "+" 기호와 함께 동일 제품이 2개 보이면 (1+1 프로모션), 개별 제품(isSetProduct=false)이면 반드시 CROP_SINGLE
+   - ⚠️ 사은품/증정품 감지: 메인 제품 외에 미니어처, 파우치, 봉제인형, 리필팩, 마스크팩, 시트마스크, 캘린더, 인형, 키링이 보이면 이것도 별도 아이템으로 카운트!
+     - 개별 제품인데 사은품 포함 시 → CROP_SINGLE (메인 제품만 크롭)
+     - 크롭이 불가능할 정도로 겹쳐있으면 → SKIP_BANNER
 
 4. SKIP_MODEL (제외 - 모델/사람) ⚠️ 매우 중요!
+   - 이미지에 제품(병, 튜브, 용기)이 전혀 보이지 않고 사람 얼굴/몸만 보이면 → 반드시 SKIP_MODEL
    - 사람의 얼굴, 몸, 손(제품을 들고 있는 손 포함)이 이미지 면적의 10% 이상이면 반드시 SKIP_MODEL
+   - 사람이 제품을 들고 있어도 사람 면적이 제품보다 크면 → SKIP_MODEL
    - 아이돌/연예인/모델의 광고 사진이면 반드시 SKIP_MODEL (한국 화장품 브랜드는 아이돌 광고가 매우 많음)
    - 사람이 제품을 사용하는 장면 (세럼을 바르는 모습, 크림을 얼굴에 바르는 모습 등)이면 SKIP_MODEL
    - 사람의 피부 클로즈업 (before/after 비교 사진 등)이면 SKIP_MODEL
+   - ⚠️ 제품 없이 사람만 있는 이미지는 절대 PASS하지 마세요!
    - 예외: 제품 패키징에 인쇄된 사람 일러스트/그림은 OK (제품 자체 디자인이므로 PASS)
 
 5. SKIP_BANNER (제외 - 배너/광고)
@@ -259,10 +268,13 @@ async function analyzeImage(imageUrl, productTitle, isSetProduct) {
    - 여러 제품이 작게 나열된 카탈로그
    - ⚠️ 올리브영 프로모션 이미지 감지 (반드시 SKIP):
      - "오늘의 특가", "올영 PICK", "OLIVE YOUNG" 로고가 보이는 이미지
-     - 대형 한국어 프로모션 텍스트가 이미지 면적의 20% 이상 차지
+     - 대형 한국어 프로모션 텍스트가 이미지 면적의 15% 이상 차지
      - 날짜+요일 표시 (예: "2/7 토", "12/25 월")
+     - 날짜+프로모션 조합 (예: "02.01~02.28 천원페이백")
+     - "천원페이백", "페이백", "디자인 리뉴얼", "NEW 디자인" 등 한글 프로모 텍스트
      - 배경에 달, 별, 캐릭터 장식이 있고 제품이 프로모션 구도로 배치된 경우
-   - 핵심 구분법: 제품 용기 자체의 인쇄 텍스트/디자인은 정상. 올리브영이 마케팅용으로 추가한 그래픽이 이미지 면적의 15% 이상이면 SKIP_BANNER
+   - ⚠️ "+" 기호가 제품 사이에 있으면 → 1+1 프로모션이므로 SKIP_BANNER (개별 제품 한정)
+   - 핵심 구분법: 제품 용기 자체의 인쇄 텍스트/디자인은 정상. 올리브영이 마케팅용으로 추가한 그래픽/뱃지/텍스트가 이미지 면적의 8% 이상이면 SKIP_BANNER
 
 6. SKIP_SET_MISMATCH (제외 - 세트 불일치) - ⚠️ 세트 제품 전용!
    - ${isSetProduct ? '세트 제품인데 이미지에 1개만 보임 (세트 구성이 안 맞음)' : '개별 제품에서는 사용하지 마세요!'}
@@ -714,16 +726,11 @@ async function processProduct(product, productIndex, totalProducts) {
                 );
                 
                 if (coords) {
-                    // 최소 크롭 크기 검증: 원본의 30% 미만이면 크롭하지 않고 PASS 처리
+                    // 최소 크롭 크기 검증: 원본의 30% 미만이면 뱃지 포함 원본 폐기
                     const cropArea = coords.width * coords.height;
                     const originalArea = dimensions.width * dimensions.height;
                     if (cropArea < originalArea * 0.3) {
-                        log(`      ⚠️  크롭 영역이 원본의 ${(cropArea / originalArea * 100).toFixed(1)}%로 너무 작음 → 원본 그대로 사용`);
-                        fs.copyFileSync(inputPath, finalPath);
-                        const fileName = `final-${Id}-${i + 1}-${timestamp}.png`;
-                        const uploadedData = await uploadToNocoDB(finalPath, fileName);
-                        validatedImages.push(uploadedData[0]);
-                        log(`      📤 저장 완료! (크롭 생략, 원본 사용)`);
+                        log(`      ⏭️ CROP_BADGE 크롭 영역 부족 (${(cropArea / originalArea * 100).toFixed(1)}%) → 뱃지 포함 원본 폐기, 건너뜀`);
                         cleanupFiles(inputPath, croppedPath, finalPath);
                         continue;
                     }

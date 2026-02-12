@@ -792,16 +792,21 @@ async function analyzeImageBasics(imagePath, productTitle, productInfo) {
    - 그림자, 반사, 포장박스는 제외
 
 2. **포장박스**: 제품 본체 외에 종이 상자/패키지 박스가 있나요?
-   - 제품 자체의 플라스틱 용기/튜브/병은 포장박스 아님
-   - 종이로 된 외부 상자만 포장박스
+   - 제품 용기(병, 튜브, 펌프병) 외에 종이 상자/골판지 박스가 보이는가?
+   - 제품이 박스 안에 들어있거나 박스 앞에 놓여있는 경우도 포함
+   - 박스만 보이고 실제 제품 용기가 안 보이는 경우 반드시 HAS_PACKAGING: YES
 
-3. **완성도**: 제품이 완전한가요?
+3. **제품 용기 확인**: 실제 제품 용기(병, 튜브, 펌프병, 드로퍼 등)가 보이나요?
+   - 종이 박스만 보이고 실제 제품 용기가 안 보이면 PRODUCT_VISIBLE: NO
+
+4. **완성도**: 제품이 완전한가요?
    - 제품이 잘려있나요? (캡, 바디, 하단)
    - 제품 전체가 이미지 안에 있나요?
 
 다음 형식으로만 답변하세요:
 PRODUCT_COUNT: [숫자]
 HAS_PACKAGING: [YES/NO]
+PRODUCT_VISIBLE: [YES/NO]
 IS_COMPLETE: [YES/NO]`;
 
         const result = await model.generateContent([
@@ -820,10 +825,12 @@ IS_COMPLETE: [YES/NO]`;
 
         const countMatch = response.match(/PRODUCT_COUNT:\s*(\d+)/i);
         const packagingMatch = response.match(/HAS_PACKAGING:\s*(YES|NO)/i);
+        const productVisibleMatch = response.match(/PRODUCT_VISIBLE:\s*(YES|NO)/i);
         const completeMatch = response.match(/IS_COMPLETE:\s*(YES|NO)/i);
 
         const detectedCount = countMatch ? parseInt(countMatch[1]) : 1;
         const hasPackaging = packagingMatch ? packagingMatch[1].toUpperCase() === 'YES' : false;
+        const productVisible = productVisibleMatch ? productVisibleMatch[1].toUpperCase() === 'YES' : true;
         const isComplete = completeMatch ? completeMatch[1].toUpperCase() === 'YES' : false;
 
         // 여러 제품 감점 (세트 제품이면 스킵)
@@ -864,7 +871,8 @@ IS_COMPLETE: [YES/NO]`;
         return {
             multipleProductsPenalty,
             packagingPenalty,
-            completenessScore
+            completenessScore,
+            productNotVisible: !productVisible
         };
 
     } catch (error) {
@@ -872,7 +880,8 @@ IS_COMPLETE: [YES/NO]`;
         return {
             multipleProductsPenalty: 0,
             packagingPenalty: 0,
-            completenessScore: 15
+            completenessScore: 15,
+            productNotVisible: false
         };
     }
 }
@@ -932,13 +941,17 @@ SET_SUITABLE: [EXCELLENT/GOOD/FAIR/POOR]` : '';
 1. **브랜드명**: 이미지에서 읽은 브랜드
 2. **제품명/라인명**: 이미지에서 읽은 제품 라인
 3. **용량**: ml, g 등
-4. **이미지 품질**: 선명도, 중앙 배치, 배경 품질, 쇼핑몰 사용 적합성 (0-20점)${setSection}
+4. **이미지 품질**: 선명도, 중앙 배치, 배경 품질, 쇼핑몰 사용 적합성 (0-20점)
+5. **사은품/증정품**: 메인 제품 외에 미니어처, 파우치, 봉제인형, 리필팩, 마스크팩, 시트마스크, 캘린더, 인형, 키링 등 사은품이 보이는가?
+6. **유령 잔상**: 배경에 반투명 유령 잔상(ghost artifact)이 보이는가? (다른 제품의 실루엣, 흐릿한 도형, 반투명 텍스트 등)${setSection}
 
 다음 형식으로만 답변:
 BRAND: [읽은 브랜드명 또는 UNKNOWN]
 PRODUCT_LINE: [읽은 제품라인명 또는 UNKNOWN]
 VOLUME: [읽은 용량 또는 UNKNOWN]
-QUALITY: [0-20 숫자]${setFormat}`;
+QUALITY: [0-20 숫자]
+HAS_GIFT_ITEMS: [YES/NO]
+HAS_GHOST_ARTIFACT: [YES/NO]${setFormat}`;
 
         const result = await model.generateContent([
             prompt,
@@ -968,21 +981,27 @@ QUALITY: [0-20 숫자]${setFormat}`;
         const targetBrand = (productInfo.brandName || '').toLowerCase();
         const targetLine = (productInfo.productLineName || '').toLowerCase();
 
-        // ✅ v12: 브랜드 확인 (동정점수 5→2)
+        // ✅ v13: 브랜드 확인 (불일치 0점, 미확인 1점)
+        let brandClearlyDifferent = false;
         if (detectedBrand !== 'unknown' && targetBrand) {
             if (detectedBrand.includes(targetBrand) || targetBrand.includes(detectedBrand)) {
                 titleMatchScore += 10;
                 log(`      ✅ 브랜드 일치: ${detectedBrand} (+10점)`);
             } else {
-                titleMatchScore += 2;  // ✅ v12: 5 → 2
-                log(`      ⚠️  브랜드 불일치: ${detectedBrand} ≠ ${targetBrand} (+2점)`);
+                titleMatchScore += 0;  // ✅ v13: 2 → 0 (동정점수 제거)
+                log(`      ⚠️  브랜드 불일치: ${detectedBrand} ≠ ${targetBrand} (+0점)`);
+                // 브랜드가 3글자 이상이고 서로 완전히 다르면 하드 탈락 대상
+                if (detectedBrand.length >= 3 && targetBrand.length >= 3) {
+                    brandClearlyDifferent = true;
+                    log(`      🚫 브랜드 명확히 다름: "${detectedBrand}" ≠ "${targetBrand}"`);
+                }
             }
         } else {
-            titleMatchScore += 2;  // ✅ v12: 5 → 2
-            log(`      ⚠️  브랜드 미확인 (+2점)`);
+            titleMatchScore += 1;  // ✅ v13: 2 → 1
+            log(`      ⚠️  브랜드 미확인 (+1점)`);
         }
 
-        // ✅ v12: 제품 라인 확인 (동정점수 5→2)
+        // ✅ v13: 제품 라인 확인 (불일치 1점, 미확인 1점)
         if (detectedProductLine !== 'unknown' && targetLine) {
             const targetWords = targetLine.split(' ').slice(0, 2).join(' ');
             const detectedWords = detectedProductLine.split(' ').slice(0, 2).join(' ');
@@ -992,12 +1011,12 @@ QUALITY: [0-20 숫자]${setFormat}`;
                 titleMatchScore += 10;
                 log(`      ✅ 제품 라인 일치 (+10점)`);
             } else {
-                titleMatchScore += 2;  // ✅ v12: 5 → 2
-                log(`      ⚠️  제품 라인 불일치 (+2점)`);
+                titleMatchScore += 1;  // ✅ v13: 2 → 1
+                log(`      ⚠️  제품 라인 불일치 (+1점)`);
             }
         } else {
-            titleMatchScore += 2;  // ✅ v12: 5 → 2
-            log(`      ⚠️  제품 라인 미확인 (+2점)`);
+            titleMatchScore += 1;  // ✅ v13: 2 → 1
+            log(`      ⚠️  제품 라인 미확인 (+1점)`);
         }
 
         // ✅ v12: 용량 확인 (하드탈락 → -30 감점)
@@ -1026,8 +1045,8 @@ QUALITY: [0-20 숫자]${setFormat}`;
                 }
             }
         } else {
-            titleMatchScore += 2;  // ✅ v12: 5 → 2
-            log(`      ⚠️  용량 미확인 (+2점)`);
+            titleMatchScore += 1;  // ✅ v13: 2 → 1
+            log(`      ⚠️  용량 미확인 (+1점)`);
         }
 
         titleMatchScore += volumePenalty;
@@ -1075,10 +1094,33 @@ QUALITY: [0-20 숫자]${setFormat}`;
 
         log(`      📊 이미지 품질: ${qualityScore}/20점`);
 
+        // ✅ v13: 사은품/증정품 감지 (FIX-2B)
+        const giftMatch = response.match(/HAS_GIFT_ITEMS:\s*(YES|NO)/i);
+        const hasGiftItems = giftMatch ? giftMatch[1].toUpperCase() === 'YES' : false;
+        let giftPenalty = 0;
+        if (hasGiftItems && !productInfo.isSetProduct) {
+            giftPenalty = -25;
+            log(`      ⚠️  사은품/증정품 감지됨 → 감점: -25점`);
+        }
+
+        // ✅ v13: 유령 잔상 감지 (FIX-3B)
+        const ghostMatch = response.match(/HAS_GHOST_ARTIFACT:\s*(YES|NO)/i);
+        const hasGhostArtifact = ghostMatch ? ghostMatch[1].toUpperCase() === 'YES' : false;
+        let ghostPenalty = 0;
+        if (hasGhostArtifact) {
+            ghostPenalty = -15;
+            log(`      ⚠️  유령 잔상(ghost artifact) 감지됨 → 감점: -15점`);
+        }
+
         return {
             titleMatchScore: { score: titleMatchScore, isWrongProduct: false },
             setCompositionScore,
-            qualityScore
+            qualityScore,
+            brandClearlyDifferent,
+            giftPenalty,
+            ghostPenalty,
+            hasGiftItems,
+            hasGhostArtifact
         };
 
     } catch (error) {
@@ -1120,7 +1162,15 @@ async function scoreImage(imageData, imagePath, productTitle, productInfo, index
     scores.titleMatch = details.titleMatchScore.score;
     scores.setComposition = details.setCompositionScore;
     scores.quality = details.qualityScore;
-    
+
+    // ✅ v13: 사은품/유령잔상 감점 적용
+    if (details.giftPenalty) {
+        scores.penalties += details.giftPenalty;
+    }
+    if (details.ghostPenalty) {
+        scores.penalties += details.ghostPenalty;
+    }
+
     // ✅ v10: 품질이 너무 낮으면 감점!
     if (scores.quality < 12) {
         scores.penalties += -20;
@@ -1148,6 +1198,18 @@ async function scoreImage(imageData, imagePath, productTitle, productInfo, index
     // 하드 탈락: 개별 제품인데 포장박스 포함 → 총점 0점
     if (!productInfo.isSetProduct && basics.packagingPenalty < 0) {
         log(`      🚫 하드 탈락: 개별 제품인데 포장박스 포함 → 0점`);
+        totalScore = 0;
+    }
+
+    // ✅ v13: 하드 탈락: 브랜드가 명확히 다름 → 총점 0점 (FIX-4B)
+    if (details.brandClearlyDifferent) {
+        log(`      🚫 하드 탈락: 브랜드 명확히 다름 → 0점`);
+        totalScore = 0;
+    }
+
+    // ✅ v13: 하드 탈락: 제품 용기 안 보이고 패키징만 있음 → 총점 0점 (FIX-5B)
+    if (basics.packagingPenalty < 0 && basics.productNotVisible) {
+        log(`      🚫 하드 탈락: 제품 용기 안 보이고 패키징만 있음 → 0점`);
         totalScore = 0;
     }
 
@@ -1279,8 +1341,16 @@ async function quickNaverImageCheck(imagePath, productInfo) {
 타겟 브랜드: "${productInfo.brandName || 'N/A'}"
 타겟 용량: "${productInfo.volume || 'N/A'}"
 
-이미지의 제품이 타겟과 같은 브랜드/제품인가요?
+다음을 확인해주세요:
+1. 이미지의 제품이 타겟과 같은 브랜드/제품인가요?
+2. 프로모션 뱃지/배너/텍스트 오버레이가 있는가?
+3. 사은품/증정품이 함께 보이는가?
+4. 사람/모델 사진인가?
+
 MATCH: [YES/NO]
+HAS_PROMO: [YES/NO]
+HAS_GIFT: [YES/NO]
+HAS_MODEL: [YES/NO]
 REASON: [한 줄]`;
 
         const result = await model.generateContent([
@@ -1292,10 +1362,30 @@ REASON: [한 줄]`;
 
         const response = result.response.text().trim();
         const matchResult = response.match(/MATCH:\s*(YES|NO)/i);
+        const promoResult = response.match(/HAS_PROMO:\s*(YES|NO)/i);
+        const giftResult = response.match(/HAS_GIFT:\s*(YES|NO)/i);
+        const modelResult = response.match(/HAS_MODEL:\s*(YES|NO)/i);
         const reasonMatch = response.match(/REASON:\s*([^\n]+)/i);
 
         const isMatch = matchResult ? matchResult[1].toUpperCase() === 'YES' : false;
+        const hasPromo = promoResult ? promoResult[1].toUpperCase() === 'YES' : false;
+        const hasGift = giftResult ? giftResult[1].toUpperCase() === 'YES' : false;
+        const hasModel = modelResult ? modelResult[1].toUpperCase() === 'YES' : false;
         const reason = reasonMatch ? reasonMatch[1].trim() : '파싱 실패';
+
+        // ✅ v13: 프로모/사은품/모델 감지 시 제외 (FIX-7)
+        if (hasPromo) {
+            log(`      ❌ 네이버 이미지: 프로모션 뱃지/배너 감지됨`);
+            return { pass: false, reason: '프로모션 뱃지/배너 포함' };
+        }
+        if (hasGift) {
+            log(`      ❌ 네이버 이미지: 사은품/증정품 감지됨`);
+            return { pass: false, reason: '사은품/증정품 포함' };
+        }
+        if (hasModel) {
+            log(`      ❌ 네이버 이미지: 모델/사람 사진 감지됨`);
+            return { pass: false, reason: '모델/사람 사진' };
+        }
 
         return { pass: isMatch, reason };
     } catch (error) {
