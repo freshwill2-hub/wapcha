@@ -110,13 +110,22 @@ class GeminiApiCounter {
         const usagePercent = ((this.stats.dailyCalls / DAILY_LIMIT) * 100).toFixed(1);
         console.log(`      📊 Gemini API: ${this.stats.dailyCalls}/${DAILY_LIMIT} (${usagePercent}%) | 세션: ${this.sessionCalls} | ${functionName}`);
 
-        // 경고
-        if (this.stats.remaining <= 100) {
+        // ✅ v14: 단계별 경고 강화
+        if (this.stats.dailyCalls === 1000) {
+            console.log(`\n      ${'⚠️'.repeat(5)}`);
+            console.log(`      ⚠️  Gemini API 1000회 사용 (한도 근접)`);
+            console.log(`      ${'⚠️'.repeat(5)}\n`);
+        }
+        if (this.stats.dailyCalls === 1500) {
+            console.log(`\n      ${'🔴'.repeat(5)}`);
+            console.log(`      🔴 Gemini API 1500회 사용 (무료 한도 초과 - 유료 과금 시작)`);
+            console.log(`      ${'🔴'.repeat(5)}\n`);
+        }
+        if (this.stats.remaining <= 100 && this.stats.remaining > 0) {
             console.log(`      ⚠️  주의: 일일 한도 ${this.stats.remaining}회 남음!`);
         }
-        
         if (this.stats.remaining <= 0) {
-            console.log(`      🚫 일일 한도 초과! 내일까지 대기 필요`);
+            console.log(`      🔴 일일 무료 한도 초과! (유료 과금 중)`);
         }
 
         return {

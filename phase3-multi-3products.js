@@ -607,13 +607,20 @@ async function processProduct(product, productIndex, totalProducts) {
     if (oliveyoungProduct) {
         productTitle = oliveyoungProduct.title_en || oliveyoungProduct.title_kr || oliveyoungProduct.title || 'Unknown Product';
         const titleKr = oliveyoungProduct.title_kr || oliveyoungProduct.title || '';
-        isSetProduct = /set of \d+|세트|\d+개입|\d+개 세트|(\d+)\s*pcs?|\d+\s*pieces?|\d+\s*ea|\d+\s*bottles?|\d+\s*pack/i.test(productTitle)
-            || /\d+개$|\d+개\)|\d+매|\d+입|\d+병|\d+세트|\(\d+\+\d+\)/i.test(titleKr);
-        log(`✅ 제품명: ${productTitle}`);
-        if (isSetProduct) {
-            log(`🎁 세트 제품 감지!`);
+        // ✅ v14: set_count 필드 우선 참조, 없으면 기존 정규식 폴백
+        if (oliveyoungProduct.set_count && oliveyoungProduct.set_count > 1) {
+            isSetProduct = true;
+            log(`✅ 제품명: ${productTitle}`);
+            log(`🎁 세트 제품 감지! (set_count: ${oliveyoungProduct.set_count})`);
         } else {
-            log(`📦 개별 제품`);
+            isSetProduct = /set of \d+|세트|\d+개입|\d+개 세트|(\d+)\s*pcs?|\d+\s*pieces?|\d+\s*ea|\d+\s*bottles?|\d+\s*pack/i.test(productTitle)
+                || /\d+개$|\d+개\)|\d+매|\d+입|\d+병|\d+세트|\(\d+\+\d+\)/i.test(titleKr);
+            log(`✅ 제품명: ${productTitle}`);
+            if (isSetProduct) {
+                log(`🎁 세트 제품 감지! (타이틀 패턴)`);
+            } else {
+                log(`📦 개별 제품`);
+            }
         }
     } else {
         log(`⚠️  Oliveyoung 제품 정보 없음`);

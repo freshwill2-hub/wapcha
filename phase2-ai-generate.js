@@ -238,6 +238,8 @@ async function getProducts(limit = 3) {
         if (shopifyProducts.length === 0) break;
 
         shopifyProducts.forEach(p => {
+            // ✅ v14: ai_product_images 유무와 관계없이 Id 존재만으로 처리 완료 판단
+            // (레코드가 있으면 getOrCreateShopifyProduct에서 업데이트하므로 중복 생성 방지)
             if (p.ai_product_images && p.ai_product_images.length > 0) {
                 processedIds.add(p.Id);
             }
@@ -516,8 +518,11 @@ async function main() {
                     if (success) {
                         const fileName = `white-bg-${product.Id}-${i + 1}-${timestamp}.png`;
                         const uploadedData = await uploadToNocoDB(outputPath, fileName);
-                        
-                        processedImages.push(uploadedData[0]);
+
+                        // ✅ v14: rembg 전 원본 URL 보존
+                        const uploadInfo = uploadedData[0];
+                        uploadInfo.originalUrl = imageUrl;
+                        processedImages.push(uploadInfo);
                         log(`   ✅ 이미지 ${i + 1} 처리 완료`);
                     }
                     

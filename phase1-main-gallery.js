@@ -480,8 +480,8 @@ function cleanProductTitle(rawTitle) {
     cleaned = cleaned.replace(/^[\/\-\s\+]+|[\/\-\s\+]+$/g, '');
     
     log(`   📝 클리닝 완료: "${cleaned}"`);
-    
-    return cleaned;
+
+    return { cleanedTitle: cleaned, setInfo };
 }
 
 // ==================== 타이틀에서 용량 추출 ====================
@@ -1421,9 +1421,14 @@ async function processBatch(productsToProcess) {
                     
                     // 1. 타이틀 처리
                     let cleanedTitle = '';
+                    let detectedSetInfo = null;
                     if (missingFields.needsTitleKr && productData.rawTitle) {
-                        cleanedTitle = cleanProductTitle(productData.rawTitle);
+                        const titleResult = cleanProductTitle(productData.rawTitle);
+                        cleanedTitle = titleResult.cleanedTitle;
+                        detectedSetInfo = titleResult.setInfo;
                         updateData.title_kr = cleanedTitle;
+                        // ✅ v14: 세트 정보를 NocoDB에 저장
+                        updateData.set_count = detectedSetInfo ? detectedSetInfo.count : 1;
                         hasUpdates = true;
                         stats.titleKrFilled++;
                         

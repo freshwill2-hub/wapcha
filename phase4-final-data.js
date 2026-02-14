@@ -148,6 +148,64 @@ const cleanupFiles = (...files) => {
     });
 };
 
+// ✅ v14: 이미지 유사도 해시 (8x8 평균 해시)
+function calculateImageHash(imagePath) {
+    try {
+        const pythonScript = `/tmp/imghash_${Date.now()}.py`;
+        const script = `from PIL import Image
+img = Image.open('${imagePath}').resize((8, 8)).convert('L')
+pixels = list(img.getdata())
+avg = sum(pixels) / 64
+hash_val = ''.join(['1' if p > avg else '0' for p in pixels])
+print(hash_val)
+`;
+        fs.writeFileSync(pythonScript, script);
+        const result = execSync(`${PYTHON_PATH} ${pythonScript}`, { encoding: 'utf-8' }).trim();
+        cleanupFiles(pythonScript);
+        return result;
+    } catch (error) {
+        return null;
+    }
+}
+
+function hammingDistance(hash1, hash2) {
+    if (!hash1 || !hash2 || hash1.length !== hash2.length) return 64;
+    let dist = 0;
+    for (let i = 0; i < hash1.length; i++) {
+        if (hash1[i] !== hash2[i]) dist++;
+    }
+    return dist;
+}
+
+function removeSimilarImages(scoredImages) {
+    if (scoredImages.length <= 1) return scoredImages;
+
+    log(`\n   🔍 유사 이미지 감지 중...`);
+    const hashes = scoredImages.map(img => ({
+        img,
+        hash: img.imagePath ? calculateImageHash(img.imagePath) : null
+    }));
+
+    const kept = [];
+    for (const item of hashes) {
+        let isDuplicate = false;
+        for (const existing of kept) {
+            const dist = hammingDistance(item.hash, existing.hash);
+            if (dist <= 10) {
+                log(`   ⚠️  유사 이미지 제거: 해밍 거리 ${dist} (점수 ${item.img.totalScore}점 < ${existing.img.totalScore}점)`);
+                isDuplicate = true;
+                break;
+            }
+        }
+        if (!isDuplicate) {
+            kept.push(item);
+        }
+    }
+
+    log(`   ✅ 유사 제거 후: ${kept.length}개 (원본 ${scoredImages.length}개)`);
+    return kept.map(k => k.img);
+}
+
 // ==================== Oliveyoung 제품 정보 가져오기 ====================
 async function getOliveyoungProduct(productId) {
     try {
@@ -1220,8 +1278,15 @@ async function processProduct(product, productIndex, totalProducts) {
     }
     
     const productInfo = extractProductInfo(productTitle);
-    
-    log(`📋 제품 정보:`);
+
+    // ✅ v14: set_count 필드 우선 참조, 없으면 기존 타이틀 파싱 사용
+    if (oliveyoungProduct && oliveyoungProduct.set_count && oliveyoungProduct.set_count > 1) {
+        productInfo.setCount = oliveyoungProduct.set_count;
+        productInfo.isSetProduct = true;
+        log(`📋 제품 정보 (set_count: ${oliveyoungProduct.set_count}):`);
+    } else {
+        log(`📋 제품 정보:`);
+    }
     log(`   - 브랜드: ${productInfo.brandName || 'N/A'}`);
     log(`   - 제품 라인: ${productInfo.productLineName || 'N/A'}`);
     log(`   - 용량: ${productInfo.volume || 'N/A'}`);
@@ -1274,21 +1339,24 @@ async function processProduct(product, productIndex, totalProducts) {
     }
     
     scoredImages.sort((a, b) => b.totalScore - a.totalScore);
-    
-    log(`\n📊 평가 결과 (점수순):`);
-    scoredImages.forEach((img, idx) => {
+
+    // ✅ v14: 유사 이미지 중복 제거
+    const uniqueImages = removeSimilarImages(scoredImages);
+
+    log(`\n📊 평가 결과 (점수순, 유사 제거 후):`);
+    uniqueImages.forEach((img, idx) => {
         log(`   ${idx + 1}위: ${img.totalScore}/125점 (감점: ${img.scores.penalties})`);
     });
-    
+
     log(`\n✂️  Step 3: 상위 3개 선별`);
     
     // ✅ v12: 점수 기반 선별 (MIN_SCORE_FOR_MAIN, MIN_SCORE_FOR_GALLERY)
-    if (scoredImages[0].totalScore < MIN_SCORE_FOR_MAIN) {
-        log(`   ⚠️  최고점 ${scoredImages[0].totalScore}점 < 최소 ${MIN_SCORE_FOR_MAIN}점 → 품질 미달`);
+    if (uniqueImages[0].totalScore < MIN_SCORE_FOR_MAIN) {
+        log(`   ⚠️  최고점 ${uniqueImages[0].totalScore}점 < 최소 ${MIN_SCORE_FOR_MAIN}점 → 품질 미달`);
     }
-    
+
     const selectedForSave = [];
-    for (const img of scoredImages.slice(0, 3)) {
+    for (const img of uniqueImages.slice(0, 3)) {
         if (selectedForSave.length === 0) {
             // 메인 이미지: MIN_SCORE_FOR_MAIN 이상
             if (img.totalScore >= MIN_SCORE_FOR_MAIN) {
@@ -1421,13 +1489,21 @@ async function processProduct(product, productIndex, totalProducts) {
         return;
     }
     
+    // ✅ v14: validated_images URL 목록으로 중복 체크
+    const existingUrls = (validated_images || []).map(img => {
+        const u = img.originalUrl || img.url || '';
+        return u.toLowerCase();
+    });
+
     const filteredUrls = naverUrls.filter(url => {
         const lowerUrl = url.toLowerCase();
-        return !lowerUrl.includes('oliveyoung') && 
-               !lowerUrl.includes('small') && 
-               !lowerUrl.includes('thumb') &&
-               !lowerUrl.includes('box') &&
-               !lowerUrl.includes('패키지');
+        // 올리브영 CDN 패턴 확장 필터
+        if (lowerUrl.includes('oliveyoung') || lowerUrl.includes('image.oliveyoung') || lowerUrl.includes('image-oliveyoung')) return false;
+        if (lowerUrl.includes('small') || lowerUrl.includes('thumb')) return false;
+        if (lowerUrl.includes('box') || lowerUrl.includes('패키지')) return false;
+        // 기존 validated_images와 동일 URL 스킵
+        if (existingUrls.some(eu => eu && (eu.includes(lowerUrl) || lowerUrl.includes(eu)))) return false;
+        return true;
     });
     
     log(`\n🖼️  Step 8: 네이버 처리`);
@@ -1501,6 +1577,21 @@ async function processProduct(product, productIndex, totalProducts) {
                 const naverCheck = await quickNaverImageCheck(finalPath, productInfo);
                 if (!naverCheck.pass) {
                     log(`      ❌ 네이버 이미지 검증 실패: ${naverCheck.reason}`);
+                    cleanupFiles(inputPath, croppedPath, finalPath);
+                    continue;
+                }
+
+                // ✅ v14: 기본 분석으로 해상도/완성도/포장박스 체크
+                const naverBasics = await analyzeImageBasics(finalPath, productTitle, productInfo);
+                const naverResolution = getImageResolution(finalPath);
+                const naverResScore = calculateResolutionScore(naverResolution);
+                if (naverResScore < 15) {
+                    log(`      ❌ 네이버 이미지 해상도 부족: ${naverResScore}/30점 → 건너뛰기`);
+                    cleanupFiles(inputPath, croppedPath, finalPath);
+                    continue;
+                }
+                if (naverBasics.productNotVisible) {
+                    log(`      ❌ 네이버 이미지 제품 미확인 → 건너뛰기`);
                     cleanupFiles(inputPath, croppedPath, finalPath);
                     continue;
                 }
