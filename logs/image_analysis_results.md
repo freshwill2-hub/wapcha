@@ -159,3 +159,30 @@
 
 === 배치 6/8 완료 (문제 7개 / 정상 3개) ===
 
+---
+
+## 배치 7/8 (제품 61~70)
+
+| # | ID | 타이틀 | 분석 결과 |
+|---|---|---|---|
+| 61 | 9195551588540 | Purcell 20 Billion/mL Pixel Biome Probiotic Concentrate 20ml | 메인:[4,5,8] 병극단적확대+기울어짐크롭불량+우하단주황"+"원형배지+주황반원호프로모세트잔여 |
+| 62 | 9195551555772 | Rejuran Healer Turnover Ampoule Dual Effect 30ml | 메인:정상 |
+| 63 | 9195551195324 | Rejuran Turnover Ampoule Dual Effect 10ml 2 pcs | 메인:[1] 타이틀"10ml 2pcs"vs실제5ml+10ml다른사이즈세트 용량불일치 \| 갤1:[1] 동일불일치+금구슬장식 \| 갤2:[2,3,5,7] 한글배너"2주만에집중안티에이징"+"ONLY올리브영"배지+포장박스+"+"SPECIAL GIFT증정품 |
+| 64 | 9195551948988 | Round Lab Pine Cica Soothing Ampoule 30ml + 30ml 2 pcs | 메인:[3,6] 한글라벨"소나무진정시카앰플"+해먹여성일러스트+우상단"OLIVE YOUNG"배지 \| 갤1:[2,4,6,8] 한글라벨+우측증정품잘림+크롭불량+고스트잔여 \| 갤2:[2,3,4,6] 한글라벨+우상단초록배지잘림+우측CLE증정품잘림+크롭불량 |
+| 65 | 9195554930876 | Rovectin Hyaluronic Acid Essence 180ml | 메인:[1] 타이틀"Hyaluronic Acid Essence"vs라벨"Hyaluronic Essence"미세불일치 \| 갤1:[4] 병하단잘림크롭불량 \| 갤2:[3,4] GLOWPICK AWARD1위배지잘림+한글텍스트+심한크롭(상하좌우잘림) |
+| 66 | 9195554341052 | SKIN1004 Madagascar Centella Ampoule 55ml | 메인:정상 \| 갤1:정상(각도뷰) |
+| 67 | 9195554832572 | SKINFOOD Royal Honey Propolis Enrich Essence 50ml 2 pcs | 메인:[2,4,5] 파우치+병+"+"기호세트+우측병잘림크롭불량 \| 갤1:[2,3,5,8] "+"기호+한글"본품용량리필증정"+리필파우치+우상단투명고스트 \| 갤2:[2,3,5] "1+1리필기획"+"GLOWPICK AWARDS 1위"+"Slow Aging"+"올리브영99%"배지다수+프로모이미지 |
+| 68 | 9195553652924 | su:m37 Secret Essence 50ml 2 pcs | 메인:[2,3,5,7] 한글배너"피부장벽83%개선멜팅세라마이드에센스"+포장박스+"총100ml본품+리필"배지+REFILL리필파우치 |
+| 69 | 9195553358012 | Sulwhasoo Yoonjo Essence 90ml | 메인:[1,4] 타이틀"Yoonjo Essence"vs라벨"First Care Activating Serum VI"완전불일치+하단잘림크롭 \| 갤1:[1] 동일타이틀불일치, 이미지자체깨끗 |
+| 70 | 9195553882300 | The Ordinary Niacinamide 10% + Zinc 1% 30ml | 메인:정상 \| 갤1:정상(텍스처방울장식) |
+
+### 추가 발견
+- **Purcell(p61)**: 극단적 확대+기울기로 제품식별 어려움 - Phase4 스코어링에서 크롭품질 검증 미흡
+- **Rejuran(p63)**: 5ml+10ml 다른사이즈인데 "10ml 2pcs"로 표기 - Phase1에서 세트구성 파악 오류
+- **Round Lab(p64)**: 한글전용라벨 제품이 영문타이틀로 Shopify에 올라감 - 라벨에 영문 없어 해외고객 혼란
+- **SKINFOOD(p67)**: 3개 이미지 모두 프로모/세트 요소 포함 - Phase3/4에서 "+"기호 감지 완전 실패
+- **Sulwhasoo(p69)**: "윤조에센스"→"Yoonjo Essence" 직역 vs 공식영문명 "First Care Activating Serum VI" - Phase1 번역 오류
+- **The Ordinary/SKIN1004(p66,p70)**: 글로벌 브랜드는 이미지 품질 우수 (정상)
+
+=== 배치 7/8 완료 (문제 7개 / 정상 3개) ===
+
