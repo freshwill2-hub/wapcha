@@ -201,7 +201,7 @@ async function getProducts(limit = 3) {
             `${NOCODB_API_URL}/api/v2/tables/${OLIVEYOUNG_TABLE_ID}/records`,
             {
                 headers: { 'xc-token': NOCODB_API_TOKEN },
-                params: { limit: pageSize, offset: offset, where: '(product_images,notnull)' }
+                params: { limit: pageSize, offset: offset }
             }
         );
 

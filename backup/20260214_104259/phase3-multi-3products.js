@@ -738,20 +738,14 @@ async function processProduct(product, productIndex, totalProducts) {
                         validatedImages.push(uploadedData[0]);
                         log(`      📤 저장 완료! (배지 제거됨)`);
                     } else {
-                        log(`      ⚠️  크롭 실패 → 원본 이미지 사용 (CROP_BADGE 폴백)`);
-                        fs.copyFileSync(inputPath, finalPath);
-                        const fileName = `final-${Id}-${i + 1}-${timestamp}.png`;
-                        const uploadedData = await uploadToNocoDB(finalPath, fileName);
-                        validatedImages.push(uploadedData[0]);
-                        log(`      📤 저장 완료! (크롭 실패, 원본 사용)`);
+                        log(`      ❌ 크롭 실패 → 건너뛰기 (품질 보장)`);
+                        cleanupFiles(inputPath, croppedPath, finalPath);
+                        continue;
                     }
                 } else {
-                    log(`      ⚠️  좌표 획득 실패 → 원본 이미지 사용 (CROP_BADGE 폴백)`);
-                    fs.copyFileSync(inputPath, finalPath);
-                    const fileName = `final-${Id}-${i + 1}-${timestamp}.png`;
-                    const uploadedData = await uploadToNocoDB(finalPath, fileName);
-                    validatedImages.push(uploadedData[0]);
-                    log(`      📤 저장 완료! (좌표 실패, 원본 사용)`);
+                    log(`      ❌ 좌표 획득 실패 → 건너뛰기 (품질 보장)`);
+                    cleanupFiles(inputPath, croppedPath, finalPath);
+                    continue;
                 }
 
             } else if (analysis.action === 'CROP_SINGLE') {
@@ -842,7 +836,7 @@ async function processProducts() {
                 headers: { 'xc-token': NOCODB_API_TOKEN },
                 params: {
                     limit: PRODUCT_LIMIT,
-                    where: '(ai_product_images,notnull)~and(validated_images,is,null)'
+                    where: '(ai_product_images,notnull)'
                 }
             }
         );

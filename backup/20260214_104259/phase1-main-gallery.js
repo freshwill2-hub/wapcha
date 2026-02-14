@@ -1249,17 +1249,8 @@ async function processBatch(productsToProcess) {
                                 
                                 if (src.includes('/gdasEditor/')) return;
                                 if (src.includes('/display/')) return;
-                                if (src.includes('/icon/')) return;
-                                if (src.includes('/badge/')) return;
                                 if (src.includes('/banner/')) return;
-                                if (src.includes('/event/')) return;
-                                if (src.includes('/logo/')) return;
-                                if (src.includes('/btn/')) return;
-                                if (src.includes('/common/')) return;
-                                if (src.includes('/review/')) return;
-                                if (src.includes('/point/')) return;
-                                if (src.includes('/coupon/')) return;
-
+                                
                                 if (seenUrls.has(src)) return;
                                 seenUrls.add(src);
                                 mainGalleryImages.push(src);
@@ -1287,14 +1278,8 @@ async function processBatch(productsToProcess) {
                                 if (src.includes('/icon/')) return;
                                 if (src.includes('/badge/')) return;
                                 if (src.includes('/banner/')) return;
-                                if (src.includes('/event/')) return;
-                                if (src.includes('/logo/')) return;
-                                if (src.includes('/btn/')) return;
-                                if (src.includes('/common/')) return;
                                 if (src.includes('/review/')) return;
-                                if (src.includes('/point/')) return;
-                                if (src.includes('/coupon/')) return;
-
+                                
                                 const width = img.naturalWidth || img.width;
                                 const height = img.naturalHeight || img.height;
                                 
