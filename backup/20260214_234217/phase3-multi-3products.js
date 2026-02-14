@@ -230,23 +230,22 @@ async function analyzeImage(imageUrl, productTitle, isSetProduct) {
    - 제품 이미지 (프레임이 있어도 OK)
    - 배경이 이미 흰색이거나 제거된 상태
    - 배지/스티커/잔여 그래픽이 없음
-   - 한국어 텍스트가 제품 라벨 외에 없음
    - ${isSetProduct ? '세트 제품의 경우: 여러 제품이 함께 보임' : '개별 제품의 경우: 제품이 1개만 보임'}
 
 2. CROP_BADGE (배지/잔여물 크롭해서 제거)
    - 제품 이미지이지만 코너에 배지/스티커가 있음
-   - 예: "Slow Aging", "NEW", "BEST", "HOT", "ONLY", "GLOWPICK", "올영PICK", "ONLY 올리브영" 등의 원형/사각형 배지
+   - 예: "Slow Aging", "NEW", "BEST", "HOT", "ONLY", "GLOWPICK" 등의 원형/사각형 배지
    - ⚠️ rembg 배경 제거 후 남은 잔여 그래픽도 포함:
      - 반투명 달, 별, 하트, 캐릭터 장식 잔해
      - 부분적으로 남은 프로모션 텍스트 (잘린 한국어 글자)
      - 모서리에 남은 색상 배지 조각이나 그라데이션 잔해
-     - 초록/노란/파란 색상의 윤곽선 잔여물 (rembg 아티팩트)
    - 이런 요소가 제품과 겹치지 않고 가장자리에 있으면 CROP_BADGE로 제거
    - 배지/잔여물 위치를 알려주세요
 
 3. CROP_SINGLE (개별 제품 1개만 크롭) - ⚠️ 개별 제품 전용!
    - ${isSetProduct ? '세트 제품에서는 사용하지 마세요!' : '개별 제품인데 이미지에 2개 이상의 제품이 보임'}
    - 가장 선명하고 중앙에 있는 1개만 크롭해야 함
+   - ⚠️ "+" 기호와 함께 동일 제품이 2개 보이면 (1+1 프로모션), 개별 제품(isSetProduct=false)이면 반드시 CROP_SINGLE
 
 4. SKIP_MODEL (제외 - 모델/사람) ⚠️ 매우 중요!
    - 사람의 얼굴, 몸, 손(제품을 들고 있는 손 포함)이 이미지 면적의 10% 이상이면 반드시 SKIP_MODEL
@@ -255,20 +254,14 @@ async function analyzeImage(imageUrl, productTitle, isSetProduct) {
    - 사람의 피부 클로즈업 (before/after 비교 사진 등)이면 SKIP_MODEL
    - 예외: 제품 패키징에 인쇄된 사람 일러스트/그림은 OK (제품 자체 디자인이므로 PASS)
 
-5. SKIP_BANNER (제외 - 배너/광고) ⚠️ 확장된 기준!
+5. SKIP_BANNER (제외 - 배너/광고)
    - 제품 없이 텍스트/광고만 있음
    - 여러 제품이 작게 나열된 카탈로그
-   - ⚠️ "+" 기호와 함께 동일 제품이 2개 이상 보이면 (1+1 프로모션) → 반드시 SKIP_BANNER
-   - ⚠️ 포장박스/종이상자만 보이고 실제 제품 용기(병, 튜브, 펌프)가 안 보이면 → SKIP_BANNER
    - ⚠️ 올리브영 프로모션 이미지 감지 (반드시 SKIP):
      - "오늘의 특가", "올영 PICK", "OLIVE YOUNG" 로고가 보이는 이미지
-     - "올영PICK", "ONLY 올리브영", "GLOWPICK", "1+1", "더블기획" 배지/텍스트
      - 대형 한국어 프로모션 텍스트가 이미지 면적의 20% 이상 차지
      - 날짜+요일 표시 (예: "2/7 토", "12/25 월")
      - 배경에 달, 별, 캐릭터 장식이 있고 제품이 프로모션 구도로 배치된 경우
-   - ⚠️ 한국어 텍스트 감지 (제품 라벨 외):
-     - 제품 용기에 인쇄된 한국어는 OK (제품 자체 디자인)
-     - 이미지에 추가된 한국어 프로모션/마케팅 텍스트가 면적 15% 이상이면 SKIP_BANNER
    - 핵심 구분법: 제품 용기 자체의 인쇄 텍스트/디자인은 정상. 올리브영이 마케팅용으로 추가한 그래픽이 이미지 면적의 15% 이상이면 SKIP_BANNER
 
 6. SKIP_SET_MISMATCH (제외 - 세트 불일치) - ⚠️ 세트 제품 전용!
@@ -278,8 +271,7 @@ async function analyzeImage(imageUrl, productTitle, isSetProduct) {
 - 컬러 프레임(핑크, 노랑 등)만 있는 이미지는 PASS입니다
 - 배지가 있으면 위치를 정확히 알려주세요 (top-left, top-right, bottom-left, bottom-right)
 - 이미지에서 **실제 제품이 몇 개 보이는지** 꼭 세어주세요
-- "+" 기호와 함께 같은 제품이 2개 이상 보이면, 개별 제품이면 반드시 SKIP_BANNER
-- 포장박스만 보이면 반드시 SKIP_BANNER
+- "+" 기호와 함께 같은 제품이 2개 이상 보이면, PRODUCT_COUNT를 정확히 세어주세요
 
 다음 형식으로만 답변:
 ACTION: [PASS/CROP_BADGE/CROP_SINGLE/SKIP_MODEL/SKIP_BANNER/SKIP_SET_MISMATCH]
@@ -309,12 +301,8 @@ REASON: [한 줄 설명]`;
 
         // 추가 검증: 개별/세트 로직 적용
         if (!isSetProduct && productCount >= 2 && action === 'PASS') {
-            action = 'SKIP_BANNER';
-            log(`      🔄 자동 변경: PASS → SKIP_BANNER (개별 제품인데 ${productCount}개 감지 → 프로모 세트)`);
-        }
-        if (!isSetProduct && productCount >= 2 && action === 'CROP_SINGLE') {
-            action = 'SKIP_BANNER';
-            log(`      🔄 자동 변경: CROP_SINGLE → SKIP_BANNER (개별 제품인데 ${productCount}개 감지 → 프로모 세트)`);
+            action = 'CROP_SINGLE';
+            log(`      🔄 자동 변경: PASS → CROP_SINGLE (개별 제품인데 ${productCount}개 감지)`);
         }
         
         if (isSetProduct && productCount === 1 && action === 'PASS') {
@@ -704,15 +692,7 @@ async function processProduct(product, productIndex, totalProducts) {
             // 2단계: 이미지 다운로드
             await downloadImage(imageUrl, inputPath);
             log(`      📥 다운로드 완료`);
-
-            // 2.5단계: 파일 크기 검증 (15KB 미만 → 건너뛰기)
-            const downloadedFileSize = fs.statSync(inputPath).size;
-            if (downloadedFileSize < 15360) {
-                log(`      ⚠️  파일 크기 너무 작음 (${(downloadedFileSize/1024).toFixed(1)}KB < 15KB) → 건너뛰기`);
-                cleanupFiles(inputPath, croppedPath, finalPath);
-                continue;
-            }
-
+            
             // 3단계: 처리 방식 결정
             if (analysis.action === 'PASS') {
                 passCount++;
@@ -771,14 +751,24 @@ async function processProduct(product, productIndex, totalProducts) {
                         validatedImages.push(uploadInfo3);
                         log(`      📤 저장 완료! (배지 제거됨)`);
                     } else {
-                        log(`      ❌ 크롭 실패 → 건너뛰기 (배지 포함 이미지 사용 방지)`);
-                        cleanupFiles(inputPath, croppedPath, finalPath);
-                        continue;
+                        log(`      ⚠️  크롭 실패 → 원본 이미지 사용 (CROP_BADGE 폴백)`);
+                        fs.copyFileSync(inputPath, finalPath);
+                        const fileName = `final-${Id}-${i + 1}-${timestamp}.png`;
+                        const uploadedData = await uploadToNocoDB(finalPath, fileName);
+                        const uploadInfo4 = uploadedData[0];
+                        uploadInfo4.originalUrl = imageUrl;
+                        validatedImages.push(uploadInfo4);
+                        log(`      📤 저장 완료! (크롭 실패, 원본 사용)`);
                     }
                 } else {
-                    log(`      ❌ 좌표 획득 실패 → 건너뛰기 (배지 포함 이미지 사용 방지)`);
-                    cleanupFiles(inputPath, croppedPath, finalPath);
-                    continue;
+                    log(`      ⚠️  좌표 획득 실패 → 원본 이미지 사용 (CROP_BADGE 폴백)`);
+                    fs.copyFileSync(inputPath, finalPath);
+                    const fileName = `final-${Id}-${i + 1}-${timestamp}.png`;
+                    const uploadedData = await uploadToNocoDB(finalPath, fileName);
+                    const uploadInfo5 = uploadedData[0];
+                    uploadInfo5.originalUrl = imageUrl;
+                    validatedImages.push(uploadInfo5);
+                    log(`      📤 저장 완료! (좌표 실패, 원본 사용)`);
                 }
 
             } else if (analysis.action === 'CROP_SINGLE') {

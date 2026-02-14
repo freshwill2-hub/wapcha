@@ -326,14 +326,14 @@ function extractProductInfo(productTitle) {
         info.volume = `${info.volumeNumber}${info.volumeUnit}`;
     }
     
-    const setMatch = productTitle.match(/set of (\d+)|(\d+)개|(\d+)\s*pcs?|(\d+)\s*pack|(\d+)\s*bottles?|(\d+)\s*ea/i);
+    const setMatch = productTitle.match(/set of (\d+)|(\d+)개|(\d+)\s*pcs?/i);
     if (setMatch) {
-        info.setCount = parseInt(setMatch[1] || setMatch[2] || setMatch[3] || setMatch[4] || setMatch[5] || setMatch[6]);
+        info.setCount = parseInt(setMatch[1] || setMatch[2] || setMatch[3]);
         info.isSetProduct = info.setCount > 1;
     }
-
+    
     if (!info.isSetProduct) {
-        info.isSetProduct = /세트|set|듀오|duo|트윈|twin|더블|double|트리플|triple|\d\+\d/i.test(productTitle);
+        info.isSetProduct = /세트|set|듀오|duo|트윈|twin/i.test(productTitle);
     }
     
     return info;
@@ -432,12 +432,12 @@ IS_COMPLETE: [YES/NO]`;
             }
         }
 
-        // ✅ v15: 포장박스 감점 - 개별/세트 모두 -30 (하드탈락은 productNotVisible일 때만)
+        // ✅ v14: 포장박스 감점 - 개별/세트 모두 -15 (하드탈락은 productNotVisible일 때만)
         let packagingPenalty = 0;
         if (hasPackaging) {
-            packagingPenalty = -30;
+            packagingPenalty = -15;
             log(`      ⚠️  포장박스 감지됨`);
-            log(`      📉 감점: -30점 (탈락 아님!)`);
+            log(`      📉 감점: -15점 (탈락 아님!)`);
         } else {
             log(`      ✅ 포장박스 없음`);
         }
@@ -1501,11 +1501,6 @@ async function processProduct(product, productIndex, totalProducts) {
         if (lowerUrl.includes('oliveyoung') || lowerUrl.includes('image.oliveyoung') || lowerUrl.includes('image-oliveyoung')) return false;
         if (lowerUrl.includes('small') || lowerUrl.includes('thumb')) return false;
         if (lowerUrl.includes('box') || lowerUrl.includes('패키지')) return false;
-        // ✅ v15: 추가 마켓플레이스/프로모 CDN 필터
-        if (lowerUrl.includes('coupang') || lowerUrl.includes('11st.co.kr') || lowerUrl.includes('gmarket')) return false;
-        if (lowerUrl.includes('tmon') || lowerUrl.includes('wemakeprice') || lowerUrl.includes('auction.co.kr')) return false;
-        if (lowerUrl.includes('promotion') || lowerUrl.includes('event') || lowerUrl.includes('banner')) return false;
-        if (lowerUrl.includes('blog') || lowerUrl.includes('cafe.naver') || lowerUrl.includes('review')) return false;
         // 기존 validated_images와 동일 URL 스킵
         if (existingUrls.some(eu => eu && (eu.includes(lowerUrl) || lowerUrl.includes(eu)))) return false;
         return true;
