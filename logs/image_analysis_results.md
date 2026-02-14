@@ -108,3 +108,54 @@
 
 === 배치 4/8 완료 (문제 9개 / 정상 1개) ===
 
+---
+
+## 배치 5/8 (제품 41~50)
+
+| # | ID | 타이틀 | 분석 결과 |
+|---|---|---|---|
+| 41 | 9195554799804 | La Roche-Posay Cicaplast Repair Essence 30ml | 메인:OK \| 갤1:[8] 파란윤곽rembg+좌측패드고스트+우측원형고스트 |
+| 42 | 9195554144444 | La Roche-Posay Effaclar Duo+M Essence 40ml | 메인:OK |
+| 43 | 9195550900412 | La Roche-Posay Effaclar Ultra Concentrated Serum 30ml | 메인:OK |
+| 44 | 9195551850684 | La Roche-Posay Hyalu B5 Hydrating Elasticity Serum 30ml | 메인:OK \| 갤1:[2,3] "올영PICK"초록배지+"NEW"배지+증정품원형인셋(B5크림+Cicaplast로션) |
+| 45 | 9195554078908 | Mamonde Calming Shot Azulen Trace Moisture Ampoule Chupa Chups 50ml | 메인:[8] 우측rembg고스트잔여(경미) - ChupaChups콜라보디자인자체는정상 |
+| 46 | 9195551391932 | MediCube PDRN Pink Ampoule 30ml | 메인:[1,2,3,8] 타이틀"PinkAmpoule"vs라벨"PinkPeptideSerum"+증정품패드사쉐+"GLOWPICK1위"배지+"+"핑크윤곽 |
+| 47 | 9195553783996 | MediCube PDRN Pink Collagen Bubble Serum 95ml | 메인:OK \| 갤1:[8] 거품/손형태고스트(경미) \| 갤2:[2] 시트마스크형태추가제품표시 |
+| 48 | 9195551490236 | MediCube PDRN Pink Peptide Ampoule 30ml | 메인:[1,8] 타이틀"Ampoule"vs라벨"PeptideSerum"+우측고스트 \| 갤1:OK \| 갤2:[8] 드롭퍼주변고스트(경미) |
+| 49 | 9195552637116 | MediCube Zero Pore One Day Serum 30ml 2 pcs | 메인:[3,8] 우측주황배지잔여+배경투명병고스트 \| 갤1:[3,7,8] "올리브영단독더블기획"+"X2"+"ONLY"배지+포장박스+한국어+우측배지고스트 |
+| 50 | 9195550834876 | Mediheal Madecassoside Trace Repair Serum 40+40ml Set of 2 | 메인:[1,8] 타이틀"TraceRepair"vs라벨"BlemishRepair"불일치+좌측초록윤곽rembg \| 갤1:[8,11] 초록윤곽+Dermatest고스트+메인과유사(중복의심) |
+
+### 추가 발견
+- **MediCube 브랜드(p46,p48)**: "Ampoule" 타이틀 vs "Serum" 라벨 - Phase1/번역 단계에서 제품타입 오번역 패턴
+- **제품 46**: GLOWPICK 수상배지가 rembg에서 제거 안됨 - 금색테두리 배지는 배경인식 실패
+- **제품 49**: "올리브영 단독 더블기획" 포장박스 이미지가 갤러리로 선택됨 - Phase4 스코어링에서 박스 페널티 미작동
+- **La Roche-Posay(p41-44)**: 글로벌 브랜드는 이미지 품질 양호 (4제품 중 3개 메인 OK)
+
+=== 배치 5/8 완료 (문제 8개 / 정상 2개) ===
+
+---
+
+## 배치 6/8 (제품 51~60)
+
+| # | ID | 타이틀 | 분석 결과 |
+|---|---|---|---|
+| 51 | 9195551064252 | Mediheal PDRN Pore Elasticity Serum 40+40ml 2 pcs | 메인:[1,8] 타이틀"Pore Elasticity"vs라벨"Lifting Serum"불일치+좌측병초록윤곽rembg \| 갤1:[1,3,8] 타이틀불일치+좌측노란윤곽+우측"단독1+1"+"1위세럼"+"hwah수상배지"고스트다수 |
+| 52 | 9195553849532 | Mediheal Vitamin C Brightening Serum 40+40ml 2 pcs | 메인:[8] 좌측초록윤곽rembg+우측Dermatest고스트+기타고스트 \| 갤1:[3,8] 좌측노란윤곽rembg+우상단파란원형배지+"Exclusive"배지+검정원형고스트다수 |
+| 53 | 9195554275516 | Mixsoon Hyalebae Pore Bubble Serum 70ml | 메인:정상 \| 갤1:[8] 병+거품구름 주변 연한파란윤곽선rembg잔여(미세) |
+| 54 | 9195551457468 | numbuzin No.1 Panthenol Active Up Soothing Serum 50ml 2 pcs | 메인:[1,7] 타이틀"Panthenol Active Up"vs라벨"Pantothenic B5 Active Soothing"불일치+포장박스포함 \| 갤1:[1,3,4,5,8] 타이틀불일치+"+"기호프로모세트+좌측노란윤곽rembg+우측노란"X"배지잘림+크롭불량(상하좌우잘림) |
+| 55 | 9195553292476 | numbuzin No.1 Pantothenic Acid Skincare 100 Blur Powder 7g | 메인:정상 \| 갤1:[2,4,5,8] 우측"+"기호+추가제품(노란윤곽rembg)프로모세트+하단"num"글자잘림+크롭불량 |
+| 56 | 9195551326396 | numbuzin No.5 Glutathione C Spot Ampoule Duo Set 30ml 2 pcs | 메인:[1,3,5,8] 타이틀"Glutathione C Spot Ampoule"vs라벨"Glutathione Vitamin Concentrated Serum"불일치+"+"기호세트+우측주황윤곽rembg심함+우상단주황반원배지고스트+하단글자잘림 |
+| 57 | 9195551817916 | Ongreedients Silk Peptide EGF Heart Fit Volume Lifting Ampoule 40ml 2 pcs | 메인:[2,3,5] 심각-산리오캐릭터콜라보프로모이미지+한글"산리오캐릭터즈파우치증정"배너+"1+1"배지+"+"기호+쿠로미파우치증정품, 완전한프로모이미지 |
+| 58 | 9195550572732 | Parnell Cica Manu 92 Serum 30ml | 메인:정상(잠만보콜라보에디션) \| 갤1:정상(정면뷰) |
+| 59 | 9195553030332 | primera PDRN-Niacinamide 10 Toning Glow Serum 30g | 메인:정상 \| 갤1:정상(핑크텍스처원형배경) |
+| 60 | 9195552145596 | primera Vita-Tinol Bouncy Lift Serum 30g | 메인:정상 |
+
+### 추가 발견
+- **Mediheal PDRN(p51)**: "Pore Elasticity Serum"이라는 타이틀인데 라벨은 "Lifting Serum" - Phase1 또는 번역단계에서 제품라인 혼동
+- **Mediheal(p51,p52)**: 올리브영 "단독1+1", "Exclusive" 배지 고스트가 rembg 후에도 잔존 - 배지 영역이 제품과 겹쳐 제거 불완전
+- **numbuzin(p54,p56)**: 타이틀과 실제 라벨 불일치 반복 - "Panthenol"vs"Pantothenic B5", "Ampoule"vs"Serum" 패턴
+- **Ongreedients(p57)**: 산리오 콜라보 프로모 이미지가 그대로 Shopify에 올라감 - Phase3/4에서 한글배너+캐릭터 감지 완전 실패
+- **Parnell/primera(p58-60)**: 프리미엄 브랜드는 이미지 품질 양호 (3제품 모두 정상)
+
+=== 배치 6/8 완료 (문제 7개 / 정상 3개) ===
+
