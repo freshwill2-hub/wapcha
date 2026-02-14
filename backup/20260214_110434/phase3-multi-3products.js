@@ -694,9 +694,7 @@ async function processProduct(product, productIndex, totalProducts) {
                 log(`      ✅ Phase 2 처리 완료 이미지 사용 (rembg 생략)`);
                 const fileName = `final-${Id}-${i + 1}-${timestamp}.png`;
                 const uploadedData = await uploadToNocoDB(finalPath, fileName);
-                const uploadInfo = uploadedData[0];
-                uploadInfo.originalUrl = imageUrl;
-                validatedImages.push(uploadInfo);
+                validatedImages.push(uploadedData[0]);
                 log(`      📤 저장 완료! (그대로 통과)`);
                 
             } else if (analysis.action === 'CROP_BADGE') {
@@ -724,9 +722,7 @@ async function processProduct(product, productIndex, totalProducts) {
                         fs.copyFileSync(inputPath, finalPath);
                         const fileName = `final-${Id}-${i + 1}-${timestamp}.png`;
                         const uploadedData = await uploadToNocoDB(finalPath, fileName);
-                        const uploadInfo2 = uploadedData[0];
-                        uploadInfo2.originalUrl = imageUrl;
-                        validatedImages.push(uploadInfo2);
+                        validatedImages.push(uploadedData[0]);
                         log(`      📤 저장 완료! (크롭 생략, 원본 사용)`);
                         cleanupFiles(inputPath, croppedPath, finalPath);
                         continue;
@@ -739,18 +735,14 @@ async function processProduct(product, productIndex, totalProducts) {
                         log(`      ✅ 크롭 이미지 사용 (rembg 생략)`);
                         const fileName = `final-${Id}-${i + 1}-${timestamp}.png`;
                         const uploadedData = await uploadToNocoDB(finalPath, fileName);
-                        const uploadInfo3 = uploadedData[0];
-                        uploadInfo3.originalUrl = imageUrl;
-                        validatedImages.push(uploadInfo3);
+                        validatedImages.push(uploadedData[0]);
                         log(`      📤 저장 완료! (배지 제거됨)`);
                     } else {
                         log(`      ⚠️  크롭 실패 → 원본 이미지 사용 (CROP_BADGE 폴백)`);
                         fs.copyFileSync(inputPath, finalPath);
                         const fileName = `final-${Id}-${i + 1}-${timestamp}.png`;
                         const uploadedData = await uploadToNocoDB(finalPath, fileName);
-                        const uploadInfo4 = uploadedData[0];
-                        uploadInfo4.originalUrl = imageUrl;
-                        validatedImages.push(uploadInfo4);
+                        validatedImages.push(uploadedData[0]);
                         log(`      📤 저장 완료! (크롭 실패, 원본 사용)`);
                     }
                 } else {
@@ -758,9 +750,7 @@ async function processProduct(product, productIndex, totalProducts) {
                     fs.copyFileSync(inputPath, finalPath);
                     const fileName = `final-${Id}-${i + 1}-${timestamp}.png`;
                     const uploadedData = await uploadToNocoDB(finalPath, fileName);
-                    const uploadInfo5 = uploadedData[0];
-                    uploadInfo5.originalUrl = imageUrl;
-                    validatedImages.push(uploadInfo5);
+                    validatedImages.push(uploadedData[0]);
                     log(`      📤 저장 완료! (좌표 실패, 원본 사용)`);
                 }
 
@@ -795,9 +785,7 @@ async function processProduct(product, productIndex, totalProducts) {
                         log(`      ✅ 크롭 이미지 사용 (rembg 생략)`);
                         const fileName = `final-${Id}-${i + 1}-${timestamp}.png`;
                         const uploadedData = await uploadToNocoDB(finalPath, fileName);
-                        const uploadInfo6 = uploadedData[0];
-                        uploadInfo6.originalUrl = imageUrl;
-                        validatedImages.push(uploadInfo6);
+                        validatedImages.push(uploadedData[0]);
                         log(`      📤 저장 완료! (개별 제품 1개 크롭됨)`);
                     } else {
                         log(`      ❌ 크롭 실패 → 건너뛰기 (품질 보장)`);

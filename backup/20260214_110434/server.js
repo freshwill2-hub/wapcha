@@ -68,8 +68,7 @@ const CONFIG_FILE = path.join(__dirname, 'config.json');
 let config = {
     productLimit: 3,
     oliveyoungUrl: '',
-    minScoreForGallery: 60,
-    minScoreForMain: 35,
+    minScoreForGallery: 70,
     targetImageSize: 1200,
     productRatio: 0.75,
     geminiApiKey: '',

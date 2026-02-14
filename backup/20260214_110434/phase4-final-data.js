@@ -295,6 +295,479 @@ function calculateResolutionScore(resolution) {
     return 10;
 }
 
+// ==================== v9: 여러 제품 감지 (탈락 → 감점) ====================
+async function detectMultipleProducts(imagePath, productTitle, productInfo) {
+    try {
+        if (productInfo.isSetProduct) {
+            log(`      🎁 세트 제품 → 여러 제품 검사 생략`);
+            return { hasMultiple: false, count: 1, penalty: 0 };
+        }
+        
+        log(`      🔍 여러 제품 감지 중... (개별 제품)`);
+        
+        const imageBuffer = fs.readFileSync(imagePath);
+        const base64 = imageBuffer.toString('base64');
+        
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+        
+        const prompt = `이 제품 이미지를 분석해주세요.
+
+제품명: "${productTitle}"
+
+**질문: 이 이미지에 동일한 제품이 몇 개 보이나요?**
+
+판단 기준:
+1. 실물 제품(화장품 병, 튜브, 용기 등)이 몇 개 있나요?
+2. 그림자나 반사는 제품 개수에 포함하지 마세요
+3. 포장박스는 제품 개수에 포함하지 마세요
+
+다음 형식으로만 답변하세요:
+COUNT: [숫자]
+REASON: [한 줄 설명]`;
+        
+        const result = await model.generateContent([
+            prompt,
+            {
+                inlineData: {
+                    data: base64,
+                    mimeType: 'image/png'
+                }
+            }
+        ]);
+        
+        // Gemini API 호출 추적
+        trackGeminiCall('detectMultipleProducts');
+        
+        const response = result.response.text().trim();
+        
+        const countMatch = response.match(/COUNT:\s*(\d+)/i);
+        const reasonMatch = response.match(/REASON:\s*([^\n]+)/i);
+        
+        const detectedCount = countMatch ? parseInt(countMatch[1]) : 1;
+        const reason = reasonMatch ? reasonMatch[1].trim() : '응답 파싱 실패';
+        
+        // ✅ v11: 여러 제품 감지 시 더 강한 감점!
+        if (detectedCount >= 2) {
+            log(`      ⚠️  여러 제품 감지 (${detectedCount}개) - ${reason}`);
+            log(`      📉 감점: -40점 (개별 제품에 다른 제품 포함!)`);
+            return { hasMultiple: true, count: detectedCount, reason, penalty: -40 };
+        } else {
+            log(`      ✅ 단일 제품 확인 (${detectedCount}개) - ${reason}`);
+            return { hasMultiple: false, count: detectedCount, reason, penalty: 0 };
+        }
+        
+    } catch (error) {
+        log('      ❌ 여러 제품 감지 실패:', error.message);
+        return { hasMultiple: false, count: 1, penalty: 0 };
+    }
+}
+
+// ==================== 포장박스 감지 (탈락 → 감점) ====================
+async function detectPackagingBox(imagePath, productTitle) {
+    try {
+        log(`      📦 포장박스 감지 중...`);
+        
+        const imageBuffer = fs.readFileSync(imagePath);
+        const base64 = imageBuffer.toString('base64');
+        
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+        
+        const prompt = `이 제품 이미지를 분석해주세요.
+
+제품명: "${productTitle}"
+
+**질문: 이 이미지에 포장박스(패키지 상자)가 있나요?**
+
+판단 기준:
+1. 제품 본체 외에 **종이 상자**, **패키지 박스**가 보이나요?
+2. 제품이 박스 안에 들어있거나, 박스 옆에 놓여있나요?
+
+⚠️ 주의: 
+- 제품 자체의 플라스틱 용기/튜브/병은 포장박스가 아닙니다
+- 종이로 된 외부 상자만 포장박스입니다
+
+다음 형식으로만 답변하세요:
+PACKAGING: [YES/NO]
+REASON: [한 줄 설명]`;
+        
+        const result = await model.generateContent([
+            prompt,
+            {
+                inlineData: {
+                    data: base64,
+                    mimeType: 'image/png'
+                }
+            }
+        ]);
+        
+        // Gemini API 호출 추적
+        trackGeminiCall('detectPackagingBox');
+        
+        const response = result.response.text().trim();
+        
+        const packagingMatch = response.match(/PACKAGING:\s*(YES|NO)/i);
+        const reasonMatch = response.match(/REASON:\s*([^\n]+)/i);
+        
+        const hasPackaging = packagingMatch ? packagingMatch[1].toUpperCase() === 'YES' : false;
+        const reason = reasonMatch ? reasonMatch[1].trim() : '응답 파싱 실패';
+        
+        // ✅ v9: 탈락 대신 감점!
+        if (hasPackaging) {
+            log(`      ⚠️  포장박스 감지됨 - ${reason}`);
+            log(`      📉 감점: -15점 (탈락 아님!)`);
+            return { hasPackaging: true, reason, penalty: -15 };
+        } else {
+            log(`      ✅ 포장박스 없음 - ${reason}`);
+            return { hasPackaging: false, reason, penalty: 0 };
+        }
+        
+    } catch (error) {
+        log('      ❌ 포장박스 감지 실패:', error.message);
+        return { hasPackaging: false, penalty: 0 };
+    }
+}
+
+// ==================== 2. 완성도 점수 (0-25점) - v9: 탈락 없음! ====================
+async function calculateCompletenessScore(imagePath, productTitle, productInfo) {
+    try {
+        log(`      🔍 제품 완성도 검증 시작...`);
+        
+        const imageBuffer = fs.readFileSync(imagePath);
+        const base64 = imageBuffer.toString('base64');
+        
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+        
+        const expectedCount = productInfo.setCount || 1;
+        
+        const prompt = `이 제품 이미지를 분석하여 제품이 완전한지 확인해주세요.
+
+제품명: "${productTitle}"
+예상 제품 개수: ${expectedCount}개
+
+다음을 검사해주세요:
+1. 제품이 잘려있나요? (캡, 바디, 하단)
+2. 제품 전체가 이미지 안에 있나요?
+
+다음 형식으로만 답변하세요:
+COMPLETE: [YES/NO]
+REASON: [이유를 한 줄로]`;
+        
+        const result = await model.generateContent([
+            prompt,
+            {
+                inlineData: {
+                    data: base64,
+                    mimeType: 'image/png'
+                }
+            }
+        ]);
+        
+        // Gemini API 호출 추적
+        trackGeminiCall('calculateCompletenessScore');
+        
+        const response = result.response.text().trim();
+        
+        const completeMatch = response.match(/COMPLETE:\s*(YES|NO)/i);
+        const reasonMatch = response.match(/REASON:\s*([^\n]+)/i);
+        
+        const isComplete = completeMatch ? completeMatch[1].toUpperCase() === 'YES' : false;
+        const reason = reasonMatch ? reasonMatch[1].trim() : '응답 파싱 실패';
+        
+        // ✅ v9: 불완전해도 탈락 안함! 낮은 점수만
+        if (isComplete) {
+            log(`      ✅ 완성도: 25/25점 - ${reason}`);
+            return 25;
+        } else {
+            log(`      ⚠️  완성도: 10/25점 - ${reason}`);
+            log(`      📉 불완전하지만 계속 평가! (탈락 아님)`);
+            return 10;  // ✅ v9: 0점 → 10점
+        }
+        
+    } catch (error) {
+        log('      ❌ 완성도 검증 실패:', error.message);
+        return 15;  // 에러 시 중립 점수
+    }
+}
+
+// ==================== 3. 타이틀 매칭 점수 (0-30점) - v9: 탈락 없음! ====================
+async function calculateTitleMatchScore(imagePath, productTitle, productInfo, originalImageUrl = null) {
+    try {
+        log(`      🔍 타이틀 매칭 확인 시작...`);
+        
+        let base64;
+        let imageSource = '크롭 이미지';
+        
+        if (originalImageUrl) {
+            try {
+                log(`      📥 원본 이미지로 확인 중...`);
+                const response = await axios.get(originalImageUrl, {
+                    responseType: 'arraybuffer',
+                    timeout: 30000,
+                    headers: {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                        'Referer': 'https://www.oliveyoung.co.kr'
+                    }
+                });
+                base64 = Buffer.from(response.data).toString('base64');
+                imageSource = '원본 이미지';
+                log(`      ✅ 원본 이미지 로드 완료`);
+            } catch (err) {
+                log(`      ⚠️  원본 이미지 로드 실패, 크롭 이미지 사용`);
+                const imageBuffer = fs.readFileSync(imagePath);
+                base64 = imageBuffer.toString('base64');
+            }
+        } else {
+            const imageBuffer = fs.readFileSync(imagePath);
+            base64 = imageBuffer.toString('base64');
+        }
+        
+        log(`      🖼️  검사 대상: ${imageSource}`);
+        
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+        
+        const prompt = `이 제품 이미지를 분석해주세요.
+
+**타겟 제품:**
+- 브랜드: "${productInfo.brandName || 'N/A'}"
+- 제품 라인: "${productInfo.productLineName || 'N/A'}"
+- 용량: "${productInfo.volume || 'N/A'}"
+
+**이미지에서 확인해주세요:**
+1. 브랜드명
+2. 제품명/라인명
+3. 용량 (ml, g 등)
+
+다음 형식으로만 답변:
+BRAND: [읽은 브랜드명 또는 UNKNOWN]
+PRODUCT_LINE: [읽은 제품라인명 또는 UNKNOWN]
+VOLUME: [읽은 용량 또는 UNKNOWN]`;
+        
+        const result = await model.generateContent([
+            prompt,
+            {
+                inlineData: {
+                    data: base64,
+                    mimeType: 'image/png'
+                }
+            }
+        ]);
+        
+        // Gemini API 호출 추적
+        trackGeminiCall('calculateTitleMatchScore');
+        
+        const response = result.response.text().trim();
+        log(`      📄 Gemini 응답:\n${response.split('\n').map(l => '         ' + l).join('\n')}`);
+        
+        const brandMatch = response.match(/BRAND:\s*([^\n]+)/i);
+        const productLineMatch = response.match(/PRODUCT_LINE:\s*([^\n]+)/i);
+        const volumeMatch = response.match(/VOLUME:\s*([^\n]+)/i);
+        
+        const detectedBrand = brandMatch ? brandMatch[1].trim().toLowerCase() : 'unknown';
+        const detectedProductLine = productLineMatch ? productLineMatch[1].trim().toLowerCase() : 'unknown';
+        const detectedVolume = volumeMatch ? volumeMatch[1].trim().toLowerCase() : 'unknown';
+        
+        let score = 0;
+        const targetBrand = (productInfo.brandName || '').toLowerCase();
+        const targetLine = (productInfo.productLineName || '').toLowerCase();
+        
+        // ✅ v9: 브랜드 확인 (불일치해도 탈락 안함!)
+        if (detectedBrand !== 'unknown' && targetBrand) {
+            if (detectedBrand.includes(targetBrand) || targetBrand.includes(detectedBrand)) {
+                score += 10;
+                log(`      ✅ 브랜드 일치: ${detectedBrand} (+10점)`);
+            } else {
+                score += 5;  // ✅ v9: 불일치해도 5점
+                log(`      ⚠️  브랜드 불일치: ${detectedBrand} ≠ ${targetBrand} (+5점)`);
+            }
+        } else {
+            score += 5;
+            log(`      ⚠️  브랜드 미확인 (+5점)`);
+        }
+        
+        // ✅ v9: 제품 라인 확인 (불일치해도 탈락 안함!)
+        if (detectedProductLine !== 'unknown' && targetLine) {
+            const targetWords = targetLine.split(' ').slice(0, 2).join(' ');
+            const detectedWords = detectedProductLine.split(' ').slice(0, 2).join(' ');
+            
+            if (detectedProductLine.includes(targetWords) || targetLine.includes(detectedWords) || 
+                detectedWords.includes(targetWords) || targetWords.includes(detectedWords)) {
+                score += 10;
+                log(`      ✅ 제품 라인 일치 (+10점)`);
+            } else {
+                score += 5;  // ✅ v9: 불일치해도 5점
+                log(`      ⚠️  제품 라인 불일치 (+5점)`);
+            }
+        } else {
+            score += 5;
+            log(`      ⚠️  제품 라인 미확인 (+5점)`);
+        }
+        
+        // ✅ v10: 용량 확인 (큰 차이는 강력 감점!)
+        let volumePenalty = 0;
+        if (detectedVolume !== 'unknown' && productInfo.volume) {
+            const detectedNum = parseInt(detectedVolume.match(/\d+/)?.[0] || '0');
+            const expectedNum = productInfo.volumeNumber;
+            
+            if (expectedNum && detectedNum > 0) {
+                const diffPercent = Math.abs(detectedNum - expectedNum) / expectedNum * 100;
+                
+                if (detectedNum === expectedNum) {
+                    score += 10;
+                    log(`      ✅ 용량 일치: ${detectedVolume} (+10점)`);
+                } else if (diffPercent <= 15) {
+                    // 15% 이내 차이 (예: 220ml vs 200ml)
+                    score += 7;
+                    log(`      ⚠️  용량 근사: ${detectedVolume} ≈ ${productInfo.volume} (+7점)`);
+                } else if (diffPercent <= 30) {
+                    // 30% 이내 차이
+                    score += 3;
+                    log(`      ⚠️  용량 차이: ${detectedVolume} ≠ ${productInfo.volume} (+3점)`);
+                } else {
+                    // ✅ v10: 50% 이상 차이는 완전히 다른 제품! 강력 감점!
+                    volumePenalty = -30;
+                    log(`      ❌ 용량 크게 불일치: ${detectedVolume} ≠ ${productInfo.volume}`);
+                    log(`      📉 다른 제품 감점: -30점`);
+                }
+            }
+        } else {
+            score += 5;
+            log(`      ⚠️  용량 미확인 (+5점)`);
+        }
+        
+        score += volumePenalty;
+        
+        log(`      📊 타이틀 매칭: ${score}/30점`);
+        
+        return { score, isWrongProduct: false };  // ✅ v9: 항상 isWrongProduct: false
+        
+    } catch (error) {
+        log('      ❌ 타이틀 매칭 확인 실패:', error.message);
+        return { score: 15, isWrongProduct: false };
+    }
+}
+
+// ==================== 4. 세트 구성 점수 (0-20점) ====================
+async function calculateSetCompositionScore(imagePath, productTitle, productInfo) {
+    try {
+        log(`      🔍 세트 구성 분석 시작...`);
+        
+        if (!productInfo.setCount || productInfo.setCount === 1) {
+            log(`      ✅ 단일 제품 → 자동 20점`);
+            return 20;
+        }
+        
+        log(`      🎁 세트 제품: ${productInfo.setCount}개 예상`);
+        
+        const imageBuffer = fs.readFileSync(imagePath);
+        const base64 = imageBuffer.toString('base64');
+        
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+        
+        const prompt = `이 이미지를 분석하여 세트 제품 구성을 평가해주세요.
+
+제품명: "${productTitle}"
+예상 세트 개수: ${productInfo.setCount}개
+
+다음 형식으로 답변하세요:
+COUNT: [숫자]
+SUITABLE: [EXCELLENT/GOOD/FAIR/POOR]`;
+        
+        const result = await model.generateContent([
+            prompt,
+            {
+                inlineData: {
+                    data: base64,
+                    mimeType: 'image/png'
+                }
+            }
+        ]);
+        
+        // Gemini API 호출 추적
+        trackGeminiCall('calculateSetCompositionScore');
+        
+        const response = result.response.text().trim();
+        
+        const countMatch = response.match(/COUNT:\s*(\d+)/i);
+        const suitableMatch = response.match(/SUITABLE:\s*(EXCELLENT|GOOD|FAIR|POOR)/i);
+        
+        const detectedCount = countMatch ? parseInt(countMatch[1]) : 0;
+        const suitable = suitableMatch ? suitableMatch[1].toUpperCase() : 'FAIR';
+        
+        let score = 0;
+        
+        if (detectedCount === productInfo.setCount) {
+            score += 10;
+        } else if (Math.abs(detectedCount - productInfo.setCount) === 1) {
+            score += 5;
+        }
+        
+        if (suitable === 'EXCELLENT') score += 10;
+        else if (suitable === 'GOOD') score += 7;
+        else if (suitable === 'FAIR') score += 4;
+        else score += 2;
+        
+        score = Math.max(0, Math.min(20, score));
+        log(`      📊 세트 구성: ${score}/20점`);
+        
+        return score;
+        
+    } catch (error) {
+        log('      ❌ 세트 구성 분석 실패:', error.message);
+        return 10;
+    }
+}
+
+// ==================== 5. Gemini 품질 평가 (0-20점) ====================
+async function calculateQualityScore(imagePath, productTitle) {
+    try {
+        log(`      🤖 이미지 품질 평가 중...`);
+        
+        const imageBuffer = fs.readFileSync(imagePath);
+        const base64 = imageBuffer.toString('base64');
+        
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+        
+        const prompt = `이 제품 이미지의 품질을 평가해주세요.
+
+평가 기준:
+1. 선명도
+2. 중앙 배치
+3. 배경 품질
+4. 쇼핑몰 사용 적합성
+
+0-20점 사이로 점수를 매겨주세요.
+숫자만 답변하세요.`;
+        
+        const result = await model.generateContent([
+            prompt,
+            {
+                inlineData: {
+                    data: base64,
+                    mimeType: 'image/png'
+                }
+            }
+        ]);
+        
+        // Gemini API 호출 추적
+        trackGeminiCall('calculateQualityScore');
+        
+        const response = result.response.text().trim();
+        const score = parseInt(response);
+        
+        if (isNaN(score) || score < 0 || score > 20) {
+            log(`      ⚠️  유효하지 않은 점수: ${response}, 기본값 12점 사용`);
+            return 12;
+        }
+        
+        log(`      📊 이미지 품질: ${score}/20점`);
+        return score;
+        
+    } catch (error) {
+        log('      ⚠️  품질 평가 실패:', error.message);
+        return 12;
+    }
+}
+
 // ==================== 통합 API: 기본 분석 (여러제품 + 포장박스 + 완성도) ====================
 async function analyzeImageBasics(imagePath, productTitle, productInfo) {
     try {
@@ -374,12 +847,12 @@ IS_COMPLETE: [YES/NO]`;
             }
         }
 
-        // ✅ v14: 포장박스 감점 - 개별/세트 모두 -15 (하드탈락은 productNotVisible일 때만)
+        // ✅ v12: 포장박스 감점 - 개별 제품은 -30, 세트 제품은 -15
         let packagingPenalty = 0;
         if (hasPackaging) {
-            packagingPenalty = -15;
+            packagingPenalty = isSetProduct ? -15 : -30;
             log(`      ⚠️  포장박스 감지됨`);
-            log(`      📉 감점: -15점 (탈락 아님!)`);
+            log(`      📉 감점: ${packagingPenalty}점 ${!isSetProduct ? '(개별 제품 하드 감점!)' : '(탈락 아님!)'}`);
         } else {
             log(`      ✅ 포장박스 없음`);
         }
@@ -722,15 +1195,21 @@ async function scoreImage(imageData, imagePath, productTitle, productInfo, index
         totalScore = 0;
     }
 
-    // ✅ v14: 포장박스 하드 탈락 조건 완화 - 제품 용기 안 보일 때만 하드 탈락
-    if (basics.packagingPenalty < 0 && basics.productNotVisible) {
-        log(`      🚫 하드 탈락: 제품 용기 안 보이고 패키징만 있음 → 0점`);
+    // 하드 탈락: 개별 제품인데 포장박스 포함 → 총점 0점
+    if (!productInfo.isSetProduct && basics.packagingPenalty < 0) {
+        log(`      🚫 하드 탈락: 개별 제품인데 포장박스 포함 → 0점`);
         totalScore = 0;
     }
 
     // ✅ v13: 하드 탈락: 브랜드가 명확히 다름 → 총점 0점 (FIX-4B)
     if (details.brandClearlyDifferent) {
         log(`      🚫 하드 탈락: 브랜드 명확히 다름 → 0점`);
+        totalScore = 0;
+    }
+
+    // ✅ v13: 하드 탈락: 제품 용기 안 보이고 패키징만 있음 → 총점 0점 (FIX-5B)
+    if (basics.packagingPenalty < 0 && basics.productNotVisible) {
+        log(`      🚫 하드 탈락: 제품 용기 안 보이고 패키징만 있음 → 0점`);
         totalScore = 0;
     }
 
