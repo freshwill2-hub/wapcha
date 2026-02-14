@@ -1,31 +1,29 @@
 {
-  "requestsFinished": 100,
+  "requestsFinished": 4,
   "requestsFailed": 0,
-  "requestsRetries": 11,
+  "requestsRetries": 0,
   "requestsFailedPerMinute": 0,
   "requestsFinishedPerMinute": 2,
-  "requestMinDurationMillis": 19148,
-  "requestMaxDurationMillis": 45243,
+  "requestMinDurationMillis": 21332,
+  "requestMaxDurationMillis": 30011,
   "requestTotalFailedDurationMillis": 0,
-  "requestTotalFinishedDurationMillis": 2576840,
-  "crawlerStartedAt": "2026-02-14T11:27:05.680Z",
-  "crawlerFinishedAt": "2026-02-14T12:10:15.609Z",
-  "statsPersistedAt": "2026-02-14T12:10:15.609Z",
-  "crawlerRuntimeMillis": 2590222,
-  "crawlerLastStartTimestamp": 1771068425387,
+  "requestTotalFinishedDurationMillis": 103669,
+  "crawlerStartedAt": "2026-02-14T12:27:21.988Z",
+  "crawlerFinishedAt": null,
+  "statsPersistedAt": "2026-02-14T12:29:21.990Z",
+  "crawlerRuntimeMillis": 120308,
+  "crawlerLastStartTimestamp": 1771072041682,
   "requestRetryHistogram": [
-    89,
-    10,
-    1
+    4
   ],
   "statsId": 0,
   "requestAvgFailedDurationMillis": null,
-  "requestAvgFinishedDurationMillis": 25768,
-  "requestTotalDurationMillis": 2576840,
-  "requestsTotal": 100,
+  "requestAvgFinishedDurationMillis": 25917,
+  "requestTotalDurationMillis": 103669,
+  "requestsTotal": 4,
   "requestsWithStatusCode": {
-    "200": 100,
-    "403": 12
+    "200": 5,
+    "403": 11
   },
   "errors": {},
   "retryErrors": {
@@ -33,7 +31,7 @@
       "missing error code": {
         "Error": {
           "Request blocked - received 403 status code.": {
-            "count": 12
+            "count": 11
           }
         }
       }
