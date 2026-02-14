@@ -527,9 +527,9 @@ async function main() {
                     cleanupFiles(inputPath, outputPath);
                 }
                 
-                await new Promise(resolve => setTimeout(resolve, 300));
+                await new Promise(resolve => setTimeout(resolve, 1000));
             }
-
+            
             if (processedImages.length > 0) {
                 await saveAIImages(shopifyProduct.Id, processedImages);
                 successCount++;
