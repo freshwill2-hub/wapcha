@@ -56,3 +56,55 @@
 
 === 배치 2/8 완료 (문제 9개 / 정상 1개) ===
 
+---
+
+## 배치 3/8 (제품 21~30)
+
+| # | ID | 타이틀 | 분석 결과 |
+|---|---|---|---|
+| 21 | 9195551523004 | Celadix Trouble Sebum Rebalancing RX 131 Ampoule 30ml | 메인:[3,4,8] 우측한국어배지다수("여드...사...","10...","연...")rembg잔여+브랜드명"Cellad"잘림 |
+| 22 | 9195552440508 | Cellimax The Real Noni Energy Ampoule 90ml 80ml | 메인:[1,4,8] 라벨"Noni Ampoule Calming+Radiance"vs타이틀"Energy Ampoule"불일치+하단크롭+우측원형rembg잔여 |
+| 23 | 9195553718460 | COSRX Advanced The Vitamin C 23 Serum 20g Set of 2 | 메인:OK \| 갤1:[3,4,8] 우측다수배지잔여잘림(주황+보라+노랑"29..."+"잡...개...") \| 갤2:[3,4,8] 좌측병라벨잘림+우측원형배지고스트(초록+주황+보라) |
+| 24 | 9195554373820 | COSRX The 6 Peptide Skin Booster Serum 150ml 2 pcs | 메인:[3,7,8] "ONLY올리브영단독기획"배지+포장박스+한국어프로모+우측고스트 \| 갤1:[3,8] "+"기호+우측병파란윤곽rembg+좌하단고스트 |
+| 25 | 9195553390780 | d'Alba Vita Toning Capsule Serum 50ml | 메인:[8] 우측반투명병고스트잔여 \| 갤1:[4] 우측라벨텍스트약간잘림(경미) \| 갤2:[8] 우측고스트병잔여(메인과유사) |
+| 26 | 9195553685692 | D'MAF Hero My First Serum a.k.a All-in-One Basic 155ml | 메인:OK |
+| 27 | 9195552374972 | Dermafactory Niacinamide 20% Serum 30ml Set of 2 | 메인:[3,7] "ONLY올리브영단독기획"+"X2단독기획"배지+포장박스+한국어텍스트 \| 갤1:[3,8] 우측"ONLY올리브영"+빨강/초록원형배지고스트잔여 |
+| 28 | 9195552702652 | Dermatory Hyal Shot Barrier B5 Ampoule 50ml | 메인:OK |
+| 29 | 9195554209980 | Dr.G Red Blemish Clear Hyal Cica Soothing Serum 50ml Set of 2 | 메인:[3,5,8] "2...기..."빨간배지잔여+좌하단투명병고스트+세트2인데1병만표시 |
+| 30 | 9195553521852 | Estée Lauder Brown Bottle 30ml | 메인:[1] 타이틀"Brown Bottle"은비공식명칭(라벨정식명"Advanced Night Repair") - 이미지자체는깨끗 |
+
+### 추가 발견
+- **제품 22**: 타이틀에 용량이 "90ml 80ml" 2개 표기 - 의미불명확 (오류 의심)
+- **제품 24**: "ONLY 올리브영 단독기획" 배지 - 올리브영 전용 프로모션 이미지가 rembg로 제거 안됨
+- **제품 27**: 동일 패턴 - "ONLY 올리브영 단독기획" 배지+포장박스가 제품 이미지로 사용됨
+- **제품 29**: "Set of 2" 타이틀인데 이미지에 1병만 - set_count와 이미지 불일치
+- **제품 30**: "Brown Bottle"은 한국 비공식명칭 - 해외 고객에게 부적절한 제품명
+
+=== 배치 3/8 완료 (문제 8개 / 정상 2개) ===
+
+---
+
+## 배치 4/8 (제품 31~40)
+
+| # | ID | 타이틀 | 분석 결과 |
+|---|---|---|---|
+| 31 | 9195553259708 | Goodal Cheonggyul Vita C Spot Care Serum Alpha 30ml | 메인:OK \| 갤1:[2,4] 우측노란사쉐증정품잔여+잘림 |
+| 32 | 9195550638268 | innisfree Retinol Cica Trace Ampoule 30ml Set of 2 | 메인:[3,7,8] "x2더블기획"배지+포장박스+한국어텍스트+우측병파란윤곽 \| 갤1:[4,8] 좌우측병크롭잘림+파란윤곽rembg잔여 |
+| 33 | 9195553095868 | IOPE PDRN Caffeine Shot 30ml | 메인:[3] 원형확대인셋프로모("38%","20,000ppm") \| 갤1:[3,8] 은색/동색구체프로모배경rembg제거실패 \| 갤2:[8] 우측초록점rembg+좌하단고스트 |
+| 34 | 9195552768188 | IOPE Retinol Rejection Serum 30ml | 메인:[1] 타이틀"Rejection"vs라벨"Reti-Jection"오타(이미지깨끗) \| 갤1:[11] 메인과거의동일(중복) \| 갤2:[8] 우측병고스트잔여 |
+| 35 | 9195552080060 | IOPE Retinol Super Bounce Serum 30ml | 메인:OK |
+| 36 | 9195555127484 | isoi Acni Doctor 1st Control Serum 40ml | 메인:OK 갤러리1:OK \| 갤2:[2,3,8] 증정품"Speedy Spot Pad"+"Dermatest"배지+한국어고스트 |
+| 37 | 9195552276668 | isoi Brightening Spot Serum 40ml | 메인:OK \| 갤1:[2,3,8] 사쉐증정품+"+"기호+"Dermatest"배지+우측고스트 |
+| 38 | 9195551916220 | isoi Moisture Dr. Jang Su Jin Hydrating Ampoule 70ml | 메인:[4,8] 심한크롭(캡+하단잘림)+좌상단캐릭터고스트 |
+| 39 | 9195554439356 | IZEN TREE Onion New Pair B5 Ampoule 50ml | 메인:[2,3,7] 증정품"Gel Cream"+"+"초록윤곽프로모+포장박스+한국어텍스트 |
+| 40 | 9195552342204 | Klairs EGF Blue Drop Calming Ampoule 50ml | 메인:[4] 심각한크롭-드롭퍼팁+물방울만(제품병전혀안보임,식별불가) |
+
+### 추가 발견
+- **제품 34**: 타이틀 "Rejection" → 정식명 "Reti-Jection" 번역/변환 오류
+- **제품 34**: 3장 이미지가 거의 동일 - Phase4 해시중복제거(hamming≤10) 미작동 의심
+- **제품 38**: 캐릭터 콜라보 에디션 - 극단적 크롭으로 캡+하단 잘려서 제품 전체상 보이지 않음
+- **제품 40**: 유일하게 1장인데 그 1장이 드롭퍼 클로즈업 - **제품 이미지로 부적절** (Naver보충도 실패)
+- **IOPE 브랜드(p33-35)**: 프로모 인셋/배경이 rembg에서 처리 안되는 패턴 확인
+
+=== 배치 4/8 완료 (문제 9개 / 정상 1개) ===
+
