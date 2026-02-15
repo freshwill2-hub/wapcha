@@ -445,17 +445,13 @@ function cleanProductTitle(rawTitle) {
     
     for (const keyword of removeKeywords) {
         try {
-            const regex = new RegExp(`(^|[\\s/\\(\\)])${keyword}([\\s/\\(\\)]|$)`, 'gi');
+            const regex = new RegExp(`(^|\\s)${keyword}(\\s|$)`, 'gi');
             cleaned = cleaned.replace(regex, ' ');
         } catch (e) {
             cleaned = cleaned.replace(new RegExp(keyword, 'gi'), '');
         }
     }
-
-    // STEP 8.1: "기획" 복합어 잔여물 제거 (듀오기획, 2입기획, 단품/기획 등)
-    cleaned = cleaned.replace(/\S*기획\S*/gi, '');
-    cleaned = cleaned.replace(/\s*(단품|기획)\s*\/\s*(단품|기획)\s*/gi, ' ');
-
+    
     // STEP 8.5: "외 N종" 패턴 제거
     cleaned = cleaned.replace(/외\s*\d+\s*종/gi, '');
 
