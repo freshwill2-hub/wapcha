@@ -711,7 +711,7 @@ HAS_GHOST_ARTIFACT: [YES/NO]${setFormat}`;
     } catch (error) {
         log('      ❌ 상세 평가 실패:', error.message);
         return {
-            titleMatchScore: { score: 15, isWrongProduct: false },
+            titleMatchScore: { score: 10, isWrongProduct: false },  // ✅ v15: 15 → 10 (에러 시 동정점수 하향)
             setCompositionScore: 10,
             qualityScore: 12
         };
