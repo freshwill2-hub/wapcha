@@ -1,11 +1,11 @@
 {
   "date": "2026-02-15",
-  "dailyCalls": 968,
+  "dailyCalls": 969,
   "dailyLimit": 1500,
-  "remaining": 532,
-  "sessionCalls": 97,
+  "remaining": 531,
+  "sessionCalls": 1,
   "byFunction": {
-    "analyzeImage": 430,
+    "analyzeImage": 431,
     "getBadgeCropCoordinates": 47,
     "getSingleProductCropCoordinates": 8,
     "analyzeImageBasics": 189,
@@ -14,11 +14,6 @@
     "quickNaverImageCheck": 60
   },
   "callHistory": [
-    {
-      "function": "quickNaverImageCheck",
-      "time": "2026-02-15T06:44:05.468Z",
-      "dailyTotal": 869
-    },
     {
       "function": "getCropCoordinates_Naver",
       "time": "2026-02-15T06:44:09.121Z",
@@ -513,7 +508,12 @@
       "function": "analyzeImageBasics",
       "time": "2026-02-15T07:08:11.722Z",
       "dailyTotal": 968
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-15T08:00:00.690Z",
+      "dailyTotal": 969
     }
   ],
-  "lastUpdated": "2026-02-15T07:08:11.722Z"
+  "lastUpdated": "2026-02-15T08:00:00.690Z"
 }
