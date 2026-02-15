@@ -946,52 +946,11 @@ REASON: [한 줄]`;
         const modelResult = response.match(/HAS_MODEL:\s*(YES|NO)/i);
         const reasonMatch = response.match(/REASON:\s*([^\n]+)/i);
 
-        let isMatch = matchResult ? matchResult[1].toUpperCase() === 'YES' : null;
+        const isMatch = matchResult ? matchResult[1].toUpperCase() === 'YES' : false;
         const hasPromo = promoResult ? promoResult[1].toUpperCase() === 'YES' : false;
         const hasGift = giftResult ? giftResult[1].toUpperCase() === 'YES' : false;
         const hasModel = modelResult ? modelResult[1].toUpperCase() === 'YES' : false;
-        const reason = reasonMatch ? reasonMatch[1].trim() : response.substring(0, 150);
-
-        // ✅ fallback: Gemini가 MATCH: YES/NO 형식으로 답하지 않은 경우
-        if (isMatch === null) {
-            const upper = response.toUpperCase();
-            // 프롬프트 거절 조건에 매핑된 키워드 (프로모션/증정품/모델)
-            const rejectSignals = [
-                'PROMOTION', 'PROMO', 'GIFT', 'MODEL', 'PERSON', 'PEOPLE',
-                'TEXT OVERLAY', 'BANNER', 'BADGE',
-                'DOES NOT MATCH', 'NOT MATCH', 'MISMATCH', 'DIFFERENT BRAND',
-                '프로모션', '증정', '사은품', '모델', '사람', '배너', '불일치', '다른 브랜드', '다른 제품'
-            ];
-            // 프롬프트 통과 조건: 브랜드/제품 일치, 문제 없음
-            const passSignals = [
-                'NO VISIBLE PROMOTION', 'NO PROMOTION', 'NO PROMO',
-                'NO GIFT', 'NO MODEL', 'NO PERSON', 'NO PEOPLE',
-                'CLEAN', 'MATCHES', 'CORRECT BRAND',
-                '프로모션 없', '증정품 없', '모델 없', '사람 없', '배너 없',
-                '일치', '매치', '적합', '깨끗'
-            ];
-
-            const hasRejectSignal = rejectSignals.some(kw => upper.includes(kw));
-            const hasPassSignal = passSignals.some(kw => upper.includes(kw));
-
-            // 통과 신호가 있고 거절 신호가 없으면 → 통과
-            // "no promotion" 같은 부정 표현은 passSignals에서 처리하므로
-            // rejectSignals의 "PROMOTION"이 "NO PROMOTION"에도 매칭됨 → passSignals 우선 판단
-            if (hasPassSignal && !hasRejectSignal) {
-                isMatch = true;
-            } else if (hasPassSignal && hasRejectSignal) {
-                // 둘 다 있으면: "no promotion" 패턴인지 확인
-                const noPromoPattern = /no\s+(visible\s+)?(promotion|promo|gift|model|person|people|banner|badge)/i;
-                const hasNegation = noPromoPattern.test(response);
-                const 없Pattern = /(프로모션|증정|사은품|모델|사람|배너).{0,5}없/;
-                const has없 = 없Pattern.test(response);
-                isMatch = hasNegation || has없;
-            } else {
-                isMatch = false;
-            }
-
-            log(`      ⚠️  MATCH 형식 없음 → fallback 파싱: ${isMatch ? '통과' : '거절'}`);
-        }
+        const reason = reasonMatch ? reasonMatch[1].trim() : '파싱 실패';
 
         // ✅ v13: 프로모/사은품/모델 감지 시 제외 (FIX-7)
         if (hasPromo) {
