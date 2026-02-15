@@ -1489,11 +1489,11 @@ async function processProduct(product, productIndex, totalProducts) {
     }
     
     if (processedImages.length === 0) {
-        log('\n⚠️  처리된 이미지 없음 → 네이버 보충 시도');
+        log('\n⚠️  처리된 이미지 없음');
         scoredImages.forEach(img => cleanupFiles(img.imagePath));
-        // ✅ Step 5 건너뛰고 Step 6로 직행 (main_image 없는 상태에서 네이버 보충 시도)
-    } else {
-
+        return;
+    }
+    
     log(`\n💾 Step 5: DB 저장`);
     
     const mainImage = processedImages[0];
@@ -1522,8 +1522,7 @@ async function processProduct(product, productIndex, totalProducts) {
     }
     
     scoredImages.forEach(img => cleanupFiles(img.imagePath));
-    } // ✅ processedImages > 0 else 블록 닫기
-
+    
     // Step 6: DB 확인
     log(`\n🔍 Step 6: DB 확인`);
     
@@ -1707,53 +1706,32 @@ async function processProduct(product, productIndex, totalProducts) {
         return;
     }
     
-    // DB 업데이트 (main_image 유무에 따라 분기)
-    log(`\n➕ Step 9: DB 업데이트`);
-
-    let currentMain = null;
+    // Gallery 업데이트
+    log(`\n➕ Step 9: Gallery 추가`);
+    
     let currentGallery = [];
     try {
         const currentResponse = await axios.get(
             `${NOCODB_API_URL}/api/v2/tables/${SHOPIFY_TABLE_ID}/records`,
             { headers: { 'xc-token': NOCODB_API_TOKEN }, params: { where: `(Id,eq,${Id})` } }
         );
-
+        
         if (currentResponse.data.list.length > 0) {
-            currentMain = currentResponse.data.list[0].main_image;
             currentGallery = currentResponse.data.list[0].gallery_images || [];
         }
     } catch (error) {}
-
-    const hasMainImage = Array.isArray(currentMain) && currentMain.length > 0;
-    const naverToUse = naverProcessed.slice(0, needed);
-
-    // ✅ main_image가 비어있으면 → 첫 번째 네이버 이미지를 main으로 설정
-    const updateData = { Id: Id };
-    if (!hasMainImage && naverToUse.length > 0) {
-        updateData.main_image = [naverToUse[0]];
-        updateData.made_at = new Date().toISOString();
-        const galleryFromNaver = naverToUse.slice(1);
-        updateData.gallery_images = galleryFromNaver.length > 0
-            ? [...currentGallery, ...galleryFromNaver]
-            : (currentGallery.length > 0 ? currentGallery : null);
-        log(`   🎯 main_image 없음 → 네이버 이미지로 main 설정`);
-        log(`   - main_image: 1개 (네이버)`);
-        log(`   - gallery: ${(updateData.gallery_images || []).length}개`);
-    } else {
-        // main_image가 이미 있으면 → 기존대로 gallery에만 추가
-        updateData.gallery_images = [...currentGallery, ...naverToUse];
-        log(`   - gallery 추가: ${naverToUse.length}개`);
-    }
-
+    
+    const updatedGallery = [...currentGallery, ...naverProcessed.slice(0, needed)];
+    
     try {
         await axios.patch(
             `${NOCODB_API_URL}/api/v2/tables/${SHOPIFY_TABLE_ID}/records`,
-            [updateData],  // ✅ v11: 배열 래퍼
+            [{ Id: Id, gallery_images: updatedGallery }],  // ✅ v11: 배열 래퍼
             { headers: { 'xc-token': NOCODB_API_TOKEN, 'Content-Type': 'application/json' } }
         );
-
-        log(`✅ DB 업데이트 완료`);
-
+        
+        log(`✅ Gallery 업데이트: ${updatedGallery.length}개`);
+        
     } catch (error) {
         log(`❌ 업데이트 실패:`, error.message);
     }
