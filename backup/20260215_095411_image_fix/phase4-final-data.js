@@ -1623,9 +1623,7 @@ async function processProduct(product, productIndex, totalProducts) {
             if (coords && coords.found) {
                 // ✅ v11: 크롭 좌표 검증 - 원본의 20% 미만이면 건너뛰기
                 if (coords.width < dimensions.width * 0.2 || coords.height < dimensions.height * 0.2) {
-                    log(`      ⚠️  크롭 좌표가 원본의 20% 미만 (${coords.width}x${coords.height} vs ${dimensions.width}x${dimensions.height}) → 건너뛰기`);
-                    cleanupFiles(inputPath, croppedPath, finalPath);
-                    continue;
+                    log(`      ⚠️  크롭 좌표가 원본의 20% 미만 (${coords.width}x${coords.height} vs ${dimensions.width}x${dimensions.height}) → 원본 그대로 사용`);
                 } else {
                     const expanded = expandCoordinates(coords, dimensions.width, dimensions.height, 0.2);
                     const cropSuccess = await cropImage(inputPath, croppedPath, expanded.x, expanded.y, expanded.width, expanded.height);
@@ -1637,24 +1635,16 @@ async function processProduct(product, productIndex, totalProducts) {
                             const heightRatio = croppedDimensions.height / dimensions.height;
                             const aspectRatio = croppedDimensions.width / croppedDimensions.height;
 
-                            // 크롭 결과가 원본의 15% 미만이면 건너뛰기
+                            // 크롭 결과가 원본의 15% 미만이면 폐기
                             if (widthRatio < 0.15 || heightRatio < 0.15) {
-                                log(`      ⚠️  크롭 결과 너무 작음 (${(widthRatio * 100).toFixed(1)}%x${(heightRatio * 100).toFixed(1)}%) → 건너뛰기`);
-                                cleanupFiles(inputPath, croppedPath, finalPath);
-                                continue;
-                            // 종횡비가 극단적이면 (> 4:1 또는 < 1:4) 건너뛰기
+                                log(`      ⚠️  크롭 결과 너무 작음 (${(widthRatio * 100).toFixed(1)}%x${(heightRatio * 100).toFixed(1)}%) → 원본 사용`);
+                            // 종횡비가 극단적이면 (> 4:1 또는 < 1:4) 폐기
                             } else if (aspectRatio > 4 || aspectRatio < 0.25) {
-                                log(`      ⚠️  크롭 종횡비 극단적 (${aspectRatio.toFixed(2)}) → 건너뛰기`);
-                                cleanupFiles(inputPath, croppedPath, finalPath);
-                                continue;
+                                log(`      ⚠️  크롭 종횡비 극단적 (${aspectRatio.toFixed(2)}) → 원본 사용`);
                             } else {
                                 processPath = croppedPath;
                             }
                         }
-                    } else {
-                        log(`      ❌ 크롭 실패 → 건너뛰기`);
-                        cleanupFiles(inputPath, croppedPath, finalPath);
-                        continue;
                     }
                 }
             }

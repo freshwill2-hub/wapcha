@@ -308,10 +308,13 @@ REASON: [한 줄 설명]`;
         const reason = reasonMatch ? reasonMatch[1].trim() : '';
 
         // 추가 검증: 개별/세트 로직 적용
-        // ✅ 개별 제품인데 2개 이상 → 프로모션(1+1 등) 가능성 → 1개만 크롭
         if (!isSetProduct && productCount >= 2 && action === 'PASS') {
-            action = 'CROP_SINGLE';
-            log(`      🔄 자동 변경: PASS → CROP_SINGLE (개별 제품인데 ${productCount}개 감지 → 1개만 크롭)`);
+            action = 'SKIP_BANNER';
+            log(`      🔄 자동 변경: PASS → SKIP_BANNER (개별 제품인데 ${productCount}개 감지 → 프로모 세트)`);
+        }
+        if (!isSetProduct && productCount >= 2 && action === 'CROP_SINGLE') {
+            action = 'SKIP_BANNER';
+            log(`      🔄 자동 변경: CROP_SINGLE → SKIP_BANNER (개별 제품인데 ${productCount}개 감지 → 프로모 세트)`);
         }
         
         if (isSetProduct && productCount === 1 && action === 'PASS') {
@@ -740,11 +743,18 @@ async function processProduct(product, productIndex, totalProducts) {
                 );
                 
                 if (coords) {
-                    // 최소 크롭 크기 검증: 원본의 30% 미만이면 건너뛰기 (배지 포함 원본 사용 방지)
+                    // 최소 크롭 크기 검증: 원본의 30% 미만이면 크롭하지 않고 PASS 처리
                     const cropArea = coords.width * coords.height;
                     const originalArea = dimensions.width * dimensions.height;
                     if (cropArea < originalArea * 0.3) {
-                        log(`      ⚠️  크롭 영역이 원본의 ${(cropArea / originalArea * 100).toFixed(1)}%로 너무 작음 → 건너뛰기 (배지 포함 이미지 사용 방지)`);
+                        log(`      ⚠️  크롭 영역이 원본의 ${(cropArea / originalArea * 100).toFixed(1)}%로 너무 작음 → 원본 그대로 사용`);
+                        fs.copyFileSync(inputPath, finalPath);
+                        const fileName = `final-${Id}-${i + 1}-${timestamp}.png`;
+                        const uploadedData = await uploadToNocoDB(finalPath, fileName);
+                        const uploadInfo2 = uploadedData[0];
+                        uploadInfo2.originalUrl = imageUrl;
+                        validatedImages.push(uploadInfo2);
+                        log(`      📤 저장 완료! (크롭 생략, 원본 사용)`);
                         cleanupFiles(inputPath, croppedPath, finalPath);
                         continue;
                     }
