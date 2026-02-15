@@ -448,16 +448,16 @@ IS_COMPLETE: [YES/NO]`;
             completenessScore = 25;
             log(`      ✅ 완성도: 25/25점`);
         } else {
-            completenessScore = 0;
-            log(`      ⚠️  완성도: 0/25점 (불완전 이미지 강력 감점)`);
+            completenessScore = 10;
+            log(`      ⚠️  완성도: 10/25점`);
+            log(`      📉 불완전하지만 계속 평가! (탈락 아님)`);
         }
 
         return {
             multipleProductsPenalty,
             packagingPenalty,
             completenessScore,
-            productNotVisible: !productVisible,
-            incompletePenalty: isComplete ? 0 : -15
+            productNotVisible: !productVisible
         };
 
     } catch (error) {
@@ -639,7 +639,6 @@ HAS_GHOST_ARTIFACT: [YES/NO]${setFormat}`;
 
         // === 세트 구성 점수 계산 ===
         let setCompositionScore;
-        let detectedSetCount = 0;
         if (!isSetProduct) {
             setCompositionScore = 20;
             log(`      ✅ 단일 제품 → 자동 20점`);
@@ -649,14 +648,14 @@ HAS_GHOST_ARTIFACT: [YES/NO]${setFormat}`;
             const setCountMatch = response.match(/SET_COUNT:\s*(\d+)/i);
             const suitableMatch = response.match(/SET_SUITABLE:\s*(EXCELLENT|GOOD|FAIR|POOR)/i);
 
-            detectedSetCount = setCountMatch ? parseInt(setCountMatch[1]) : 0;
+            const detectedCount = setCountMatch ? parseInt(setCountMatch[1]) : 0;
             const suitable = suitableMatch ? suitableMatch[1].toUpperCase() : 'FAIR';
 
             setCompositionScore = 0;
 
-            if (detectedSetCount === productInfo.setCount) {
+            if (detectedCount === productInfo.setCount) {
                 setCompositionScore += 10;
-            } else if (Math.abs(detectedSetCount - productInfo.setCount) === 1) {
+            } else if (Math.abs(detectedCount - productInfo.setCount) === 1) {
                 setCompositionScore += 5;
             }
 
@@ -706,8 +705,7 @@ HAS_GHOST_ARTIFACT: [YES/NO]${setFormat}`;
             giftPenalty,
             ghostPenalty,
             hasGiftItems,
-            hasGhostArtifact,
-            detectedSetCount
+            hasGhostArtifact
         };
 
     } catch (error) {
@@ -743,10 +741,6 @@ async function scoreImage(imageData, imagePath, productTitle, productInfo, index
     scores.penalties += basics.multipleProductsPenalty;
     scores.penalties += basics.packagingPenalty;
     scores.completeness = basics.completenessScore;
-    if (basics.incompletePenalty) {
-        scores.penalties += basics.incompletePenalty;
-        log(`      📉 불완전 이미지 추가 감점: ${basics.incompletePenalty}점`);
-    }
 
     // ✅ 통합 API 2: 상세 평가 (타이틀매칭 + 세트구성 + 품질) - API 1회
     const details = await evaluateImageDetails(imagePath, productTitle, productInfo, imageData.originalUrl || null);
@@ -792,22 +786,10 @@ async function scoreImage(imageData, imagePath, productTitle, productInfo, index
         totalScore = 0;
     }
 
-    // ✅ v16: 하드 탈락: 브랜드가 명확히 다름 → -100점 (강화)
+    // ✅ v13: 하드 탈락: 브랜드가 명확히 다름 → 총점 0점 (FIX-4B)
     if (details.brandClearlyDifferent) {
-        log(`      🚫 하드 탈락: 브랜드 명확히 다름 → -100점`);
-        totalScore = -100;
-    }
-
-    // ✅ v16: 하드 탈락: 세트 개수 불일치 → -100점
-    if (productInfo.isSetProduct && details.detectedSetCount > 0 && details.detectedSetCount !== productInfo.setCount) {
-        log(`      🚫 하드 탈락: 세트 개수 불일치 (감지: ${details.detectedSetCount}개, 예상: ${productInfo.setCount}개) → -100점`);
-        totalScore = -100;
-    }
-
-    // ✅ v16: 하드 탈락: 비세트 제품인데 증정품/추가상품 감지 → -100점
-    if (details.hasGiftItems && !productInfo.isSetProduct) {
-        log(`      🚫 하드 탈락: 개별 제품인데 증정품/추가상품 감지 → -100점`);
-        totalScore = -100;
+        log(`      🚫 하드 탈락: 브랜드 명확히 다름 → 0점`);
+        totalScore = 0;
     }
 
     log(`      📉 감점: ${scores.penalties}점`);
@@ -978,9 +960,7 @@ REASON: [한 줄]`;
                 'PROMOTION', 'PROMO', 'GIFT', 'MODEL', 'PERSON', 'PEOPLE',
                 'TEXT OVERLAY', 'BANNER', 'BADGE',
                 'DOES NOT MATCH', 'NOT MATCH', 'MISMATCH', 'DIFFERENT BRAND',
-                '프로모션', '증정', '사은품', '모델', '사람', '배너', '불일치', '다른 브랜드', '다른 제품',
-                '기획', '한정', '더블', '듀오', '플러스', '덤',
-                'BEST', 'HOT', '올영PICK', '오늘드림'
+                '프로모션', '증정', '사은품', '모델', '사람', '배너', '불일치', '다른 브랜드', '다른 제품'
             ];
             // 프롬프트 통과 조건: 브랜드/제품 일치, 문제 없음
             const passSignals = [
