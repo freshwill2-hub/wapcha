@@ -466,8 +466,7 @@ IS_COMPLETE: [YES/NO]`;
             multipleProductsPenalty: 0,
             packagingPenalty: 0,
             completenessScore: 15,
-            productNotVisible: false,
-            incompletePenalty: 0
+            productNotVisible: false
         };
     }
 }
@@ -686,8 +685,8 @@ HAS_GHOST_ARTIFACT: [YES/NO]${setFormat}`;
         const hasGiftItems = giftMatch ? giftMatch[1].toUpperCase() === 'YES' : false;
         let giftPenalty = 0;
         if (hasGiftItems && !productInfo.isSetProduct) {
-            giftPenalty = -25;  // Note: 비세트 증정품은 scoreImage()에서 -100 하드탈락 처리됨 (v16)
-            log(`      ⚠️  사은품/증정품 감지됨 → 감점: -25점 (하드탈락 대상)`);
+            giftPenalty = -25;
+            log(`      ⚠️  사은품/증정품 감지됨 → 감점: -25점`);
         }
 
         // ✅ v13: 유령 잔상 감지 (FIX-3B)
@@ -716,13 +715,7 @@ HAS_GHOST_ARTIFACT: [YES/NO]${setFormat}`;
         return {
             titleMatchScore: { score: 10, isWrongProduct: false },  // ✅ v15: 15 → 10 (에러 시 동정점수 하향)
             setCompositionScore: 10,
-            qualityScore: 12,
-            brandClearlyDifferent: false,
-            giftPenalty: 0,
-            ghostPenalty: 0,
-            hasGiftItems: false,
-            hasGhostArtifact: false,
-            detectedSetCount: 0
+            qualityScore: 12
         };
     }
 }
@@ -1572,8 +1565,8 @@ async function processProduct(product, productIndex, totalProducts) {
             log(`   - Gallery: ${actualGalleryCount}개`);
         }
     } catch (error) {
-        actualMainCount = typeof mainImage !== 'undefined' ? 1 : 0;
-        actualGalleryCount = typeof galleryImages !== 'undefined' ? galleryImages.length : 0;
+        actualMainCount = 1;
+        actualGalleryCount = galleryImages.length;
     }
     
     const totalCount = actualMainCount + actualGalleryCount;
