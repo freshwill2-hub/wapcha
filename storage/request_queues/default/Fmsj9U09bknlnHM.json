@@ -2,7 +2,7 @@
 	"id": "Fmsj9U09bknlnHM",
 	"json": "{\"id\":\"Fmsj9U09bknlnHM\",\"url\":\"https://www.oliveyoung.co.kr/store/goods/getGoodsDetail.do?goodsNo=A000000219548\",\"uniqueKey\":\"https://www.oliveyoung.co.kr/store/goods/getGoodsDetail.do?goodsNo=A000000219548\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"product\":{\"Id\":48,\"CreatedAt\":\"2026-02-15 03:04:58+00:00\",\"UpdatedAt\":null,\"Title\":null,\"product_url\":\"https://www.oliveyoung.co.kr/store/goods/getGoodsDetail.do?goodsNo=A000000219548\",\"title_kr\":null,\"price_original\":null,\"price_discount\":null,\"image_urls\":null,\"description\":null,\"category\":null,\"scraped_at\":null,\"sku\":\"A000000219548\",\"title_en\":null,\"description_en\":null,\"screenshot\":null,\"product_images\":null},\"index\":47,\"missingFields\":{\"needsTitleKr\":true,\"needsTitleEn\":true,\"needsPriceOriginal\":true,\"needsPriceDiscount\":true,\"needsDescription\":true,\"needsDescriptionEn\":true,\"needsImages\":true,\"needsPageVisit\":true,\"isComplete\":false}}}",
 	"method": "GET",
-	"orderNo": 1771124704531,
+	"orderNo": 1771125513467,
 	"retryCount": 0,
 	"uniqueKey": "https://www.oliveyoung.co.kr/store/goods/getGoodsDetail.do?goodsNo=A000000219548",
 	"url": "https://www.oliveyoung.co.kr/store/goods/getGoodsDetail.do?goodsNo=A000000219548"
