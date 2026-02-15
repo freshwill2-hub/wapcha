@@ -981,108 +981,76 @@ async function searchNaverImages(titleKr, maxImages = 15) {
     const imageUrls = [];
     const seen = new Set();
 
-    // URL에서 제외할 키워드 (아이콘/로고/배너/스프라이트 등 비상품 이미지)
-    const excludeKeywords = ['logo', 'icon', 'sprite', 'favicon', 'avatar', 'btn_', 'button_', 'blogpfthumb'];
-    const isExcludedUrl = (url) => {
-        const lower = url.toLowerCase();
-        return excludeKeywords.some(kw => lower.includes(kw));
-    };
+    try {
+        const searchUrl = `https://search.naver.com/search.naver?ssc=tab.image.all&where=image&sm=tab_jum&query=${encodeURIComponent(titleKr)}`;
+        log(`   🔄 axios로 HTML 가져오는 중...`);
 
-    // HTML에서 이미지 URL 추출하는 내부 함수
-    const extractFromHtml = (html) => {
-        let count = 0;
-        let match;
+        const response = await axios.get(searchUrl, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
+                'Referer': 'https://www.naver.com'
+            },
+            timeout: 15000
+        });
 
-        // 1단계: search.pstatic.net/?src= 패턴에서 원본 URL 추출
+        const html = response.data;
+        log(`   ✅ HTML 수신 완료 (${(html.length / 1024).toFixed(1)}KB)`);
+
+        // 1단계: search.pstatic.net/?src= 패턴에서 원본 URL 추출 (쇼핑 + 이미지탭 모두 포함)
         const pstaticPattern = /https?:\/\/search\.pstatic\.net\/(?:common|sunny)\/\?src=([^"&\s\\]+)/g;
+        let match;
         while ((match = pstaticPattern.exec(html)) !== null) {
             try {
                 let srcParam = match[1];
+                // HTML 엔티티 디코딩 (&amp; → &)
                 srcParam = srcParam.replace(/&amp;/g, '&');
-                // \u0026 등 유니코드 이스케이프 이후 제거 (type 파라미터 등)
-                srcParam = srcParam.replace(/\\u[0-9a-fA-F]{4}.*/g, '');
                 const originalUrl = decodeURIComponent(srcParam);
 
-                if (originalUrl.startsWith('http') && !seen.has(originalUrl) && !isExcludedUrl(originalUrl)) {
+                if (originalUrl.startsWith('http') && !seen.has(originalUrl)) {
                     seen.add(originalUrl);
                     imageUrls.push(originalUrl);
-                    count++;
                 }
             } catch (e) {}
         }
+
+        log(`   ✅ pstatic src 파라미터 추출: ${imageUrls.length}개`);
 
         // 2단계: shopping-phinf.pstatic.net 직접 URL 추출 (쇼핑 섹션 고품질 이미지)
         const shoppingPattern = /https?:\/\/shopping-phinf\.pstatic\.net\/[^"&\s\\]+/g;
+        let shoppingCount = 0;
         while ((match = shoppingPattern.exec(html)) !== null) {
             try {
                 let url = match[0];
-                url = url.replace(/\\u[0-9a-fA-F]{4}.*/g, '');
-                if (url.startsWith('http') && !seen.has(url) && !isExcludedUrl(url)) {
+                // \u0026 등 유니코드 이스케이프 정리
+                url = url.replace(/\\u0026.*/g, '');
+                if (url.startsWith('http') && !seen.has(url)) {
                     seen.add(url);
                     imageUrls.push(url);
-                    count++;
+                    shoppingCount++;
                 }
             } catch (e) {}
         }
 
-        return count;
-    };
-
-    const headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
-        'Referer': 'https://www.naver.com'
-    };
-
-    try {
-        // 1차 검색: 원본 쿼리
-        const searchUrl1 = `https://search.naver.com/search.naver?where=image&query=${encodeURIComponent(titleKr)}`;
-        log(`   🔄 1차 검색: "${titleKr}"`);
-
-        const response1 = await axios.get(searchUrl1, { headers, timeout: 15000 });
-        log(`   ✅ HTML 수신 (${(response1.data.length / 1024).toFixed(1)}KB)`);
-
-        const count1 = extractFromHtml(response1.data);
-        log(`   ✅ 1차 추출: ${count1}개`);
-
-        // 2차 검색: "제품" 키워드 추가 (다양한 상품 이미지 확보, 중복 제외)
-        try {
-            const searchUrl2 = `https://search.naver.com/search.naver?where=image&query=${encodeURIComponent(titleKr + ' 제품')}`;
-            log(`   🔄 2차 검색: "${titleKr} 제품"`);
-
-            const response2 = await axios.get(searchUrl2, { headers, timeout: 15000 });
-            const count2 = extractFromHtml(response2.data);
-            log(`   ✅ 2차 추출: ${count2}개 추가 (중복 제외)`);
-        } catch (e2) {
-            log(`   ⚠️  2차 검색 실패 (무시): ${e2.message}`);
+        if (shoppingCount > 0) {
+            log(`   🛒 쇼핑 이미지 추가: ${shoppingCount}개`);
         }
 
-        // 3단계: 상품 이미지 우선 정렬
+        // 3단계: 상품 이미지 우선 정렬 (blogfiles는 후순위)
         imageUrls.sort((a, b) => {
             const priority = (url) => {
                 const l = url.toLowerCase();
-                if (l.includes('shopping-phinf.pstatic.net')) return 0;  // 네이버 쇼핑 공식 (흰배경)
-                if (l.includes('shop-phinf.pstatic.net')) return 1;     // 네이버 스마트스토어
-                if (l.includes('shop1.phinf.naver.net')) return 2;      // 네이버 스마트스토어 (구형)
-                if (l.includes('.pstatic.net')) return 3;               // 기타 pstatic CDN
-                if (l.includes('blogfiles.naver.net')) return 8;        // 블로그 (후순위)
-                if (l.includes('cafefiles')) return 9;                  // 카페 (최후순위)
-                return 5;                                               // 외부 도메인
+                if (l.includes('shopping-phinf.pstatic.net')) return 0;  // 네이버 쇼핑 공식
+                if (l.includes('shop-phinf.pstatic.net')) return 1;     // 네이버 쇼핑 판매자
+                if (l.includes('shop1.phinf.naver.net')) return 2;      // 네이버 스마트스토어
+                if (l.includes('blogfiles.naver.net')) return 9;        // 블로그 (후순위)
+                return 5;                                               // 기타 (중간)
             };
             return priority(a) - priority(b);
         });
 
-        // 도메인별 통계
-        const domainStats = {};
-        imageUrls.forEach(url => {
-            try {
-                const domain = new URL(url).hostname;
-                domainStats[domain] = (domainStats[domain] || 0) + 1;
-            } catch (e) {}
-        });
-        const topDomains = Object.entries(domainStats).sort((a, b) => b[1] - a[1]).slice(0, 5);
-        log(`   📊 도메인 분포: ${topDomains.map(([d, c]) => `${d}(${c})`).join(', ')}`);
+        log(`   📊 정렬 완료: 쇼핑>${'>'}스토어>${'>'}기타>${'>'}블로그`);
 
         // 로그: 추출된 URL 목록 (정렬 후)
         if (imageUrls.length > 0) {
