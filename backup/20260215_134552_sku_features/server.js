@@ -22,9 +22,6 @@ const NOCODB_API_TOKEN = process.env.NOCODB_API_TOKEN;
 const OLIVEYOUNG_TABLE_ID = process.env.OLIVEYOUNG_TABLE_ID;
 const SHOPIFY_TABLE_ID = process.env.SHOPIFY_TABLE_ID;
 const SCRIPTS_DIR = process.env.SCRIPTS_DIR || '/root/copychu-scraper';
-const SHOPIFY_STORE_URL = process.env.SHOPIFY_STORE_URL || 'wap-australia-2.myshopify.com';
-const SHOPIFY_ACCESS_TOKEN = process.env.SHOPIFY_ACCESS_TOKEN;
-const SHOPIFY_API_VERSION = '2024-01';
 
 console.log('🔧 환경 변수 확인:');
 console.log(`- NOCODB_API_URL: ${NOCODB_API_URL}`);
@@ -84,8 +81,7 @@ let config = {
         phase3: true,
         phase4: true,
         phase5: true  // ✅ Phase 5 추가!
-    },
-    skuDedup: true  // ✅ SKU 중복 방지 (Shopify 기준) - 기본값 ON
+    }
 };
 
 // 설정 로드
@@ -251,8 +247,7 @@ async function runPhase0(categoryUrl, maxProducts, categoryName, maxPages = 0, u
             CATEGORY_URL: categoryUrl,
             MAX_PRODUCTS: maxProducts.toString(),
             MAX_PAGES: maxPages.toString(),
-            UNIFIED_LOG_PATH: unifiedLogPath || '',  // ✅ 통합 로그 경로 전달
-            SKU_DEDUP_ENABLED: (config.skuDedup !== false).toString()  // ✅ SKU 중복 방지 설정 전달
+            UNIFIED_LOG_PATH: unifiedLogPath || ''  // ✅ 통합 로그 경로 전달
         };
         
         const child = spawn('node', [scriptPath], {
@@ -435,8 +430,7 @@ async function runPhase(phase, productLimit, categoryUrl = null, maxProducts = n
         const env = {
             ...process.env,
             PRODUCT_LIMIT: productLimit.toString(),
-            MAX_VOLUME_LIMIT: (config.maxVolumeLimit || 0).toString(),  // ✅ v2.9: 용량 제한 전달
-            SKU_DEDUP_ENABLED: (config.skuDedup !== false).toString()  // ✅ SKU 중복 방지 설정 전달
+            MAX_VOLUME_LIMIT: (config.maxVolumeLimit || 0).toString()  // ✅ v2.9: 용량 제한 전달
         };
 
         // ✅ 통합 로그 경로 전달
@@ -1698,181 +1692,6 @@ app.post('/api/force-kill', async (req, res) => {
     console.log('🛑 강제 종료 완료:', results.message.join(', '));
     
     res.json({ success: true, message: results.message.join('\n') });
-});
-
-// ==================== SKU 중복 방지 설정 API ====================
-app.get('/api/settings/sku-dedup', (req, res) => {
-    res.json({ enabled: config.skuDedup !== false });
-});
-
-app.post('/api/settings/sku-dedup', (req, res) => {
-    const { enabled } = req.body;
-    config.skuDedup = enabled !== false;
-    saveConfig();
-    addLog('info', `🔄 SKU 중복 방지: ${config.skuDedup ? 'ON' : 'OFF'}`);
-    res.json({ success: true, enabled: config.skuDedup });
-});
-
-// ==================== Shopify SKU 목록 API ====================
-app.get('/api/shopify-skus', async (req, res) => {
-    if (!SHOPIFY_ACCESS_TOKEN) {
-        return res.status(400).json({ error: 'Shopify Access Token이 설정되지 않았습니다.' });
-    }
-    try {
-        const skus = [];
-        let nextPageUrl = `https://${SHOPIFY_STORE_URL}/admin/api/${SHOPIFY_API_VERSION}/products.json?limit=250&fields=id,variants`;
-        while (nextPageUrl) {
-            const response = await axios.get(nextPageUrl, {
-                headers: { 'X-Shopify-Access-Token': SHOPIFY_ACCESS_TOKEN },
-                timeout: 30000
-            });
-            for (const product of (response.data.products || [])) {
-                for (const variant of (product.variants || [])) {
-                    if (variant.sku) skus.push(variant.sku);
-                }
-            }
-            // Link 헤더 페이지네이션
-            nextPageUrl = null;
-            const linkHeader = response.headers['link'];
-            if (linkHeader) {
-                const nextMatch = linkHeader.match(/<([^>]+)>;\s*rel="next"/);
-                if (nextMatch) nextPageUrl = nextMatch[1];
-            }
-            if (nextPageUrl) await new Promise(r => setTimeout(r, 500));
-        }
-        res.json({ skus, count: skus.length });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// ==================== 판매 중단 제품 체크 API ====================
-let discontinuedCheckRunning = false;
-
-app.post('/api/check-discontinued', async (req, res) => {
-    if (systemState.status === 'running') {
-        return res.status(400).json({ error: '파이프라인 실행 중에는 체크할 수 없습니다.' });
-    }
-    if (discontinuedCheckRunning) {
-        return res.status(400).json({ error: '이미 체크가 진행 중입니다.' });
-    }
-
-    discontinuedCheckRunning = true;
-    res.json({ success: true, message: '판매 중단 체크를 시작합니다.' });
-
-    try {
-        // 1. Shopify에서 active 제품 목록 가져오기
-        addLog('info', '🔍 Shopify에서 active 제품 목록 가져오는 중...');
-        io.emit('discontinuedProgress', { status: 'fetching', message: 'Shopify 제품 목록 가져오는 중...' });
-
-        const products = [];
-        let nextPageUrl = `https://${SHOPIFY_STORE_URL}/admin/api/${SHOPIFY_API_VERSION}/products.json?limit=250&status=active&fields=id,title,variants`;
-        while (nextPageUrl) {
-            const response = await axios.get(nextPageUrl, {
-                headers: { 'X-Shopify-Access-Token': SHOPIFY_ACCESS_TOKEN },
-                timeout: 30000
-            });
-            for (const product of (response.data.products || [])) {
-                const sku = product.variants?.[0]?.sku;
-                if (sku) {
-                    products.push({ id: product.id, title: product.title, sku });
-                }
-            }
-            nextPageUrl = null;
-            const linkHeader = response.headers['link'];
-            if (linkHeader) {
-                const nextMatch = linkHeader.match(/<([^>]+)>;\s*rel="next"/);
-                if (nextMatch) nextPageUrl = nextMatch[1];
-            }
-            if (nextPageUrl) await new Promise(r => setTimeout(r, 500));
-        }
-
-        addLog('info', `📦 총 ${products.length}개 active 제품 발견`);
-        io.emit('discontinuedProgress', { status: 'checking', message: `${products.length}개 제품 체크 시작`, total: products.length, current: 0 });
-
-        // 2. 각 SKU로 올리브영 페이지 체크
-        const results = { total: products.length, active: 0, discontinued: [], failed: [] };
-
-        for (let i = 0; i < products.length; i++) {
-            const product = products[i];
-            const url = `https://www.oliveyoung.co.kr/store/goods/getGoodsDetail.do?goodsNo=${product.sku}`;
-
-            io.emit('discontinuedProgress', {
-                status: 'checking',
-                message: `[${i + 1}/${products.length}] ${product.title}`,
-                total: products.length,
-                current: i + 1
-            });
-
-            try {
-                const response = await axios.get(url, {
-                    timeout: 15000,
-                    headers: {
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                        'Accept-Language': 'ko-KR,ko;q=0.9'
-                    },
-                    maxRedirects: 5,
-                    validateStatus: (status) => status < 500
-                });
-
-                const html = typeof response.data === 'string' ? response.data : '';
-                const finalUrl = response.request?.res?.responseUrl || response.config?.url || url;
-                const isRedirectedToMain = finalUrl.includes('/main') || finalUrl.includes('/store/main');
-                const isDiscontinued = response.status === 404 ||
-                    isRedirectedToMain ||
-                    html.includes('판매중단') ||
-                    html.includes('존재하지 않는 상품') ||
-                    (html.includes('일시품절') && !html.includes('장바구니'));
-
-                if (isDiscontinued) {
-                    // Shopify에서 draft 처리
-                    try {
-                        await axios.put(
-                            `https://${SHOPIFY_STORE_URL}/admin/api/${SHOPIFY_API_VERSION}/products/${product.id}.json`,
-                            { product: { id: product.id, status: 'draft' } },
-                            { headers: { 'X-Shopify-Access-Token': SHOPIFY_ACCESS_TOKEN, 'Content-Type': 'application/json' }, timeout: 15000 }
-                        );
-                        results.discontinued.push({ sku: product.sku, title: product.title, reason: isRedirectedToMain ? 'redirect' : 'page_content' });
-                        addLog('warning', `⛔ 판매중단 → Draft: [${product.sku}] ${product.title}`);
-                    } catch (putErr) {
-                        results.failed.push({ sku: product.sku, title: product.title, error: 'Draft 변경 실패: ' + putErr.message });
-                        addLog('error', `❌ Draft 변경 실패: [${product.sku}] ${putErr.message}`);
-                    }
-                } else {
-                    results.active++;
-                }
-            } catch (error) {
-                if (error.response?.status === 404 || error.code === 'ECONNREFUSED') {
-                    results.discontinued.push({ sku: product.sku, title: product.title, reason: 'not_found' });
-                    addLog('warning', `⛔ 접근불가 → Draft: [${product.sku}] ${product.title}`);
-                    try {
-                        await axios.put(
-                            `https://${SHOPIFY_STORE_URL}/admin/api/${SHOPIFY_API_VERSION}/products/${product.id}.json`,
-                            { product: { id: product.id, status: 'draft' } },
-                            { headers: { 'X-Shopify-Access-Token': SHOPIFY_ACCESS_TOKEN, 'Content-Type': 'application/json' }, timeout: 15000 }
-                        );
-                    } catch (e) { /* ignore */ }
-                } else {
-                    results.failed.push({ sku: product.sku, title: product.title, error: error.message });
-                }
-            }
-
-            // Rate limit: 올리브영 요청 간 2초 대기
-            if (i < products.length - 1) {
-                await new Promise(r => setTimeout(r, 2000));
-            }
-        }
-
-        // 3. 결과 전송
-        addLog('success', `✅ 판매 중단 체크 완료: 총 ${results.total}개, 정상 ${results.active}개, 중단 ${results.discontinued.length}개, 실패 ${results.failed.length}개`);
-        io.emit('discontinuedResult', results);
-
-    } catch (error) {
-        addLog('error', `❌ 판매 중단 체크 실패: ${error.message}`);
-        io.emit('discontinuedResult', { error: error.message });
-    } finally {
-        discontinuedCheckRunning = false;
-    }
 });
 
 // ==================== Socket.io ====================

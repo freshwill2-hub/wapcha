@@ -1,0 +1,1525 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL 관리 - Copychu Dashboard</title>
+
+    <!-- Fonts - index.html과 완전히 동일 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Socket.io -->
+    <script src="/socket.io/socket.io.js"></script>
+
+    <style>
+        /* ==================== index.html에서 그대로 복사한 CSS 변수 ==================== */
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --bg-card: #1e293b;
+            --border: #475569;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent: #22d3ee;
+            --accent-hover: #06b6d4;
+            --accent-dim: rgba(34, 211, 238, 0.15);
+            --success: #22c55e;
+            --warning: #eab308;
+            --error: #ef4444;
+            --info: #3b82f6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+        }
+
+        /* ==================== Sidebar - index.html에서 그대로 복사 ==================== */
+        .sidebar {
+            width: 224px;
+            background: #0f172a;
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+        }
+
+        .logo {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo h1 {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--accent);
+            letter-spacing: -0.5px;
+        }
+
+        .logo span {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 400;
+            display: block;
+            margin-top: 4px;
+        }
+
+        .nav {
+            flex: 1;
+            padding: 12px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 4px;
+            font-size: 14px;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            background: var(--accent-dim);
+            color: var(--accent);
+            border-left-color: var(--accent);
+        }
+
+        .nav-item svg {
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+        }
+
+        .status-indicator {
+            padding: 16px 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-badge.idle { background: var(--bg-tertiary); color: var(--text-secondary); }
+        .status-badge.running { background: rgba(34, 211, 238, 0.15); color: var(--accent); }
+        .status-badge.paused { background: rgba(234, 179, 8, 0.15); color: var(--warning); }
+        .status-badge.error { background: rgba(239, 68, 68, 0.15); color: var(--error); }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .status-badge.running .status-dot {
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        /* ==================== Main Content - index.html에서 그대로 복사 ==================== */
+        .main {
+            flex: 1;
+            margin-left: 224px;
+            min-height: 100vh;
+        }
+
+        .header {
+            padding: 24px 32px;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-secondary);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .header h2 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-top: 4px;
+        }
+
+        .content {
+            padding: 32px;
+        }
+
+        /* ==================== Cards - index.html에서 그대로 복사 ==================== */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* ==================== Buttons - index.html에서 그대로 복사 ==================== */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+            color: var(--bg-primary);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(34, 211, 238, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success), #16a34a);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--error);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.25);
+        }
+
+        .btn-force-kill {
+            background: linear-gradient(135deg, #7f1d1d, #450a0a);
+            border: 2px solid #dc2626;
+            color: white;
+            animation: pulse-danger 2s infinite;
+        }
+
+        .btn-force-kill:hover {
+            background: linear-gradient(135deg, #991b1b, #7f1d1d);
+            box-shadow: 0 0 15px rgba(220, 38, 38, 0.5);
+        }
+
+        @keyframes pulse-danger {
+            0%, 100% { box-shadow: 0 0 5px rgba(220, 38, 38, 0.3); }
+            50% { box-shadow: 0 0 15px rgba(220, 38, 38, 0.6); }
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 13px;
+        }
+
+        /* ==================== Inputs - index.html에서 그대로 복사 ==================== */
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .input {
+            width: 100%;
+            padding: 10px 14px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-dim);
+        }
+
+        .input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .input:disabled {
+            background: var(--bg-secondary);
+            color: var(--text-muted);
+            cursor: not-allowed;
+        }
+
+        /* ==================== Tabs ==================== */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .tab-btn:hover {
+            background: var(--border);
+            color: var(--text-primary);
+        }
+
+        .tab-btn.active {
+            background: var(--accent);
+            color: var(--bg-primary);
+            border-color: var(--accent);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* ==================== Progress ==================== */
+        .progress-section {
+            margin-bottom: 24px;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--accent-hover));
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+
+        /* ==================== Grid ==================== */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        @media (max-width: 900px) {
+            .grid-2, .grid-3 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ==================== Queue Item ==================== */
+        .queue-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 12px;
+            transition: all 0.2s;
+        }
+
+        .queue-item:hover {
+            border-color: var(--accent);
+        }
+
+        .queue-number {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-card);
+            border-radius: 50%;
+            font-size: 14px;
+            font-weight: 500;
+            flex-shrink: 0;
+        }
+
+        .queue-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .queue-name {
+            font-weight: 500;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .queue-url {
+            font-size: 12px;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .queue-meta {
+            display: flex;
+            gap: 16px;
+            flex-shrink: 0;
+        }
+
+        .queue-meta span {
+            font-size: 13px;
+            white-space: nowrap;
+        }
+
+        .status-pending { color: var(--warning); }
+        .status-processing { color: var(--accent); }
+        .status-completed { color: var(--success); }
+        .status-error { color: var(--error); }
+
+        /* ==================== Log Viewer - index.html에서 그대로 복사 ==================== */
+        .log-viewer {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            height: 500px;
+            overflow-y: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            padding: 16px;
+        }
+
+        .log-line {
+            display: flex;
+            gap: 12px;
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(71, 85, 105, 0.3);
+        }
+
+        .log-time {
+            color: var(--text-muted);
+            flex-shrink: 0;
+            min-width: 70px;
+        }
+
+        .log-message {
+            flex: 1;
+            word-break: break-all;
+        }
+
+        .log-line.success .log-message { color: var(--success); }
+        .log-line.error .log-message { color: var(--error); }
+        .log-line.warning .log-message { color: var(--warning); }
+        .log-line.info .log-message { color: var(--text-primary); }
+
+        /* ==================== Table ==================== */
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 500;
+        }
+
+        tr:hover {
+            background: var(--bg-tertiary);
+        }
+
+        /* ==================== Info Box ==================== */
+        .info-box {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        @media (max-width: 768px) {
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .info-item {
+            display: flex;
+            gap: 12px;
+        }
+
+        .info-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .info-title {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .info-desc {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .info-sub {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* ==================== Checkbox ==================== */
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .checkbox-custom {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent);
+        }
+
+        /* ==================== Pagination ==================== */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 20px;
+        }
+
+        .pagination button {
+            padding: 8px 16px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .pagination button:hover {
+            background: var(--border);
+        }
+
+        .pagination span {
+            padding: 8px 16px;
+            color: var(--text-secondary);
+        }
+
+        /* ==================== Empty State ==================== */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        /* ==================== Hidden ==================== */
+        .hidden {
+            display: none !important;
+        }
+
+        /* ==================== Responsive - index.html에서 그대로 복사 ==================== */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 60px;
+            }
+
+            .sidebar .logo span,
+            .sidebar .nav-item span:not(.nav-icon),
+            .sidebar .status-indicator span {
+                display: none;
+            }
+
+            .sidebar .logo h1 {
+                font-size: 14px;
+            }
+
+            .main {
+                margin-left: 60px;
+            }
+
+            .content {
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar - index.html에서 그대로 복사한 구조 -->
+    <aside class="sidebar">
+        <div class="logo">
+            <h1>COPYCHU</h1>
+            <span>Automation Dashboard</span>
+        </div>
+
+        <nav class="nav">
+            <a class="nav-item" href="/">
+                <span class="nav-icon">📊</span>
+                <span>Dashboard</span>
+            </a>
+            <a class="nav-item" href="/#pipeline">
+                <span class="nav-icon">▶️</span>
+                <span>Pipeline</span>
+            </a>
+            <a class="nav-item active" href="/urls.html">
+                <span class="nav-icon">🔗</span>
+                <span>URL Manager</span>
+            </a>
+            <a class="nav-item" href="/#monitor">
+                <span class="nav-icon">📺</span>
+                <span>Monitor</span>
+            </a>
+            <a class="nav-item" href="/logs.html">
+                <span class="nav-icon">📜</span>
+                <span>Log Viewer</span>
+            </a>
+            <a class="nav-item" href="/#gallery">
+                <span class="nav-icon">🖼️</span>
+                <span>Gallery</span>
+            </a>
+            <a class="nav-item" href="/#stats">
+                <span class="nav-icon">📈</span>
+                <span>Statistics</span>
+            </a>
+            <a class="nav-item" href="/#settings">
+                <span class="nav-icon">⚙️</span>
+                <span>Settings</span>
+            </a>
+        </nav>
+
+        <div class="status-indicator">
+            <div class="status-badge idle" id="status-badge">
+                <div class="status-dot"></div>
+                <span id="status-text">Idle</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main">
+        <header class="header">
+            <h2>🔗 URL Manager</h2>
+            <p>Collect products from category URLs and process automatically</p>
+        </header>
+
+        <div class="content">
+            <!-- Progress Section -->
+            <div id="progress-section" class="card hidden">
+                <div class="card-header">
+                    <h3 class="card-title">🔄 Processing</h3>
+                    <span id="progress-phase" style="color: var(--text-secondary);">Phase 0</span>
+                </div>
+                <div class="progress-bar" style="margin-bottom: 8px;">
+                    <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
+                </div>
+                <div class="progress-header" style="margin-bottom: 0;">
+                    <span id="progress-current" style="color: var(--text-secondary);">0 processed</span>
+                    <span id="progress-percent" style="color: var(--text-secondary);">0%</span>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabs">
+                <button id="tab-category" class="tab-btn active" onclick="showTab('category')">📂 Category Queue</button>
+                <button id="tab-product" class="tab-btn" onclick="showTab('product')">📦 Add Single URL</button>
+                <button id="tab-list" class="tab-btn" onclick="showTab('list')">📋 Product List</button>
+                <button id="tab-logs" class="tab-btn" onclick="showTab('logs')">📜 Real-time Logs</button>
+            </div>
+
+            <!-- ===================== Category Queue Tab ===================== -->
+            <div id="content-category" class="tab-content active">
+                <!-- Add Category URL -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">📂 Add Category URL</h3>
+                    </div>
+
+                    <div class="grid-2" style="margin-bottom: 16px;">
+                        <div class="input-group" style="margin-bottom: 0;">
+                            <label class="input-label">OliveYoung Category URL</label>
+                            <input type="text" id="category-url" class="input"
+                                   placeholder="https://www.oliveyoung.co.kr/store/main/getBestList.do?dispCatNo=...">
+                        </div>
+                        <div class="input-group" style="margin-bottom: 0;">
+                            <label class="input-label">Category Name (optional)</label>
+                            <input type="text" id="category-name" class="input"
+                                   placeholder="e.g., Skincare, Suncare">
+                        </div>
+                    </div>
+
+                    <div class="grid-3" style="margin-bottom: 16px;">
+                        <div class="input-group" style="margin-bottom: 0;">
+                            <label class="input-label">Max Products</label>
+                            <input type="number" id="category-max" class="input" value="100" min="1" max="1000">
+                        </div>
+                        <div class="input-group" style="margin-bottom: 0;">
+                            <label class="input-label">
+                                <span class="checkbox-wrapper">
+                                    <input type="checkbox" id="limit-pages-checkbox" class="checkbox-custom" onchange="togglePageLimit()">
+                                    <span>Limit Pages</span>
+                                </span>
+                            </label>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <input type="number" id="category-max-pages" class="input" value="10" min="1" max="100" disabled>
+                                <span id="pages-label" style="color: var(--accent); font-size: 13px; white-space: nowrap; font-weight: 500;">Unlimited</span>
+                            </div>
+                        </div>
+                        <div class="input-group" style="margin-bottom: 0; display: flex; align-items: flex-end;">
+                            <button onclick="addCategory()" class="btn btn-primary" style="width: 100%;">
+                                ➕ Add to Queue
+                            </button>
+                        </div>
+                    </div>
+
+                    <p style="color: var(--text-muted); font-size: 13px;">
+                        💡 Unchecked = auto-collect until last page | Duplicate SKUs are auto-skipped
+                    </p>
+                </div>
+
+                <!-- Category Queue List -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">📋 Category Queue</h3>
+                        <div class="btn-group">
+                            <button onclick="processQueueUrlOnly()" id="btn-url-only" class="btn btn-primary btn-sm">
+                                📥 Collect URLs Only
+                            </button>
+                            <button onclick="processQueueFull()" id="btn-full-pipeline" class="btn btn-success btn-sm">
+                                🚀 Full Pipeline
+                            </button>
+                            <button onclick="stopQueue()" id="btn-stop" class="btn btn-danger btn-sm">
+                                ⏹️ Stop
+                            </button>
+                            <button onclick="forceKill()" id="btn-force-kill" class="btn btn-force-kill btn-sm">
+                                🔴 Force Kill
+                            </button>
+                            <button onclick="clearCompleted()" class="btn btn-secondary btn-sm">
+                                🗑️ Clear Completed
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Execution Mode Description -->
+                    <div class="info-box">
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <span class="info-icon">📥</span>
+                                <div>
+                                    <p class="info-title" style="color: var(--accent);">Collect URLs Only</p>
+                                    <p class="info-desc">Phase 0 only → Save URLs and SKUs only</p>
+                                </div>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-icon">🚀</span>
+                                <div>
+                                    <p class="info-title" style="color: var(--success);">Full Pipeline</p>
+                                    <p class="info-desc">Phase 0→1→2→3→4→5</p>
+                                    <p class="info-sub">Complete product data + Shopify upload</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="category-queue">
+                        <div class="empty-state">
+                            <div class="empty-icon">📋</div>
+                            <p>No categories. Add one above.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===================== Single URL Tab ===================== -->
+            <div id="content-product" class="tab-content">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">📦 Add Single Product URL</h3>
+                    </div>
+
+                    <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+                        <input type="text" id="product-url" class="input" style="flex: 1;"
+                               placeholder="https://www.oliveyoung.co.kr/store/goods/getGoodsDetail.do?goodsNo=...">
+                        <button onclick="addProductUrl()" class="btn btn-primary">➕ Add</button>
+                    </div>
+
+                    <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 24px;">
+                        💡 Enter OliveYoung product detail page URL (auto-skip if SKU exists)
+                    </p>
+
+                    <div style="border-top: 1px solid var(--border); padding-top: 24px;">
+                        <h4 style="font-size: 14px; font-weight: 500; margin-bottom: 12px;">📝 Add Multiple URLs</h4>
+                        <textarea id="product-urls-bulk" class="input" style="height: 120px; resize: vertical;"
+                                  placeholder="Enter one URL per line..."></textarea>
+                        <button onclick="addBulkUrls()" class="btn btn-primary" style="margin-top: 12px;">
+                            ➕ Add All
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card p-6 mb-6">
+                    <h3 class="text-lg font-semibold mb-4">🚀 Process Added URLs</h3>
+                    <p class="text-gray-400 text-sm mb-4">Run scraping for URLs added above (Phase 1→2→3→4→5)</p>
+                    <div class="flex gap-3">
+                        <button onclick="runPipelineForAddedUrls()" class="btn-success px-6 py-3 rounded-lg font-medium text-white">
+                            🚀 Run Full Pipeline
+                        </button>
+                        <button onclick="runPhase1Only()" class="btn-primary px-6 py-3 rounded-lg font-medium text-slate-900">
+                            📥 Run Phase 1 Only
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">📋 Recently Added URLs</h3>
+                        <button onclick="loadRecentUrls()" class="btn btn-secondary btn-sm">🔄 Refresh</button>
+                    </div>
+                    <div id="recent-urls">
+                        <p style="color: var(--text-muted);">Loading...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===================== Product List Tab ===================== -->
+            <div id="content-list" class="tab-content">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">📋 Registered Products</h3>
+                        <div style="display: flex; gap: 12px; align-items: center;">
+                            <span id="product-count" style="font-size: 13px; color: var(--text-secondary); background: var(--bg-tertiary); padding: 4px 12px; border-radius: 20px;">0 products</span>
+                            <button onclick="loadProducts()" class="btn btn-secondary btn-sm">🔄 Refresh</button>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>SKU</th>
+                                    <th>Product Name</th>
+                                    <th>Price</th>
+                                    <th>Collected</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="product-list">
+                                <!-- Dynamically populated -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="pagination">
+                        <button onclick="prevPage()">◀ Prev</button>
+                        <span id="page-info">1 / 1</span>
+                        <button onclick="nextPage()">Next ▶</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===================== Logs Tab ===================== -->
+            <div id="content-logs" class="tab-content">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">📜 Real-time Logs</h3>
+                        <div style="display: flex; gap: 12px; align-items: center;">
+                            <button onclick="clearLogs()" class="btn btn-secondary btn-sm">🗑️ Clear Logs</button>
+                            <label class="checkbox-wrapper" style="font-size: 13px; color: var(--text-secondary); cursor: pointer;">
+                                <input type="checkbox" id="auto-scroll" checked class="checkbox-custom">
+                                <span>Auto Scroll</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div id="log-container" class="log-viewer">
+                        <p style="color: var(--text-muted);">Logs will appear here...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const socket = io();
+        let currentPage = 0;
+        const pageSize = 50;
+        let totalProducts = 0;
+        let logMessages = [];
+
+        // ==================== Page Limit Checkbox ====================
+        function togglePageLimit() {
+            const checkbox = document.getElementById('limit-pages-checkbox');
+            const input = document.getElementById('category-max-pages');
+            const label = document.getElementById('pages-label');
+
+            if (checkbox.checked) {
+                input.disabled = false;
+                label.textContent = 'pages';
+                label.style.color = 'var(--text-secondary)';
+            } else {
+                input.disabled = true;
+                label.textContent = 'Unlimited';
+                label.style.color = 'var(--accent)';
+            }
+        }
+
+        // ==================== Tab Switch ====================
+        function showTab(tab) {
+            ['category', 'product', 'list', 'logs'].forEach(t => {
+                document.getElementById(`content-${t}`).classList.remove('active');
+                document.getElementById(`tab-${t}`).classList.remove('active');
+            });
+
+            document.getElementById(`content-${tab}`).classList.add('active');
+            document.getElementById(`tab-${tab}`).classList.add('active');
+
+            if (tab === 'list') loadProducts();
+            if (tab === 'product') loadRecentUrls();
+        }
+
+        // ==================== Add Category ====================
+        async function addCategory() {
+            const url = document.getElementById('category-url').value.trim();
+            const name = document.getElementById('category-name').value.trim();
+            const maxProducts = parseInt(document.getElementById('category-max').value) || 100;
+            const limitPages = document.getElementById('limit-pages-checkbox').checked;
+            const maxPages = parseInt(document.getElementById('category-max-pages').value) || 10;
+
+            if (!url) {
+                alert('Please enter a category URL');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/url-queue/category', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        url,
+                        name,
+                        maxProducts,
+                        maxPages: limitPages ? maxPages : 0,
+                        limitPages
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('category-url').value = '';
+                    document.getElementById('category-name').value = '';
+                    loadUrlQueue();
+                    addLogMessage({ type: 'success', message: `✅ Category added: ${name || url.substring(0, 50)}...`, timestamp: new Date().toISOString() });
+                } else {
+                    alert(data.error || 'Add failed');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        // ==================== Delete Category ====================
+        async function deleteCategory(id) {
+            if (!confirm('Delete this category?')) return;
+
+            try {
+                await fetch(`/api/url-queue/category/${id}`, { method: 'DELETE' });
+                loadUrlQueue();
+            } catch (error) {
+                alert('Delete failed: ' + error.message);
+            }
+        }
+
+        // ==================== URL Only Collection (Phase 0 only) ====================
+        async function processQueueUrlOnly() {
+            if (!confirm('Collect URLs only (Phase 0 only).\n\nProduct details (title, price, images) will NOT be collected.\nContinue?')) return;
+
+            try {
+                addLogMessage({ type: 'info', message: '📥 Starting URL collection (Phase 0 only)', timestamp: new Date().toISOString() });
+
+                const response = await fetch('/api/url-queue/process', { method: 'POST' });
+                const data = await response.json();
+
+                if (!data.success) {
+                    alert(data.error || 'Execution failed');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        // ==================== Full Pipeline (Phase 0→5) ====================
+        async function processQueueFull() {
+            if (!confirm('🚀 Run full pipeline.\n\nPhase 0: URL Collection\nPhase 1: Product Scraping\nPhase 2: BG Removal\nPhase 3: AI Image Validation\nPhase 4: Final Image Selection\nPhase 5: Shopify Upload\n\nThis may take a while. Continue?')) return;
+
+            try {
+                addLogMessage({ type: 'info', message: '🚀 Starting full pipeline (Phase 0→1→2→3→4→5)', timestamp: new Date().toISOString() });
+                showProgress();
+
+                const response = await fetch('/api/url-queue/process-full', { method: 'POST' });
+                const data = await response.json();
+
+                if (!data.success) {
+                    alert(data.error || 'Execution failed');
+                    hideProgress();
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+                hideProgress();
+            }
+        }
+
+        // ==================== Stop ====================
+        async function stopQueue() {
+            if (!confirm('Stop processing?')) return;
+
+            try {
+                const response = await fetch('/api/pipeline/stop', { method: 'POST' });
+                const data = await response.json();
+
+                if (data.success) {
+                    addLogMessage({ type: 'warning', message: '🛑 Pipeline stopped', timestamp: new Date().toISOString() });
+                    hideProgress();
+                    loadUrlQueue();
+                } else {
+                    alert(data.error || 'Stop failed');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        // ==================== Force Kill ====================
+        async function forceKill() {
+            if (!confirm('⚠️ Warning: Force Kill!\n\nThis will terminate all Phase processes and Chromium.\nAre you sure?')) return;
+
+            try {
+                addLogMessage({ type: 'warning', message: '🔴 Force kill requested...', timestamp: new Date().toISOString() });
+
+                const response = await fetch('/api/force-kill', { method: 'POST' });
+                const data = await response.json();
+
+                if (data.success) {
+                    addLogMessage({ type: 'success', message: '✅ Force kill complete!', timestamp: new Date().toISOString() });
+                    hideProgress();
+                    loadUrlQueue();
+                } else {
+                    alert('❌ Force kill failed: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('❌ Error: ' + error.message);
+            }
+        }
+
+        // ==================== Clear Completed ====================
+        async function clearCompleted() {
+            try {
+                const response = await fetch('/api/url-queue');
+                const queue = await response.json();
+
+                let deleted = 0;
+                for (const cat of (queue.categories || [])) {
+                    if (cat.status === 'completed') {
+                        await fetch(`/api/url-queue/category/${cat.id}`, { method: 'DELETE' });
+                        deleted++;
+                    }
+                }
+
+                if (deleted > 0) {
+                    addLogMessage({ type: 'info', message: `🗑️ ${deleted} completed items cleared`, timestamp: new Date().toISOString() });
+                }
+
+                loadUrlQueue();
+            } catch (error) {
+                alert('Clear failed: ' + error.message);
+            }
+        }
+
+        // ==================== Add Single Product URL ====================
+        async function addProductUrl() {
+            const url = document.getElementById('product-url').value.trim();
+
+            if (!url) {
+                alert('Please enter a product URL');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/url-queue/product', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('product-url').value = '';
+                    addLogMessage({ type: 'success', message: `✅ URL added (SKU: ${data.sku})`, timestamp: new Date().toISOString() });
+                    loadRecentUrls();
+                } else {
+                    alert(data.error || 'Add failed');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        // ==================== Add Bulk URLs ====================
+        async function addBulkUrls() {
+            const text = document.getElementById('product-urls-bulk').value.trim();
+            const urls = text.split('\n').filter(u => u.trim());
+
+            if (urls.length === 0) {
+                alert('Please enter URLs');
+                return;
+            }
+
+            let success = 0, failed = 0, duplicates = 0;
+
+            for (const url of urls) {
+                try {
+                    const response = await fetch('/api/url-queue/product', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ url: url.trim() })
+                    });
+
+                    const data = await response.json();
+                    if (data.success) success++;
+                    else if (data.error?.includes('already')) duplicates++;
+                    else failed++;
+                } catch {
+                    failed++;
+                }
+            }
+
+            alert(`Complete:\n✅ Success: ${success}\n⚠️ Duplicates: ${duplicates}\n❌ Failed: ${failed}`);
+            document.getElementById('product-urls-bulk').value = '';
+            loadRecentUrls();
+        }
+
+        // ==================== Load URL Queue ====================
+        async function loadUrlQueue() {
+            try {
+                const response = await fetch('/api/url-queue');
+                const queue = await response.json();
+
+                const container = document.getElementById('category-queue');
+
+                if (!queue.categories || queue.categories.length === 0) {
+                    container.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><p>No categories. Add one above.</p></div>';
+                    return;
+                }
+
+                container.innerHTML = queue.categories.map((cat, index) => {
+                    const pagesText = cat.maxPages === 0 ? 'Unlimited' : `${cat.maxPages} pages`;
+                    const pagesColor = cat.maxPages === 0 ? 'var(--accent)' : 'var(--warning)';
+
+                    return `
+                    <div class="queue-item">
+                        <span style="color: var(--text-muted); cursor: move;">☰</span>
+                        <span class="queue-number">${index + 1}</span>
+                        <div class="queue-info">
+                            <p class="queue-name">${cat.name || 'Unnamed'}</p>
+                            <p class="queue-url">${cat.url.substring(0, 60)}...</p>
+                        </div>
+                        <div class="queue-meta">
+                            <span style="color: var(--accent);">Max ${cat.maxProducts}</span>
+                            <span style="color: ${pagesColor};">${pagesText}</span>
+                        </div>
+                        <span class="status-${cat.status}" style="font-size: 13px; white-space: nowrap;">${getStatusText(cat.status)}</span>
+                        <button onclick="deleteCategory('${cat.id}')" class="btn btn-danger btn-sm" style="padding: 6px 12px;">🗑️</button>
+                    </div>
+                `;
+                }).join('');
+
+            } catch (error) {
+                console.error('Failed to load URL queue:', error);
+            }
+        }
+
+        function getStatusText(status) {
+            const texts = {
+                'pending': '⏳ Pending',
+                'processing': '🔄 Processing',
+                'completed': '✅ Done',
+                'error': '❌ Error'
+            };
+            return texts[status] || status;
+        }
+
+        // ==================== Load Recent URLs ====================
+        async function loadRecentUrls() {
+            try {
+                const response = await fetch('/api/oliveyoung/products?limit=10');
+                const data = await response.json();
+
+                const container = document.getElementById('recent-urls');
+
+                if (!data.list || data.list.length === 0) {
+                    container.innerHTML = '<p style="color: var(--text-muted);">No registered URLs</p>';
+                    return;
+                }
+
+                container.innerHTML = data.list.map(p => `
+                    <div class="queue-item" style="padding: 12px;">
+                        <div class="queue-info">
+                            <p class="queue-name" style="font-size: 13px;">${p.title_kr || p.sku || 'No title'}</p>
+                            <p class="queue-url">SKU: ${p.sku || '-'}</p>
+                        </div>
+                        <span style="font-size: 12px; color: var(--text-muted);">${p.collected_at ? new Date(p.collected_at).toLocaleDateString('en-AU') : '-'}</span>
+                    </div>
+                `).join('');
+
+            } catch (error) {
+                console.error('Failed to load recent URLs:', error);
+            }
+        }
+
+        // ==================== Load Products ====================
+        async function loadProducts() {
+            try {
+                const response = await fetch(`/api/oliveyoung/products?limit=${pageSize}&offset=${currentPage * pageSize}`);
+                const data = await response.json();
+
+                totalProducts = data.total || data.list?.length || 0;
+                document.getElementById('product-count').textContent = `${totalProducts} products`;
+
+                const totalPages = Math.ceil(totalProducts / pageSize) || 1;
+                document.getElementById('page-info').textContent = `${currentPage + 1} / ${totalPages}`;
+
+                const tbody = document.getElementById('product-list');
+
+                if (!data.list || data.list.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 40px; color: var(--text-muted);">No registered products</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = data.list.map(p => `
+                    <tr>
+                        <td>${p.Id}</td>
+                        <td style="font-family: 'JetBrains Mono', monospace; color: var(--accent); font-size: 12px;">${p.sku || '-'}</td>
+                        <td title="${p.title_kr || ''}">${(p.title_kr || '').substring(0, 25)}${(p.title_kr || '').length > 25 ? '...' : ''}</td>
+                        <td>${p.price_current ? '₩' + p.price_current.toLocaleString() : '-'}</td>
+                        <td style="font-size: 13px; color: var(--text-secondary);">${p.collected_at ? new Date(p.collected_at).toLocaleDateString('en-AU') : '-'}</td>
+                        <td>${p.product_images ? '<span style="color: var(--success);">✅ Done</span>' : '<span style="color: var(--warning);">⏳ Pending</span>'}</td>
+                        <td><button onclick="deleteProduct(${p.Id})" style="color: var(--error); background: none; border: none; cursor: pointer; font-size: 13px; font-family: inherit;">Delete</button></td>
+                    </tr>
+                `).join('');
+
+            } catch (error) {
+                console.error('Failed to load products:', error);
+            }
+        }
+
+        // ==================== Delete Product ====================
+        async function deleteProduct(id) {
+            if (!confirm('Delete this product?')) return;
+
+            try {
+                await fetch(`/api/oliveyoung/products/${id}`, { method: 'DELETE' });
+                loadProducts();
+            } catch (error) {
+                alert('Delete failed: ' + error.message);
+            }
+        }
+
+        // ==================== Pagination ====================
+        function prevPage() {
+            if (currentPage > 0) {
+                currentPage--;
+                loadProducts();
+            }
+        }
+
+        function nextPage() {
+            const totalPages = Math.ceil(totalProducts / pageSize);
+            if (currentPage < totalPages - 1) {
+                currentPage++;
+                loadProducts();
+            }
+        }
+
+        // ==================== Progress Display ====================
+        function showProgress() {
+            document.getElementById('progress-section').classList.remove('hidden');
+        }
+
+        function hideProgress() {
+            document.getElementById('progress-section').classList.add('hidden');
+        }
+
+        function updateProgress(progress) {
+            const percent = progress.total > 0 ? Math.round((progress.current / progress.total) * 100) : 0;
+
+            document.getElementById('progress-fill').style.width = `${percent}%`;
+            document.getElementById('progress-current').textContent = `${progress.current} processed`;
+            document.getElementById('progress-percent').textContent = `${percent}%`;
+            document.getElementById('progress-phase').textContent = progress.phase || '';
+        }
+
+        // ==================== Logs ====================
+        function addLogMessage(log) {
+            const container = document.getElementById('log-container');
+
+            if (logMessages.length === 0) {
+                container.innerHTML = '';
+            }
+
+            logMessages.push(log);
+
+            if (logMessages.length > 500) {
+                logMessages.shift();
+                if (container.firstChild) container.removeChild(container.firstChild);
+            }
+
+            const logDiv = document.createElement('div');
+            logDiv.className = `log-line ${log.type || 'info'}`;
+
+            const time = log.timeFormatted || new Date(log.timestamp).toLocaleTimeString('en-AU', {hour: '2-digit', minute: '2-digit', second: '2-digit'});
+
+            logDiv.innerHTML = `
+                <span class="log-time">[${time}]</span>
+                <span class="log-message">${log.message}</span>
+            `;
+
+            container.appendChild(logDiv);
+
+            if (document.getElementById('auto-scroll').checked) {
+                container.scrollTop = container.scrollHeight;
+            }
+        }
+
+        function clearLogs() {
+            logMessages = [];
+            document.getElementById('log-container').innerHTML = '<p style="color: var(--text-muted);">Logs will appear here...</p>';
+        }
+
+        // ==================== Socket.io Events ====================
+        socket.on('state', (state) => {
+            const badge = document.getElementById('status-badge');
+            const text = document.getElementById('status-text');
+
+            badge.className = 'status-badge ' + (state.status || 'idle');
+
+            const statusTexts = {
+                idle: 'Idle',
+                running: 'Running',
+                paused: 'Paused',
+                error: 'Error'
+            };
+            text.textContent = state.currentPhase || statusTexts[state.status] || 'Idle';
+
+            if (state.status === 'running') {
+                showProgress();
+            } else if (state.status === 'idle') {
+                hideProgress();
+            }
+        });
+
+        socket.on('urlQueue', () => {
+            loadUrlQueue();
+        });
+
+        socket.on('log', (log) => {
+            addLogMessage(log);
+        });
+
+        socket.on('logs', (existingLogs) => {
+            existingLogs.forEach(log => addLogMessage(log));
+        });
+
+        socket.on('progress', (progress) => {
+            updateProgress(progress);
+        });
+
+        // ==================== 추가된 URL 파이프라인 실행 ====================
+        async function runPipelineForAddedUrls() {
+            if (!confirm('추가된 URL들의 전체 파이프라인을 실행하시겠습니까?')) return;
+
+            try {
+                const response = await fetch('/api/pipeline/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ productLimit: 100, phases: { phase1: true, phase2: true, phase3: true, phase4: true, phase5: true } })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    alert('✅ 파이프라인 시작됨! 실시간 로그 탭에서 진행상황을 확인하세요.');
+                    showTab('logs');
+                } else {
+                    alert('❌ 실패: ' + data.error);
+                }
+            } catch (error) {
+                alert('❌ 오류: ' + error.message);
+            }
+        }
+
+        async function runPhase1Only() {
+            if (!confirm('Phase 1 (스크래핑)만 실행하시겠습니까?')) return;
+
+            try {
+                const response = await fetch('/api/pipeline/run-phase', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phaseId: 'phase1', productLimit: 100 })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    alert('✅ Phase 1 시작됨!');
+                    showTab('logs');
+                } else {
+                    alert('❌ 실패: ' + data.error);
+                }
+            } catch (error) {
+                alert('❌ 오류: ' + error.message);
+            }
+        }
+
+        // ==================== Initial Load ====================
+        loadUrlQueue();
+        loadRecentUrls();
+    </script>
+</body>
+</html>
