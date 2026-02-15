@@ -681,6 +681,149 @@
                 padding: 16px;
             }
         }
+
+        /* ==================== SKU Dedup Toggle & Discontinued Check ==================== */
+        .settings-bar {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+            padding: 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+        .toggle-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .toggle-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        .toggle-switch {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            cursor: pointer;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .toggle-slider {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            transition: 0.3s;
+            border: 1px solid var(--border);
+        }
+        .toggle-slider:before {
+            content: "";
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            left: 2px;
+            bottom: 2px;
+            background: var(--text-muted);
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+        .toggle-switch input:checked + .toggle-slider {
+            background: var(--success);
+            border-color: var(--success);
+        }
+        .toggle-switch input:checked + .toggle-slider:before {
+            transform: translateX(20px);
+            background: white;
+        }
+        .toggle-status {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        .toggle-status.on {
+            background: rgba(34, 197, 94, 0.15);
+            color: var(--success);
+        }
+        .toggle-status.off {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--error);
+        }
+        .settings-divider {
+            width: 1px;
+            height: 32px;
+            background: var(--border);
+        }
+        .discontinued-result {
+            margin-top: 16px;
+            padding: 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            display: none;
+        }
+        .discontinued-result.show {
+            display: block;
+        }
+        .result-summary {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        .result-stat {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .result-stat.total { background: rgba(99, 102, 241, 0.15); color: #818cf8; }
+        .result-stat.active { background: rgba(34, 197, 94, 0.15); color: var(--success); }
+        .result-stat.draft { background: rgba(239, 68, 68, 0.15); color: var(--error); }
+        .result-stat.failed { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+        .result-list {
+            max-height: 300px;
+            overflow-y: auto;
+            font-size: 12px;
+            line-height: 1.8;
+            color: var(--text-secondary);
+        }
+        .result-list .item-draft { color: var(--error); }
+        .result-list .item-failed { color: var(--warning); }
+        .btn-discontinued {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+        }
+        .btn-discontinued:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+        }
+        .btn-discontinued:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .progress-bar-mini {
+            width: 100%;
+            height: 6px;
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+        .progress-bar-mini .fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--success));
+            border-radius: 3px;
+            transition: width 0.3s;
+        }
     </style>
 </head>
 <body>
@@ -755,6 +898,36 @@
                     <span id="progress-current" style="color: var(--text-secondary);">0 processed</span>
                     <span id="progress-percent" style="color: var(--text-secondary);">0%</span>
                 </div>
+            </div>
+
+            <!-- Settings Bar -->
+            <div class="settings-bar">
+                <div class="toggle-group">
+                    <span class="toggle-label">SKU 중복 방지 (Shopify)</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="sku-dedup-toggle" onchange="toggleSkuDedup(this.checked)" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span id="sku-dedup-status" class="toggle-status on">ON</span>
+                </div>
+                <div class="settings-divider"></div>
+                <button onclick="checkDiscontinued()" id="btn-discontinued" class="btn btn-discontinued btn-sm">
+                    🔍 판매 중단 제품 체크
+                </button>
+                <span id="discontinued-progress-text" style="font-size: 12px; color: var(--text-muted); display: none;"></span>
+            </div>
+
+            <!-- Discontinued Check Result -->
+            <div id="discontinued-result" class="discontinued-result">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <h4 style="margin: 0; color: var(--text-primary);">📊 판매 중단 체크 결과</h4>
+                    <button onclick="document.getElementById('discontinued-result').classList.remove('show')" class="btn btn-secondary" style="padding: 4px 12px; font-size: 12px;">닫기</button>
+                </div>
+                <div id="discontinued-progress-bar" class="progress-bar-mini" style="display: none;">
+                    <div class="fill" style="width: 0%"></div>
+                </div>
+                <div id="discontinued-summary" class="result-summary"></div>
+                <div id="discontinued-list" class="result-list"></div>
             </div>
 
             <!-- Tabs -->
@@ -1517,9 +1690,129 @@
             }
         }
 
+        // ==================== SKU Dedup Toggle ====================
+        async function loadSkuDedupSetting() {
+            try {
+                const res = await fetch('/api/settings/sku-dedup');
+                const data = await res.json();
+                const toggle = document.getElementById('sku-dedup-toggle');
+                const status = document.getElementById('sku-dedup-status');
+                toggle.checked = data.enabled;
+                status.textContent = data.enabled ? 'ON' : 'OFF';
+                status.className = 'toggle-status ' + (data.enabled ? 'on' : 'off');
+            } catch (e) { console.error('SKU dedup setting load failed:', e); }
+        }
+
+        async function toggleSkuDedup(enabled) {
+            try {
+                const res = await fetch('/api/settings/sku-dedup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ enabled })
+                });
+                const data = await res.json();
+                const status = document.getElementById('sku-dedup-status');
+                status.textContent = data.enabled ? 'ON' : 'OFF';
+                status.className = 'toggle-status ' + (data.enabled ? 'on' : 'off');
+            } catch (e) {
+                alert('설정 변경 실패: ' + e.message);
+            }
+        }
+
+        // ==================== Discontinued Product Check ====================
+        async function checkDiscontinued() {
+            if (!confirm('Shopify에 등록된 모든 제품의 올리브영 판매 상태를 체크합니다.\n판매 중단된 제품은 자동으로 Draft 처리됩니다.\n\n진행하시겠습니까?')) return;
+
+            const btn = document.getElementById('btn-discontinued');
+            const progressText = document.getElementById('discontinued-progress-text');
+            const resultDiv = document.getElementById('discontinued-result');
+            const progressBar = document.getElementById('discontinued-progress-bar');
+
+            btn.disabled = true;
+            btn.textContent = '⏳ 체크 중...';
+            progressText.style.display = 'inline';
+            progressText.textContent = '준비 중...';
+            resultDiv.classList.add('show');
+            progressBar.style.display = 'block';
+            progressBar.querySelector('.fill').style.width = '0%';
+            document.getElementById('discontinued-summary').innerHTML = '';
+            document.getElementById('discontinued-list').innerHTML = '';
+
+            try {
+                const res = await fetch('/api/check-discontinued', { method: 'POST' });
+                const data = await res.json();
+                if (!data.success) {
+                    alert('체크 실패: ' + data.error);
+                    btn.disabled = false;
+                    btn.textContent = '🔍 판매 중단 제품 체크';
+                    progressText.style.display = 'none';
+                }
+            } catch (e) {
+                alert('요청 실패: ' + e.message);
+                btn.disabled = false;
+                btn.textContent = '🔍 판매 중단 제품 체크';
+                progressText.style.display = 'none';
+            }
+        }
+
+        socket.on('discontinuedProgress', (data) => {
+            const progressText = document.getElementById('discontinued-progress-text');
+            const progressBar = document.getElementById('discontinued-progress-bar');
+            progressText.style.display = 'inline';
+            progressText.textContent = data.message;
+            if (data.total > 0 && data.current > 0) {
+                const pct = Math.round((data.current / data.total) * 100);
+                progressBar.querySelector('.fill').style.width = pct + '%';
+            }
+        });
+
+        socket.on('discontinuedResult', (results) => {
+            const btn = document.getElementById('btn-discontinued');
+            const progressText = document.getElementById('discontinued-progress-text');
+            const progressBar = document.getElementById('discontinued-progress-bar');
+            const summaryDiv = document.getElementById('discontinued-summary');
+            const listDiv = document.getElementById('discontinued-list');
+
+            btn.disabled = false;
+            btn.textContent = '🔍 판매 중단 제품 체크';
+            progressText.style.display = 'none';
+            progressBar.style.display = 'none';
+
+            if (results.error) {
+                summaryDiv.innerHTML = `<span class="result-stat failed">오류: ${results.error}</span>`;
+                return;
+            }
+
+            summaryDiv.innerHTML = `
+                <span class="result-stat total">체크 완료: ${results.total}개</span>
+                <span class="result-stat active">정상 판매: ${results.active}개</span>
+                <span class="result-stat draft">판매 중단 → Draft: ${results.discontinued.length}개</span>
+                <span class="result-stat failed">체크 실패: ${results.failed.length}개</span>
+            `;
+
+            let listHtml = '';
+            if (results.discontinued.length > 0) {
+                listHtml += '<div style="margin-bottom: 8px; font-weight: 600; color: var(--error);">⛔ 판매 중단 (Draft 처리됨):</div>';
+                results.discontinued.forEach(p => {
+                    listHtml += `<div class="item-draft">[${p.sku}] ${p.title}</div>`;
+                });
+            }
+            if (results.failed.length > 0) {
+                listHtml += '<div style="margin-top: 8px; margin-bottom: 8px; font-weight: 600; color: var(--warning);">⚠️ 체크 실패:</div>';
+                results.failed.forEach(p => {
+                    listHtml += `<div class="item-failed">[${p.sku}] ${p.title} - ${p.error}</div>`;
+                });
+            }
+            if (results.discontinued.length === 0 && results.failed.length === 0) {
+                listHtml = '<div style="color: var(--success);">모든 제품이 정상 판매 중입니다.</div>';
+            }
+            listDiv.innerHTML = listHtml;
+        });
+
         // ==================== Initial Load ====================
         loadUrlQueue();
         loadRecentUrls();
+        loadSkuDedupSetting();
     </script>
 </body>
 </html>

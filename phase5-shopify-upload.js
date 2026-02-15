@@ -114,6 +114,38 @@ const shopifyApi = axios.create({
     timeout: 120000  // 이미지 업로드 때문에 타임아웃 증가
 });
 
+// ==================== Shopify 기존 SKU 가져오기 (중복 방지) ====================
+async function getShopifyExistingSkus() {
+    try {
+        log('🛒 Shopify에서 기존 SKU 가져오는 중...');
+        const skus = new Set();
+        let nextPageUrl = `https://${SHOPIFY_STORE_URL}/admin/api/${SHOPIFY_API_VERSION}/products.json?limit=250&fields=id,variants`;
+        while (nextPageUrl) {
+            const response = await axios.get(nextPageUrl, {
+                headers: { 'X-Shopify-Access-Token': SHOPIFY_ACCESS_TOKEN },
+                timeout: 30000
+            });
+            for (const product of (response.data.products || [])) {
+                for (const variant of (product.variants || [])) {
+                    if (variant.sku) skus.add(variant.sku);
+                }
+            }
+            nextPageUrl = null;
+            const linkHeader = response.headers['link'];
+            if (linkHeader) {
+                const nextMatch = linkHeader.match(/<([^>]+)>;\s*rel="next"/);
+                if (nextMatch) nextPageUrl = nextMatch[1];
+            }
+            if (nextPageUrl) await new Promise(r => setTimeout(r, 500));
+        }
+        log(`   ✅ Shopify 기존 SKU: ${skus.size}개`);
+        return skus;
+    } catch (error) {
+        log(`   ⚠️  Shopify SKU 조회 실패: ${error.message} → 중복 체크 없이 진행`);
+        return new Set();
+    }
+}
+
 // ==================== 브랜드명 추출 ====================
 function extractBrandFromTitle(title) {
     if (!title) return 'K-Beauty';
@@ -428,16 +460,27 @@ async function main() {
         return;
     }
     
+    // 2.5. Shopify SKU 중복 체크 (이중 안전장치)
+    const existingSkus = await getShopifyExistingSkus();
+
     stats.total = products.length;
     log(`\n📦 총 ${stats.total}개 제품 업로드 시작`);
     log('='.repeat(70));
-    
+
     // 3. 각 제품 업로드
     for (let i = 0; i < products.length; i++) {
         const product = products[i];
-        
+
+        // SKU 중복 체크
+        const productSku = product.oliveyoung_product_id;
+        if (productSku && existingSkus.has(productSku)) {
+            log(`\n[${i + 1}/${products.length}] ⚠️  SKU 중복 → 건너뛰기: ${productSku}`);
+            stats.skipped++;
+            continue;
+        }
+
         log(`\n[${i + 1}/${products.length}] 처리 중...`);
-        
+
         await createShopifyProduct(product);
         
         // Rate limiting (이미지 업로드 때문에 5초로 증가)

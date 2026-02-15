@@ -290,7 +290,14 @@ async function collectUrls() {
     }
     
     // ✅ Step 1: Shopify 기존 SKU 확인 (가장 먼저!)
-    const shopifySkus = await getShopifyExistingSkus();
+    const skuDedupEnabled = process.env.SKU_DEDUP_ENABLED !== 'false';
+    let shopifySkus;
+    if (skuDedupEnabled) {
+        shopifySkus = await getShopifyExistingSkus();
+    } else {
+        log('⚠️  SKU 중복 방지 비활성화됨 (SKU_DEDUP_ENABLED=false) → Shopify SKU 체크 스킵');
+        shopifySkus = new Set();
+    }
     
     // ✅ Step 2: NocoDB 기존 SKU 확인
     const nocodbSkus = await getExistingSkus();
