@@ -390,16 +390,6 @@ print('✅ 흰색 배경 추가 완료')
         if (fs.existsSync(outputPath)) {
             const sizeKB = (fs.statSync(outputPath).size / 1024).toFixed(1);
             log(`   ✅ 배경 제거 + 흰색 배경 완료 (${sizeKB}KB, ${duration}초 소요)`);
-
-            // rembg 품질 검증: 출력이 입력의 5% 미만이면 제품이 거의 없는 이미지
-            try {
-                const outputSize = fs.statSync(outputPath).size;
-                const inputSize = fs.statSync(inputPath).size;
-                if (inputSize > 0 && outputSize < inputSize * 0.05) {
-                    log(`   ⚠️  rembg 품질 의심: 출력 ${(outputSize/1024).toFixed(1)}KB / 입력 ${(inputSize/1024).toFixed(1)}KB (${(outputSize/inputSize*100).toFixed(1)}%)`);
-                }
-            } catch (sizeErr) { /* 크기 검증 실패해도 진행 */ }
-
             return true;
         } else {
             log('   ❌ 출력 파일 생성 실패');

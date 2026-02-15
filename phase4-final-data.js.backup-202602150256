@@ -1013,7 +1013,7 @@ async function searchNaverImages(titleKr, maxImages = 15) {
                     thumbnails.forEach((img, index) => {
                         const thumbnailUrl = img.src;
                         
-                        if (!thumbnailUrl || !thumbnailUrl.includes('search.pstatic.net')) {
+                        if (!thumbnailUrl || !thumbnailUrl.includes('search.pstatic.net/common')) {
                             return;
                         }
                         
@@ -1045,43 +1045,7 @@ async function searchNaverImages(titleKr, maxImages = 15) {
                         imageUrls.push(item.original);
                     });
                 }
-
-                // 보충: 쇼핑 섹션 고품질 이미지 추출 (200px 이상, 기존 셀렉터에 잡히지 않는 것)
-                // 쇼핑 섹션 보충은 기존 추출 수와 관계없이 항상 실행 (고품질 상품 이미지 우선 확보)
-                {
-                    const shoppingUrls = await page.evaluate((existingUrls) => {
-                        const results = [];
-                        const existing = new Set(existingUrls);
-                        const imgs = document.querySelectorAll('img');
-                        imgs.forEach((img) => {
-                            const w = img.naturalWidth || img.width || 0;
-                            if (w < 200) return;
-                            if (img.className && img.className.includes('_fe_image_tab_content_thumbnail_image')) return;
-                            const src = img.src;
-                            if (!src || !src.includes('search.pstatic.net')) return;
-                            try {
-                                const url = new URL(src);
-                                const srcParam = url.searchParams.get('src');
-                                if (srcParam) {
-                                    const originalUrl = decodeURIComponent(srcParam);
-                                    if (originalUrl.startsWith('http') && !existing.has(originalUrl)) {
-                                        results.push(originalUrl);
-                                    }
-                                }
-                            } catch (e) {}
-                        });
-                        return results;
-                    }, [...imageUrls]);
-
-                    if (shoppingUrls.length > 0) {
-                        log(`   🛒 쇼핑 섹션 보충: ${shoppingUrls.length}개`);
-                        shoppingUrls.forEach(url => {
-                            log(`      + ${url.substring(0, 80)}...`);
-                            imageUrls.push(url);
-                        });
-                    }
-                }
-
+                
             } catch (error) {
                 log('   ❌ 페이지 처리 오류:', error.message);
             }
@@ -1546,9 +1510,7 @@ async function processProduct(product, productIndex, totalProducts) {
         if (existingUrls.some(eu => eu && (eu.includes(lowerUrl) || lowerUrl.includes(eu)))) return false;
         return true;
     });
-
-    log(`   📊 네이버 URL 필터: ${naverUrls.length}개 → ${filteredUrls.length}개 (${naverUrls.length - filteredUrls.length}개 제외)`);
-
+    
     log(`\n🖼️  Step 8: 네이버 처리`);
     
     const naverProcessed = [];
