@@ -1,31 +1,31 @@
 {
-  "requestsFinished": 185,
+  "requestsFinished": 208,
   "requestsFailed": 0,
   "requestsRetries": 19,
   "requestsFailedPerMinute": 0,
   "requestsFinishedPerMinute": 2,
-  "requestMinDurationMillis": 18707,
+  "requestMinDurationMillis": 18565,
   "requestMaxDurationMillis": 61220,
   "requestTotalFailedDurationMillis": 0,
-  "requestTotalFinishedDurationMillis": 4762033,
+  "requestTotalFinishedDurationMillis": 5355982,
   "crawlerStartedAt": "2026-02-16T11:39:18.381Z",
   "crawlerFinishedAt": null,
-  "statsPersistedAt": "2026-02-16T12:59:18.869Z",
-  "crawlerRuntimeMillis": 4800975,
+  "statsPersistedAt": "2026-02-16T13:09:18.995Z",
+  "crawlerRuntimeMillis": 5401101,
   "crawlerLastStartTimestamp": 1771241957894,
   "requestRetryHistogram": [
-    166,
+    189,
     16,
     3
   ],
   "statsId": 0,
   "requestAvgFailedDurationMillis": null,
-  "requestAvgFinishedDurationMillis": 25741,
-  "requestTotalDurationMillis": 4762033,
-  "requestsTotal": 185,
+  "requestAvgFinishedDurationMillis": 25750,
+  "requestTotalDurationMillis": 5355982,
+  "requestsTotal": 208,
   "requestsWithStatusCode": {
-    "200": 186,
-    "403": 22
+    "200": 209,
+    "403": 30
   },
   "errors": {},
   "retryErrors": {
@@ -33,7 +33,7 @@
       "missing error code": {
         "Error": {
           "Request blocked - received 403 status code.": {
-            "count": 22
+            "count": 30
           }
         }
       }
