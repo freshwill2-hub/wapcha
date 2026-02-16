@@ -744,14 +744,7 @@ async function processProduct(product, productIndex, totalProducts) {
                     const cropArea = coords.width * coords.height;
                     const originalArea = dimensions.width * dimensions.height;
                     if (cropArea < originalArea * 0.3) {
-                        log(`      ⚠️  크롭 영역이 원본의 ${(cropArea / originalArea * 100).toFixed(1)}%로 너무 작음 → 원본으로 진행`);
-                        fs.copyFileSync(inputPath, finalPath);
-                        const fileName = `final-${Id}-${i + 1}-${timestamp}.png`;
-                        const uploadedData = await uploadToNocoDB(finalPath, fileName);
-                        const uploadInfoSmall = uploadedData[0];
-                        uploadInfoSmall.originalUrl = imageUrl;
-                        validatedImages.push(uploadInfoSmall);
-                        log(`      📤 저장 완료! (원본 사용 - 크롭 영역 부족)`);
+                        log(`      ⚠️  크롭 영역이 원본의 ${(cropArea / originalArea * 100).toFixed(1)}%로 너무 작음 → 건너뛰기 (배지 포함 이미지 사용 방지)`);
                         cleanupFiles(inputPath, croppedPath, finalPath);
                         continue;
                     }
@@ -768,24 +761,14 @@ async function processProduct(product, productIndex, totalProducts) {
                         validatedImages.push(uploadInfo3);
                         log(`      📤 저장 완료! (배지 제거됨)`);
                     } else {
-                        log(`      ⚠️ 크롭 실패 → 원본으로 진행 (배지 포함 원본 사용)`);
-                        fs.copyFileSync(inputPath, finalPath);
-                        const fileName = `final-${Id}-${i + 1}-${timestamp}.png`;
-                        const uploadedData = await uploadToNocoDB(finalPath, fileName);
-                        const uploadInfo3b = uploadedData[0];
-                        uploadInfo3b.originalUrl = imageUrl;
-                        validatedImages.push(uploadInfo3b);
-                        log(`      📤 저장 완료! (원본 사용 - 크롭 실패)`);
+                        log(`      ❌ 크롭 실패 → 건너뛰기 (배지 포함 이미지 사용 방지)`);
+                        cleanupFiles(inputPath, croppedPath, finalPath);
+                        continue;
                     }
                 } else {
-                    log(`      ⚠️ 좌표 획득 실패 → 원본으로 진행 (배지 포함 원본 사용)`);
-                    fs.copyFileSync(inputPath, finalPath);
-                    const fileName = `final-${Id}-${i + 1}-${timestamp}.png`;
-                    const uploadedData = await uploadToNocoDB(finalPath, fileName);
-                    const uploadInfo3c = uploadedData[0];
-                    uploadInfo3c.originalUrl = imageUrl;
-                    validatedImages.push(uploadInfo3c);
-                    log(`      📤 저장 완료! (원본 사용 - 좌표 실패)`);
+                    log(`      ❌ 좌표 획득 실패 → 건너뛰기 (배지 포함 이미지 사용 방지)`);
+                    cleanupFiles(inputPath, croppedPath, finalPath);
+                    continue;
                 }
 
             } else if (analysis.action === 'CROP_SINGLE') {

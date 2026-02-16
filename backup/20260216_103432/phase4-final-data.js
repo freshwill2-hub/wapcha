@@ -1477,71 +1477,33 @@ async function processProduct(product, productIndex, totalProducts) {
     }
     
     log(`   선별됨: ${selectedForSave.length}개 (메인 최소: ${MIN_SCORE_FOR_MAIN}점, 갤러리 최소: ${MIN_SCORE_FOR_GALLERY}점)`);
-
-    // ✅ 절대 폴백: 점수 기반 선별에서 아무것도 선택되지 않았을 때 강제로 1개 확보
-    if (selectedForSave.length === 0 && uniqueImages.length > 0) {
-        log(`\n🔄 절대 폴백 발동: 모든 이미지가 점수 미달 → 강제로 최선 이미지 1개 확보`);
-
-        let fallbackImage = null;
-
-        // (a) totalScore > 0인 최고 점수 이미지
-        const positiveScoreImages = uniqueImages.filter(img => img.totalScore > 0);
-        if (positiveScoreImages.length > 0) {
-            fallbackImage = positiveScoreImages[0]; // 이미 점수순 정렬됨
-            log(`   ✅ 폴백(a): totalScore > 0 최고 점수 이미지 사용 (${fallbackImage.totalScore}점)`);
-        }
-
-        // (b) 모두 totalScore <= 0이면 → rawScore(감점 전 합산) 가장 높은 것
-        if (!fallbackImage) {
-            const byRawScore = uniqueImages.map(img => ({
-                ...img,
-                rawScore: img.scores.resolution + img.scores.completeness + img.scores.titleMatch + img.scores.setComposition + img.scores.quality
-            })).sort((a, b) => b.rawScore - a.rawScore);
-
-            if (byRawScore.length > 0 && byRawScore[0].rawScore > 0) {
-                fallbackImage = byRawScore[0];
-                log(`   ✅ 폴백(b): rawScore 최고 이미지 강제 사용 (rawScore: ${byRawScore[0].rawScore}, totalScore: ${fallbackImage.totalScore}점)`);
-            }
-        }
-
-        // (c) 그마저도 없으면 → validated_images의 첫 번째 이미지를 그대로 사용
-        if (!fallbackImage && uniqueImages.length > 0) {
-            fallbackImage = uniqueImages[0];
-            log(`   ✅ 폴백(c): 첫 번째 이미지 강제 사용 (${fallbackImage.totalScore}점)`);
-        }
-
-        if (fallbackImage) {
-            selectedForSave.push(fallbackImage);
-            log(`   🎯 절대 폴백 이미지 1개 확보 완료`);
-        }
-    }
-
+    
     log(`\n📐 Step 4: 정규화 + 업로드`);
-
+    
     const processedImages = [];
-
+    
     for (let i = 0; i < selectedForSave.length; i++) {
         const selected = selectedForSave[i];
-
+        
         log(`\n   ${i + 1}/${selectedForSave.length} 처리 중...`);
-
+        
         if (!selected || !selected.imagePath || !fs.existsSync(selected.imagePath)) {
             log('      ❌ 유효하지 않은 이미지');
             continue;
         }
-
+        
         const normalizedPath = normalizeImage(selected.imagePath);
         if (!normalizedPath || !fs.existsSync(normalizedPath)) {
             log('      ❌ 정규화 실패');
             cleanupFiles(selected.imagePath);
             continue;
         }
-
+        
         try {
             log('      📤 NocoDB 업로드 중...');
             const fileName = `final-${Id}-${i + 1}-${Date.now()}.png`;
             const uploadResult = await uploadToNocoDB(normalizedPath, fileName);
-
+            
             if (uploadResult && uploadResult.length > 0) {
                 processedImages.push(uploadResult[0]);
                 log('      ✅ 완료!');
@@ -1549,10 +1511,10 @@ async function processProduct(product, productIndex, totalProducts) {
         } catch (uploadError) {
             log('      ❌ 업로드 오류:', uploadError.message);
         }
-
+        
         cleanupFiles(selected.imagePath, normalizedPath);
     }
-
+    
     if (processedImages.length === 0) {
         log('\n⚠️  처리된 이미지 없음 → 네이버 보충 시도');
         scoredImages.forEach(img => cleanupFiles(img.imagePath));

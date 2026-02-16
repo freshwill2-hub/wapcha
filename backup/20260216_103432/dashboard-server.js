@@ -9,7 +9,6 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
-import ExcelJS from 'exceljs';
 
 dotenv.config({ path: './.env' });
 
@@ -1744,114 +1743,6 @@ app.get('/api/shopify-skus', async (req, res) => {
         res.json({ skus, count: skus.length });
     } catch (error) {
         res.status(500).json({ error: error.message });
-    }
-});
-
-// ==================== NocoDB 엑셀 다운로드 API ====================
-app.get('/api/export-excel', async (req, res) => {
-    try {
-        addLog('info', '📥 엑셀 다운로드 요청 시작');
-
-        // NocoDB에서 모든 레코드 가져오기 (페이지네이션)
-        const allRecords = [];
-        let offset = 0;
-        const pageSize = 200;
-
-        while (true) {
-            const response = await axios.get(
-                `${NOCODB_API_URL}/api/v2/tables/${SHOPIFY_TABLE_ID}/records`,
-                {
-                    headers: { 'xc-token': NOCODB_API_TOKEN },
-                    params: { limit: pageSize, offset: offset }
-                }
-            );
-
-            const records = response.data.list || [];
-            allRecords.push(...records);
-
-            if (records.length < pageSize) break;
-            offset += pageSize;
-        }
-
-        addLog('info', `📊 총 ${allRecords.length}개 레코드 로드 완료`);
-
-        // ExcelJS 워크북 생성
-        const workbook = new ExcelJS.Workbook();
-        workbook.creator = 'Copychu Dashboard';
-        workbook.created = new Date();
-
-        const worksheet = workbook.addWorksheet('Shopify Products');
-
-        // 헤더 정의
-        worksheet.columns = [
-            { header: 'Id', key: 'Id', width: 8 },
-            { header: 'Title (EN)', key: 'title_en', width: 40 },
-            { header: 'Title (KR)', key: 'title_kr', width: 40 },
-            { header: 'Price (AUD)', key: 'price_aud', width: 12 },
-            { header: 'Description', key: 'description', width: 50 },
-            { header: 'Main Image URL', key: 'main_image', width: 60 },
-            { header: 'Gallery Images URL', key: 'gallery_images', width: 80 },
-            { header: 'Shopify Product ID', key: 'shopify_product_id', width: 20 },
-            { header: 'Uploaded At', key: 'uploaded_at', width: 22 }
-        ];
-
-        // 헤더 스타일
-        worksheet.getRow(1).font = { bold: true };
-        worksheet.getRow(1).fill = {
-            type: 'pattern',
-            pattern: 'solid',
-            fgColor: { argb: 'FF22D3EE' }
-        };
-
-        // 데이터 추가
-        for (const record of allRecords) {
-            // 이미지 URL 추출
-            let mainImageUrl = '';
-            if (record.main_image) {
-                const img = Array.isArray(record.main_image) ? record.main_image[0] : record.main_image;
-                if (img) {
-                    mainImageUrl = img.url || (img.path ? `${NOCODB_API_URL}/${img.path}` : '');
-                }
-            }
-
-            let galleryUrls = '';
-            if (record.gallery_images && Array.isArray(record.gallery_images)) {
-                galleryUrls = record.gallery_images.map(img => {
-                    return img.url || (img.path ? `${NOCODB_API_URL}/${img.path}` : '');
-                }).filter(u => u).join(' | ');
-            }
-
-            worksheet.addRow({
-                Id: record.Id,
-                title_en: record.title_en || '',
-                title_kr: record.title_kr || '',
-                price_aud: record.price_aud || '',
-                description: record.description_en || record.description || '',
-                main_image: mainImageUrl,
-                gallery_images: galleryUrls,
-                shopify_product_id: record.shopify_product_id || '',
-                uploaded_at: record.uploaded_at || ''
-            });
-        }
-
-        // 파일명 생성
-        const today = new Date().toISOString().split('T')[0];
-        const filename = `copychu-export-${today}.xlsx`;
-
-        // 응답 헤더 설정
-        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-
-        // 엑셀 파일을 스트림으로 전송
-        await workbook.xlsx.write(res);
-        res.end();
-
-        addLog('success', `✅ 엑셀 다운로드 완료: ${filename} (${allRecords.length}개 레코드)`);
-
-    } catch (error) {
-        console.error('❌ 엑셀 다운로드 실패:', error.message);
-        addLog('error', `❌ 엑셀 다운로드 실패: ${error.message}`);
-        res.status(500).json({ error: '엑셀 다운로드 실패: ' + error.message });
     }
 });
 
