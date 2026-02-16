@@ -1030,10 +1030,6 @@ async function processBatch(productsToProcess) {
         log('🧹 storage 디렉토리 삭제 완료');
     }
 
-    // ✅ v18: 기본 디렉토리 재생성 (Crawlee SessionPool이 요구)
-    fs.mkdirSync(path.join(storageDir, 'key_value_stores', 'default'), { recursive: true });
-    log('📁 storage 기본 디렉토리 재생성 완료');
-
     // 배치별 카운터 초기화
     processedCount = 0;
     successCount = 0;
@@ -1560,18 +1556,6 @@ async function processBatch(productsToProcess) {
                             // 영문만으로 구성된 브랜드명이면 그대로 사용
                             if (/^[A-Za-z\s.'&:+-]+$/.test(productData.brandKr.trim())) {
                                 productData.brandEn = productData.brandKr.trim();
-                            }
-                        }
-                    }
-
-                    // ✅ v18: CSS 셀렉터 실패 시 rawTitle에서 브랜드 추출 (fallback)
-                    if (!productData.brandKr && productData.rawTitle) {
-                        const sortedBrands = Object.keys(BRAND_KR_TO_EN).sort((a, b) => b.length - a.length);
-                        for (const krName of sortedBrands) {
-                            if (productData.rawTitle.includes(krName)) {
-                                productData.brandKr = krName;
-                                productData.brandEn = BRAND_KR_TO_EN[krName];
-                                break;
                             }
                         }
                     }
