@@ -292,33 +292,6 @@ print(f'{img.width},{img.height}')
 }
 
 // ==================== 제품명에서 정보 추출 ====================
-
-// ✅ v18: 멀티 워드 브랜드 인식을 위한 알려진 브랜드 목록
-const KNOWN_BRANDS = [
-    // 2+ word English brands (longer first for greedy match)
-    'beauty of joseon', 'la roche-posay', 'la roche posay',
-    'round lab', 'one thing', 'skin food', 'thank you farmer',
-    'by wishtrend', 'dear klairs', 'heimish all clean',
-    'some by mi', 'banila co', 'holika holika', 'too cool for school',
-    'son & park', "it's skin",
-    // Single-word brands with special chars
-    "rom&nd", 'romand', 'dr.g', 'dr.jart+', 'dr.jart', 'dr. jart',
-    'ma:nyo', 'manyo', "d'alba", 'dalba',
-    // Common K-beauty brands
-    'cosrx', 'anua', 'torriden', 'numbuzin', 'mediheal', 'innisfree',
-    'missha', 'etude', 'laneige', 'sulwhasoo', 'hera', 'aestura',
-    'goodal', 'isoi', 'skinfood', 'wellage', 'parnell', 'clio',
-    'tonymoly', 'nature republic', 'the saem', 'mamonde', 'iope',
-    'cnp', 'fation', 'abib', 'skin1004', 'mixsoon', 'biodance',
-    'medicube', 'nacific', 'purito', 'klairs', 'benton', 'iunik',
-    'pyunkang yul', 'illiyoon', 'cerave', 'bioderma', 'avene',
-    'biotherm', 'vichy', 'uriage', 'eucerin', 'ongreedients',
-    'axis-y', 'axis y', 'needly', 'tocobo', 'haruharu wonder',
-    'haruharu', 'tirtir', 'peripera', 'espoir', 'jung saem mool',
-    'jungsamool', 'vt cosmetics', 'vt', 'bring green', 'apieu',
-    "a'pieu", 's.nature',
-];
-
 function extractProductInfo(productTitle) {
     const info = {
         brandName: null,
@@ -329,33 +302,19 @@ function extractProductInfo(productTitle) {
         setCount: null,
         isSetProduct: false
     };
-
-    // ✅ v18: 알려진 멀티 워드 브랜드 먼저 매칭
-    const titleLower = productTitle.toLowerCase();
-    let brandFound = false;
-    for (const brand of KNOWN_BRANDS) {
-        if (titleLower.startsWith(brand + ' ') || titleLower === brand) {
-            info.brandName = brand;
-            brandFound = true;
-            break;
+    
+    // ✅ v11: 영문 + 한국어 + 확장 라틴 브랜드 모두 인식
+    const brandMatch = productTitle.match(/^([A-Za-z\u00C0-\u024F]+)/);
+    if (brandMatch) {
+        info.brandName = brandMatch[1].toLowerCase();
+    } else {
+        const koreanBrandMatch = productTitle.match(/^([가-힣A-Za-z0-9]+)/);
+        if (koreanBrandMatch) {
+            info.brandName = koreanBrandMatch[1].toLowerCase();
         }
     }
-
-    // 기존 로직 fallback: 알려진 브랜드가 아니면 첫 단어(들) 추출
-    if (!brandFound) {
-        // 특수문자 포함 브랜드 패턴: Dr.G, rom&nd, d'Alba, Ma:nyo
-        const specialBrandMatch = productTitle.match(/^([A-Za-z\u00C0-\u024F][A-Za-z\u00C0-\u024F.'&:+-]*)/);
-        if (specialBrandMatch) {
-            info.brandName = specialBrandMatch[1].toLowerCase().trim();
-        } else {
-            const koreanBrandMatch = productTitle.match(/^([가-힣A-Za-z0-9]+)/);
-            if (koreanBrandMatch) {
-                info.brandName = koreanBrandMatch[1].toLowerCase();
-            }
-        }
-    }
-
-    const productLineMatch = productTitle.match(/^[A-Za-z][A-Za-z\s.'&:+-]*?\s+(.+?)(?:\s+\d+\s*(?:ml|mL|g|G|pcs|개)|\s+Set|\s+세트|$)/i);
+    
+    const productLineMatch = productTitle.match(/^[A-Za-z]+\s+(.+?)(?:\s+\d+\s*(?:ml|mL|g|G|pcs|개)|\s+Set|\s+세트|$)/i);
     if (productLineMatch) {
         info.productLineName = productLineMatch[1].trim().toLowerCase();
     }

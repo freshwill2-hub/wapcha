@@ -111,87 +111,6 @@ const MEMORY_CHECK_INTERVAL = 5;
 
 const openai = OPENAI_API_KEY ? new OpenAI({ apiKey: OPENAI_API_KEY }) : null;
 
-// ✅ v18: 한국어→영문 브랜드 매핑 테이블
-const BRAND_KR_TO_EN = {
-    // 주요 K-뷰티 브랜드
-    '차앤박': 'CNP Laboratory',
-    'CNP': 'CNP Laboratory',
-    '파티온': 'FATION',
-    '에스네이처': 'S.Nature',
-    '아누아': 'Anua',
-    '코스알엑스': 'COSRX',
-    'COSRX': 'COSRX',
-    '달바': "d'Alba",
-    '토리든': 'Torriden',
-    '라운드랩': 'Round Lab',
-    '넘버즈인': 'numbuzin',
-    '메디힐': 'MEDIHEAL',
-    '이니스프리': 'innisfree',
-    '미샤': 'MISSHA',
-    '설화수': 'Sulwhasoo',
-    '라네즈': 'LANEIGE',
-    '에뛰드': 'ETUDE',
-    '헤라': 'HERA',
-    '아이오페': 'IOPE',
-    '마몽드': 'Mamonde',
-    '닥터지': 'Dr.G',
-    '클리오': 'CLIO',
-    '롬앤': "rom&nd",
-    '성분에디터': 'Ongreedients',
-    '조선미녀': 'Beauty of Joseon',
-    '스킨푸드': 'SKINFOOD',
-    '마녀공장': 'Ma:nyo',
-    '구달': 'Goodal',
-    '아이소이': 'isoi',
-    '에스트라': 'Aestura',
-    '파넬': 'Parnell',
-    '웰라쥬': 'Wellage',
-    '토니모리': 'TONYMOLY',
-    '네이처리퍼블릭': 'Nature Republic',
-    '더샘': 'The Saem',
-    '아비브': 'ABIB',
-    '스킨1004': 'SKIN1004',
-    '믹순': 'Mixsoon',
-    '바이오던스': 'BIODANCE',
-    '메디큐브': 'Medicube',
-    '나시픽': 'NACIFIC',
-    '퓨리토': 'PURITO',
-    '디어클레어스': 'Dear Klairs',
-    '클레어스': 'Dear Klairs',
-    '벤튼': 'Benton',
-    '아이유닉': 'iUNIK',
-    '편강율': 'Pyunkang Yul',
-    '일리윤': 'Illiyoon',
-    '페리페라': 'Peripera',
-    '에스쁘아': 'espoir',
-    '정샘물': 'Jung Saem Mool',
-    '바이위시트렌드': 'By Wishtrend',
-    '썸바이미': 'Some By Mi',
-    '바닐라코': 'Banila Co',
-    '홀리카홀리카': 'Holika Holika',
-    '잇츠스킨': "It's Skin",
-    '티르티르': 'TIRTIR',
-    '에이피큐': "A'pieu",
-    '어퓨': "A'pieu",
-    '브링그린': 'Bring Green',
-    '니들리': 'Needly',
-    '토코보': 'Tocobo',
-    '하루하루원더': 'Haruharu Wonder',
-    '액시스와이': 'AXIS-Y',
-    // 해외 브랜드
-    '바이오더마': 'Bioderma',
-    '아벤느': 'Avène',
-    '라로슈포제': 'La Roche-Posay',
-    '비오템': 'Biotherm',
-    '비쉬': 'Vichy',
-    '유리아쥬': 'Uriage',
-    '유세린': 'Eucerin',
-    '세라비': 'CeraVe',
-    '원씽': 'One Thing',
-    '브이티': 'VT Cosmetics',
-    '브이티코스메틱': 'VT Cosmetics',
-};
-
 log('🚀 Phase 1: 제품 상세 스크래핑 (v2.9.2 - 배치 반복 처리 추가)');
 log('='.repeat(70));
 log('🔧 설정 확인:');
@@ -1123,8 +1042,6 @@ async function processBatch(productsToProcess) {
                     const productData = await page.evaluate(() => {
                         const result = {
                             rawTitle: '',
-                            brandKr: '',
-                            brandEn: '',
                             priceOriginal: 0,
                             priceDiscount: 0,
                             infoTable: {
@@ -1138,59 +1055,6 @@ async function processBatch(productsToProcess) {
                             expectedImageCount: 0,
                             debugInfo: ''
                         };
-
-                        // ===== 브랜드 추출 =====
-                        const brandSelectors = [
-                            '.prd_brand_area a',
-                            '.prd_brand_area',
-                            '.brand_name a',
-                            '.brand_name',
-                            '[class*="brand"] a',
-                            'a[href*="brandShop"]',
-                            '.prd_detail_box .brand_like a',
-                            '.goods-brand a',
-                        ];
-
-                        for (const selector of brandSelectors) {
-                            try {
-                                const el = document.querySelector(selector);
-                                if (el) {
-                                    const text = el.textContent.trim();
-                                    if (text.length >= 2 && text.length < 50) {
-                                        result.brandKr = text;
-                                        break;
-                                    }
-                                }
-                            } catch (e) {}
-                        }
-
-                        // JSON-LD에서 브랜드 추출 시도
-                        if (!result.brandKr) {
-                            try {
-                                const jsonLd = document.querySelector('script[type="application/ld+json"]');
-                                if (jsonLd) {
-                                    const data = JSON.parse(jsonLd.textContent);
-                                    if (data.brand && data.brand.name) {
-                                        result.brandKr = data.brand.name;
-                                    } else if (data['@graph']) {
-                                        const productItem = data['@graph'].find(item => item['@type'] === 'Product');
-                                        if (productItem && productItem.brand && productItem.brand.name) {
-                                            result.brandKr = productItem.brand.name;
-                                        }
-                                    }
-                                }
-                            } catch (e) {}
-                        }
-
-                        // meta 태그에서 브랜드 추출 시도
-                        if (!result.brandKr) {
-                            try {
-                                const ogBrand = document.querySelector('meta[property="product:brand"]');
-                                if (ogBrand && ogBrand.content) {
-                                    result.brandKr = ogBrand.content.trim();
-                                }
-                            } catch (e) {}
-                        }
                         
                         // ===== 타이틀 추출 =====
                         const titleSelectors = [
@@ -1546,24 +1410,8 @@ async function processBatch(productsToProcess) {
                         return result;
                     });
                     
-                    // ✅ v18: 브랜드 한국어→영문 변환
-                    if (productData.brandKr) {
-                        // 매핑 테이블에서 먼저 찾기
-                        const mappedBrand = BRAND_KR_TO_EN[productData.brandKr] || BRAND_KR_TO_EN[productData.brandKr.trim()];
-                        if (mappedBrand) {
-                            productData.brandEn = mappedBrand;
-                        } else {
-                            // 영문만으로 구성된 브랜드명이면 그대로 사용
-                            if (/^[A-Za-z\s.'&:+-]+$/.test(productData.brandKr.trim())) {
-                                productData.brandEn = productData.brandKr.trim();
-                            }
-                        }
-                    }
-
                     log(`📋 추출된 정보:`);
                     log(`   타이틀: ${productData.rawTitle ? productData.rawTitle.substring(0, 60) + '...' : '❌ 없음'}`);
-                    log(`   🏷️  브랜드(한): ${productData.brandKr || '❌ 없음'}`);
-                    log(`   🏷️  브랜드(영): ${productData.brandEn || '❌ 없음'}`);
                     log(`   정가: ${productData.priceOriginal ? '₩' + productData.priceOriginal.toLocaleString() : '❌ 없음'}`);
                     log(`   할인가: ${productData.priceDiscount ? '₩' + productData.priceDiscount.toLocaleString() : '❌ 없음'}`);
                     log(`   🖼️  메인 갤러리 이미지: ${productData.imageUrls.length}개 (예상: ${productData.expectedImageCount || '?'}개)`);
@@ -1574,7 +1422,7 @@ async function processBatch(productsToProcess) {
                     log(`      사용기한: ${productData.infoTable.expiry || '❌ 없음'}`);
                     log(`      사용방법: ${productData.infoTable.usage ? productData.infoTable.usage.substring(0, 40) + '...' : '❌ 없음'}`);
                     log(`      성분: ${productData.infoTable.ingredients ? productData.infoTable.ingredients.substring(0, 40) + '...' : '❌ 없음'}`);
-
+                    
                     // 1. 타이틀 처리
                     let cleanedTitle = '';
                     let detectedSetInfo = null;
@@ -1626,15 +1474,6 @@ async function processBatch(productsToProcess) {
                         if (missingFields.needsTitleEn) {
                             const englishTitle = await translateToEnglish(cleanedTitle);
                             if (englishTitle) {
-                                // ✅ v18: 스크래핑된 영문 브랜드로 번역 결과 보정
-                                if (productData.brandEn) {
-                                    const brandEnLower = productData.brandEn.toLowerCase();
-                                    const titleEnLower = englishTitle.toLowerCase();
-                                    if (!titleEnLower.startsWith(brandEnLower)) {
-                                        // 번역 결과의 첫 단어(들)가 브랜드가 아니면 교체
-                                        log(`   🔄 브랜드 보정: "${englishTitle}" 앞에 "${productData.brandEn}" 확인`);
-                                    }
-                                }
                                 updateData.title_en = englishTitle;
                                 stats.titleEnFilled++;
                             }
