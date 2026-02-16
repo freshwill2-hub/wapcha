@@ -1747,207 +1747,111 @@ app.get('/api/shopify-skus', async (req, res) => {
     }
 });
 
-// ==================== 카테고리 목록 API (엑셀 다운로드용) ====================
-app.get('/api/export-categories', (req, res) => {
-    const categories = (urlQueue.categories || []).map(c => ({
-        id: c.id,
-        name: c.name,
-        maxProducts: c.maxProducts,
-        maxPages: c.maxPages,
-        status: c.status
-    }));
-    res.json(categories);
-});
-
-// ==================== NocoDB 엑셀 다운로드 API (카테고리별 + 2시트) ====================
-// 이미지 attachment에서 URL만 추출하는 헬퍼
-function extractAttachmentUrls(field) {
-    if (!field) return '';
-    const arr = Array.isArray(field) ? field : [field];
-    return arr.map(img => {
-        if (!img) return '';
-        return img.url || (img.path ? `${NOCODB_API_URL}/${img.path}` : '');
-    }).filter(u => u).join(' | ');
-}
-
-// 시드니 시간 포맷 (파일명용)
-function getSydneyTimeForFilename() {
-    const now = new Date();
-    const sydneyDate = new Date(now.toLocaleString('en-US', { timeZone: 'Australia/Sydney' }));
-    const y = sydneyDate.getFullYear();
-    const mo = String(sydneyDate.getMonth() + 1).padStart(2, '0');
-    const d = String(sydneyDate.getDate()).padStart(2, '0');
-    const h = String(sydneyDate.getHours()).padStart(2, '0');
-    const mi = String(sydneyDate.getMinutes()).padStart(2, '0');
-    const s = String(sydneyDate.getSeconds()).padStart(2, '0');
-    return `${y}-${mo}-${d}_${h}-${mi}-${s}`;
-}
-
-// NocoDB 테이블 전체 레코드 가져오기 (페이지네이션)
-async function fetchAllRecords(tableId) {
-    const allRecords = [];
-    let offset = 0;
-    const pageSize = 200;
-    while (true) {
-        const response = await axios.get(
-            `${NOCODB_API_URL}/api/v2/tables/${tableId}/records`,
-            {
-                headers: { 'xc-token': NOCODB_API_TOKEN },
-                params: { limit: pageSize, offset: offset }
-            }
-        );
-        const records = response.data.list || [];
-        allRecords.push(...records);
-        if (records.length < pageSize) break;
-        offset += pageSize;
-    }
-    return allRecords;
-}
-
-// 헤더 스타일 적용 헬퍼
-function applyHeaderStyle(worksheet, argbColor) {
-    worksheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
-    worksheet.getRow(1).fill = {
-        type: 'pattern',
-        pattern: 'solid',
-        fgColor: { argb: argbColor }
-    };
-}
-
+// ==================== NocoDB 엑셀 다운로드 API ====================
 app.get('/api/export-excel', async (req, res) => {
     try {
-        const { categoryId } = req.query;
+        addLog('info', '📥 엑셀 다운로드 요청 시작');
 
-        // 카테고리 정보 확인
-        let categoryName = 'All';
-        let maxProducts = 0;
-        let maxPages = 0;
+        // NocoDB에서 모든 레코드 가져오기 (페이지네이션)
+        const allRecords = [];
+        let offset = 0;
+        const pageSize = 200;
 
-        if (categoryId && categoryId !== 'all') {
-            const cat = (urlQueue.categories || []).find(c => c.id === categoryId);
-            if (cat) {
-                categoryName = cat.name || 'Unnamed';
-                maxProducts = cat.maxProducts || 0;
-                maxPages = cat.maxPages || 0;
-            }
+        while (true) {
+            const response = await axios.get(
+                `${NOCODB_API_URL}/api/v2/tables/${SHOPIFY_TABLE_ID}/records`,
+                {
+                    headers: { 'xc-token': NOCODB_API_TOKEN },
+                    params: { limit: pageSize, offset: offset }
+                }
+            );
+
+            const records = response.data.list || [];
+            allRecords.push(...records);
+
+            if (records.length < pageSize) break;
+            offset += pageSize;
         }
 
-        addLog('info', `📥 엑셀 다운로드 요청: ${categoryName}`);
-
-        // 양쪽 테이블 데이터 로드
-        const [oliveyoungRecords, shopifyRecords] = await Promise.all([
-            fetchAllRecords(OLIVEYOUNG_TABLE_ID),
-            fetchAllRecords(SHOPIFY_TABLE_ID)
-        ]);
-
-        addLog('info', `📊 Oliveyoung: ${oliveyoungRecords.length}개, Shopify: ${shopifyRecords.length}개 로드`);
+        addLog('info', `📊 총 ${allRecords.length}개 레코드 로드 완료`);
 
         // ExcelJS 워크북 생성
         const workbook = new ExcelJS.Workbook();
         workbook.creator = 'Copychu Dashboard';
         workbook.created = new Date();
 
-        // ==================== Sheet 1: Shopify Products ====================
-        const wsShopify = workbook.addWorksheet('Shopify Products');
-        wsShopify.columns = [
+        const worksheet = workbook.addWorksheet('Shopify Products');
+
+        // 헤더 정의
+        worksheet.columns = [
             { header: 'Id', key: 'Id', width: 8 },
-            { header: 'OliveYoung Product ID', key: 'oliveyoung_product_id', width: 12 },
             { header: 'Title (EN)', key: 'title_en', width: 40 },
+            { header: 'Title (KR)', key: 'title_kr', width: 40 },
             { header: 'Price (AUD)', key: 'price_aud', width: 12 },
-            { header: 'Description (EN)', key: 'description_en', width: 50 },
+            { header: 'Description', key: 'description', width: 50 },
             { header: 'Main Image URL', key: 'main_image', width: 60 },
             { header: 'Gallery Images URL', key: 'gallery_images', width: 80 },
             { header: 'Shopify Product ID', key: 'shopify_product_id', width: 20 },
-            { header: 'Shopify Status', key: 'shopify_status', width: 14 },
-            { header: 'Uploaded At', key: 'uploaded_at', width: 22 },
-            { header: 'Made At', key: 'made_at', width: 22 },
-            { header: 'AI Product Images', key: 'ai_product_images', width: 60 },
-            { header: 'Validated Images', key: 'validated_images', width: 60 }
+            { header: 'Uploaded At', key: 'uploaded_at', width: 22 }
         ];
-        applyHeaderStyle(wsShopify, 'FF22D3EE');
 
-        for (const r of shopifyRecords) {
-            wsShopify.addRow({
-                Id: r.Id,
-                oliveyoung_product_id: r.oliveyoung_product_id || '',
-                title_en: r.title_en || '',
-                price_aud: r.price_aud || '',
-                description_en: r.description_en || '',
-                main_image: extractAttachmentUrls(r.main_image),
-                gallery_images: extractAttachmentUrls(r.gallery_images),
-                shopify_product_id: r.shopify_product_id || '',
-                shopify_status: r.shopify_status || '',
-                uploaded_at: r.uploaded_at || '',
-                made_at: r.made_at || '',
-                ai_product_images: extractAttachmentUrls(r.ai_product_images),
-                validated_images: extractAttachmentUrls(r.validated_images)
+        // 헤더 스타일
+        worksheet.getRow(1).font = { bold: true };
+        worksheet.getRow(1).fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FF22D3EE' }
+        };
+
+        // 데이터 추가
+        for (const record of allRecords) {
+            // 이미지 URL 추출
+            let mainImageUrl = '';
+            if (record.main_image) {
+                const img = Array.isArray(record.main_image) ? record.main_image[0] : record.main_image;
+                if (img) {
+                    mainImageUrl = img.url || (img.path ? `${NOCODB_API_URL}/${img.path}` : '');
+                }
+            }
+
+            let galleryUrls = '';
+            if (record.gallery_images && Array.isArray(record.gallery_images)) {
+                galleryUrls = record.gallery_images.map(img => {
+                    return img.url || (img.path ? `${NOCODB_API_URL}/${img.path}` : '');
+                }).filter(u => u).join(' | ');
+            }
+
+            worksheet.addRow({
+                Id: record.Id,
+                title_en: record.title_en || '',
+                title_kr: record.title_kr || '',
+                price_aud: record.price_aud || '',
+                description: record.description_en || record.description || '',
+                main_image: mainImageUrl,
+                gallery_images: galleryUrls,
+                shopify_product_id: record.shopify_product_id || '',
+                uploaded_at: record.uploaded_at || ''
             });
         }
 
-        // ==================== Sheet 2: Oliveyoung Products ====================
-        const wsOliveyoung = workbook.addWorksheet('Oliveyoung Products');
-        wsOliveyoung.columns = [
-            { header: 'Id', key: 'Id', width: 8 },
-            { header: 'SKU', key: 'sku', width: 18 },
-            { header: 'Title (KR)', key: 'title_kr', width: 40 },
-            { header: 'Title (EN)', key: 'title_en', width: 40 },
-            { header: 'Price (Original)', key: 'price_original', width: 14 },
-            { header: 'Price (Discount)', key: 'price_discount', width: 14 },
-            { header: 'Category', key: 'category', width: 20 },
-            { header: 'Product URL', key: 'product_url', width: 60 },
-            { header: 'Description', key: 'description', width: 50 },
-            { header: 'Description (EN)', key: 'description_en', width: 50 },
-            { header: 'Image URLs', key: 'image_urls', width: 60 },
-            { header: 'Product Images', key: 'product_images', width: 60 },
-            { header: 'Screenshot', key: 'screenshot', width: 60 },
-            { header: 'Scraped At', key: 'scraped_at', width: 22 }
-        ];
-        applyHeaderStyle(wsOliveyoung, 'FF16A34A');
-
-        for (const r of oliveyoungRecords) {
-            wsOliveyoung.addRow({
-                Id: r.Id,
-                sku: r.sku || '',
-                title_kr: r.title_kr || '',
-                title_en: r.title_en || '',
-                price_original: r.price_original || '',
-                price_discount: r.price_discount || '',
-                category: r.category || '',
-                product_url: r.product_url || '',
-                description: r.description || '',
-                description_en: r.description_en || '',
-                image_urls: typeof r.image_urls === 'string' ? r.image_urls : extractAttachmentUrls(r.image_urls),
-                product_images: extractAttachmentUrls(r.product_images),
-                screenshot: extractAttachmentUrls(r.screenshot),
-                scraped_at: r.scraped_at || ''
-            });
-        }
-
-        // 파일명 생성: {CategoryName}_{MaxProducts}p_{LimitPages}pg_{Sydney시간}.xlsx
-        const sydneyTime = getSydneyTimeForFilename();
-        // 카테고리명에서 파일명에 안전하지 않은 문자 제거
-        const safeCatName = categoryName.replace(/[\/\\:*?"<>|]/g, '_').replace(/\s+/g, '_');
-        const pagesLabel = maxPages === 0 ? 'unlimited' : `${maxPages}pg`;
-        const filename = categoryId && categoryId !== 'all'
-            ? `${safeCatName}_${maxProducts}p_${pagesLabel}_${sydneyTime}.xlsx`
-            : `All_Products_${sydneyTime}.xlsx`;
+        // 파일명 생성
+        const today = new Date().toISOString().split('T')[0];
+        const filename = `copychu-export-${today}.xlsx`;
 
         // 응답 헤더 설정
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(filename)}"`);
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
 
         // 엑셀 파일을 스트림으로 전송
         await workbook.xlsx.write(res);
         res.end();
 
-        addLog('success', `✅ 엑셀 다운로드 완료: ${filename} (Shopify: ${shopifyRecords.length}, OliveYoung: ${oliveyoungRecords.length})`);
+        addLog('success', `✅ 엑셀 다운로드 완료: ${filename} (${allRecords.length}개 레코드)`);
 
     } catch (error) {
         console.error('❌ 엑셀 다운로드 실패:', error.message);
         addLog('error', `❌ 엑셀 다운로드 실패: ${error.message}`);
-        if (!res.headersSent) {
-            res.status(500).json({ error: '엑셀 다운로드 실패: ' + error.message });
-        }
+        res.status(500).json({ error: '엑셀 다운로드 실패: ' + error.message });
     }
 });
 

@@ -849,38 +849,23 @@
                     <h2>📊 Dashboard</h2>
                     <p>Copychu Automation System Overview</p>
                 </div>
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <select id="excelCategorySelect" style="
-                        background: var(--bg-tertiary);
-                        color: var(--text-primary);
-                        border: 1px solid var(--border);
-                        padding: 10px 12px;
-                        border-radius: 8px;
-                        font-size: 13px;
-                        cursor: pointer;
-                        min-width: 200px;
-                    ">
-                        <option value="all">All Products</option>
-                    </select>
-                    <button id="btnExportExcel" onclick="exportExcel()" style="
-                        background: linear-gradient(135deg, #22c55e, #16a34a);
-                        color: white;
-                        border: none;
-                        padding: 10px 20px;
-                        border-radius: 8px;
-                        font-size: 14px;
-                        font-weight: 600;
-                        cursor: pointer;
-                        display: flex;
-                        align-items: center;
-                        gap: 8px;
-                        transition: all 0.2s;
-                        box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
-                        white-space: nowrap;
-                    " onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 12px rgba(34,197,94,0.4)'" onmouseout="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(34,197,94,0.3)'">
-                        <span style="font-size: 16px;">📥</span> Excel Download
-                    </button>
-                </div>
+                <button id="btnExportExcel" onclick="exportExcel()" style="
+                    background: linear-gradient(135deg, #22c55e, #16a34a);
+                    color: white;
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: 8px;
+                    font-size: 14px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    transition: all 0.2s;
+                    box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
+                " onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 12px rgba(34,197,94,0.4)'" onmouseout="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(34,197,94,0.3)'">
+                    <span style="font-size: 16px;">📥</span> Excel Download
+                </button>
             </header>
             <div class="content">
                 <div class="stats-grid">
@@ -1773,42 +1758,20 @@
             }
         }
 
-        // 엑셀 카테고리 목록 로드
-        async function loadExcelCategories() {
-            try {
-                const response = await fetch('/api/export-categories');
-                const categories = await response.json();
-                const select = document.getElementById('excelCategorySelect');
-                // 기존 옵션 유지 (All Products)
-                select.innerHTML = '<option value="all">All Products</option>';
-                categories.forEach(cat => {
-                    const pagesText = cat.maxPages === 0 ? 'unlimited' : `${cat.maxPages}pg`;
-                    select.innerHTML += `<option value="${cat.id}">${cat.name} (${cat.maxProducts}p / ${pagesText})</option>`;
-                });
-            } catch (error) {
-                console.error('Failed to load export categories:', error);
-            }
-        }
-
         async function exportExcel() {
             const btn = document.getElementById('btnExportExcel');
-            const select = document.getElementById('excelCategorySelect');
-            const categoryId = select.value;
             const originalText = btn.innerHTML;
             btn.innerHTML = '<span style="font-size: 16px;">⏳</span> Downloading...';
             btn.disabled = true;
             btn.style.opacity = '0.7';
             try {
-                const response = await fetch(`/api/export-excel?categoryId=${encodeURIComponent(categoryId)}`);
+                const response = await fetch('/api/export-excel');
                 if (!response.ok) throw new Error('Download failed');
                 const blob = await response.blob();
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                // Content-Disposition에서 파일명 추출 (URL-encoded일 수 있음)
-                const disposition = response.headers.get('Content-Disposition') || '';
-                const filenameMatch = disposition.match(/filename[*]?=(?:UTF-8'')?["']?([^"';\n]+)/);
-                a.download = filenameMatch ? decodeURIComponent(filenameMatch[1]) : 'copychu-export.xlsx';
+                a.download = response.headers.get('Content-Disposition')?.match(/filename="(.+)"/)?.[1] || 'copychu-export.xlsx';
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
@@ -2081,7 +2044,6 @@
         // ==================== 초기 로드 ====================
         loadDashboardStats();
         loadRecentProducts();
-        loadExcelCategories();
     </script>
 </body>
 </html>
