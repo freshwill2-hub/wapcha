@@ -6,8 +6,9 @@
       "name": "에센스/세럼/앰플",
       "maxProducts": 100,
       "maxPages": 5,
-      "status": "processing",
-      "createdAt": "2026-02-17T11:06:36.921Z"
+      "status": "completed",
+      "createdAt": "2026-02-17T11:06:36.921Z",
+      "completedAt": "2026-02-17T11:10:31.238Z"
     },
     {
       "id": "c7fb9715-6dd0-41a7-b33b-f1753700bae3",
@@ -15,8 +16,9 @@
       "name": "클렌징폼/젤",
       "maxProducts": 100,
       "maxPages": 5,
-      "status": "pending",
-      "createdAt": "2026-02-17T11:07:32.156Z"
+      "status": "completed",
+      "createdAt": "2026-02-17T11:07:32.156Z",
+      "completedAt": "2026-02-17T11:12:54.753Z"
     },
     {
       "id": "b7af40e7-94ce-4e04-be49-12ba1964fcb2",
@@ -24,8 +26,9 @@
       "name": "선크림",
       "maxProducts": 100,
       "maxPages": 5,
-      "status": "pending",
-      "createdAt": "2026-02-17T11:07:48.939Z"
+      "status": "completed",
+      "createdAt": "2026-02-17T11:07:48.939Z",
+      "completedAt": "2026-02-17T11:15:14.075Z"
     }
   ],
   "products": []
