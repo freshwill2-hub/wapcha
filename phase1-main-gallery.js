@@ -1031,7 +1031,15 @@ async function processBatch(productsToProcess) {
     }
 
     // ✅ v18: 기본 디렉토리 재생성 (Crawlee SessionPool이 요구)
-    fs.mkdirSync(path.join(storageDir, 'key_value_stores', 'default'), { recursive: true });
+    const defaultKvDir = path.join(storageDir, 'key_value_stores', 'default');
+    fs.mkdirSync(defaultKvDir, { recursive: true });
+    // ✅ fix: SessionPool 초기 상태 파일 생성 (배치2+ 크래시 방지)
+    // purgeDefaultStorages()가 메모리 내 엔트리를 완전히 제거하지 않아
+    // 다음 배치에서 파일을 읽으려다 ENOENT 크래시 발생하는 문제 수정
+    fs.writeFileSync(
+        path.join(defaultKvDir, 'SDK_SESSION_POOL_STATE.json'),
+        JSON.stringify({ usableSessionsCount: 0, retiredSessionsCount: 0, sessions: [] })
+    );
     log('📁 storage 기본 디렉토리 재생성 완료');
 
     // 배치별 카운터 초기화
