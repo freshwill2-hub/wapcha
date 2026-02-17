@@ -1,0 +1,28 @@
+{
+  "productLimit": 3,
+  "oliveyoungUrl": "",
+  "minScoreForGallery": 60,
+  "minScoreForMain": 35,
+  "targetImageSize": 1200,
+  "productRatio": 0.75,
+  "geminiApiKey": "",
+  "maxVolumeLimit": 700,
+  "schedules": [
+    {
+      "id": "c8b7bc95-be97-43d5-9f2f-f0834bc9ad45",
+      "name": "Test",
+      "cron": "9",
+      "productLimit": 50,
+      "enabled": true,
+      "createdAt": "2026-02-17T23:03:57.496Z"
+    }
+  ],
+  "phases": {
+    "phase1": true,
+    "phase2": true,
+    "phase3": true,
+    "phase4": true,
+    "phase5": true
+  },
+  "skuDedup": true
+}
