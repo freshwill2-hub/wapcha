@@ -459,10 +459,20 @@ async function runPhase(phase, productLimit, categoryUrl = null, maxProducts = n
         });
         
         currentProcess = child;
-        
+
+        // ✅ fix: Phase 타임아웃 (2시간) - 무한 루프 방지
+        const PHASE_TIMEOUT_MS = 2 * 60 * 60 * 1000;
+        const phaseTimeout = setTimeout(() => {
+            addLog('error', `🛑 ${phase.name} 타임아웃 (2시간 초과) → 강제 종료`, phase.id);
+            try { child.kill('SIGTERM'); } catch (e) { /* ignore */ }
+            setTimeout(() => {
+                try { child.kill('SIGKILL'); } catch (e) { /* ignore */ }
+            }, 5000);
+        }, PHASE_TIMEOUT_MS);
+
         child.stdout.on('data', (data) => {
             const lines = data.toString().split('\n').filter(l => l.trim());
-            
+
             lines.forEach(line => {
                 const productMatch = line.match(/\[(\d+)\/(\d+)\]/);
                 if (productMatch) {
@@ -474,30 +484,30 @@ async function runPhase(phase, productLimit, categoryUrl = null, maxProducts = n
                         phase: phase.id
                     });
                 }
-                
+
                 if (line.includes('Gemini') || line.includes('API')) {
                     systemState.stats.apiCalls++;
                     systemState.stats.estimatedCost = systemState.stats.apiCalls * 0.0001;
                 }
-                
+
                 if (line.includes('✅') || line.includes('성공')) {
                     systemState.stats.successCount++;
                 }
                 if (line.includes('❌') || line.includes('실패')) {
                     systemState.stats.failedCount++;
                 }
-                
+
                 let logType = 'info';
                 if (line.includes('✅') || line.includes('완료')) logType = 'success';
                 if (line.includes('❌') || line.includes('실패') || line.includes('오류')) logType = 'error';
                 if (line.includes('⚠️') || line.includes('경고')) logType = 'warning';
-                
+
                 addLog(logType, line, phase.id);
             });
-            
+
             io.emit('state', systemState);
         });
-        
+
         child.stderr.on('data', (data) => {
             const message = data.toString().trim();
             if (message) {
@@ -512,10 +522,11 @@ async function runPhase(phase, productLimit, categoryUrl = null, maxProducts = n
                 }
             }
         });
-        
+
         child.on('close', (code) => {
+            clearTimeout(phaseTimeout);
             currentProcess = null;
-            
+
             if (code === 0) {
                 addLog('success', `✅ ${phase.name} 완료`, phase.id);
                 resolve(true);
@@ -524,8 +535,9 @@ async function runPhase(phase, productLimit, categoryUrl = null, maxProducts = n
                 reject(new Error(`Phase ${phase.id} failed with code ${code}`));
             }
         });
-        
+
         child.on('error', (error) => {
+            clearTimeout(phaseTimeout);
             currentProcess = null;
             addLog('error', `❌ ${phase.name} 오류: ${error.message}`, phase.id);
             reject(error);

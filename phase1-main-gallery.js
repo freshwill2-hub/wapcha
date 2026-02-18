@@ -1854,7 +1854,9 @@ async function main() {
     let totalFailed = 0;
     let totalSkipped = 0;
     let batchNumber = 0;
-    
+    let consecutiveEmptyBatches = 0;
+    const MAX_BATCHES = 50;
+
     try {
         // ✅ v2.9.2: 미처리 제품이 없을 때까지 배치 반복
         while (true) {
@@ -1901,7 +1903,25 @@ async function main() {
             totalSkipped += batchResult.skippedCount;
             
             log(`\n📊 배치 ${batchNumber} 결과: 성공 ${batchResult.successCount}, 실패 ${batchResult.failedCount}, 스킵 ${batchResult.skippedCount}`);
-            
+
+            // ✅ fix: 연속 빈 배치 감지 → 무한 루프 방지
+            if (batchResult.successCount === 0 && batchResult.failedCount === 0 && batchResult.skippedCount === 0) {
+                consecutiveEmptyBatches++;
+                log(`⚠️  연속 빈 배치: ${consecutiveEmptyBatches}회`);
+                if (consecutiveEmptyBatches >= 3) {
+                    log('🛑 연속 3회 빈 배치 감지 → 무한 루프 방지를 위해 종료합니다.');
+                    break;
+                }
+            } else {
+                consecutiveEmptyBatches = 0;
+            }
+
+            // ✅ fix: 최대 배치 수 제한
+            if (batchNumber >= MAX_BATCHES) {
+                log(`🛑 최대 배치 수(${MAX_BATCHES}) 도달 → 종료합니다.`);
+                break;
+            }
+
             // 메모리 정리
             await forceGarbageCollection();
             logMemoryUsage(`배치 ${batchNumber} 완료 후`);
