@@ -1,83 +1,18 @@
 {
   "date": "2026-02-18",
-  "dailyCalls": 157,
+  "dailyCalls": 170,
   "dailyLimit": 1500,
-  "remaining": 1343,
-  "sessionCalls": 29,
+  "remaining": 1330,
+  "sessionCalls": 42,
   "byFunction": {
     "analyzeImage": 56,
     "getBadgeCropCoordinates": 9,
-    "analyzeImageBasics": 26,
-    "evaluateImageDetails": 16,
-    "getCropCoordinates_Naver": 27,
-    "quickNaverImageCheck": 23
+    "analyzeImageBasics": 29,
+    "evaluateImageDetails": 18,
+    "getCropCoordinates_Naver": 31,
+    "quickNaverImageCheck": 27
   },
   "callHistory": [
-    {
-      "function": "evaluateImageDetails",
-      "time": "2026-02-18T10:44:11.539Z",
-      "dailyTotal": 58
-    },
-    {
-      "function": "analyzeImageBasics",
-      "time": "2026-02-18T10:44:17.059Z",
-      "dailyTotal": 59
-    },
-    {
-      "function": "evaluateImageDetails",
-      "time": "2026-02-18T10:44:18.686Z",
-      "dailyTotal": 60
-    },
-    {
-      "function": "analyzeImageBasics",
-      "time": "2026-02-18T10:44:28.574Z",
-      "dailyTotal": 61
-    },
-    {
-      "function": "evaluateImageDetails",
-      "time": "2026-02-18T10:44:29.920Z",
-      "dailyTotal": 62
-    },
-    {
-      "function": "getCropCoordinates_Naver",
-      "time": "2026-02-18T10:44:35.763Z",
-      "dailyTotal": 63
-    },
-    {
-      "function": "quickNaverImageCheck",
-      "time": "2026-02-18T10:44:42.288Z",
-      "dailyTotal": 64
-    },
-    {
-      "function": "getCropCoordinates_Naver",
-      "time": "2026-02-18T10:44:44.719Z",
-      "dailyTotal": 65
-    },
-    {
-      "function": "quickNaverImageCheck",
-      "time": "2026-02-18T10:44:50.822Z",
-      "dailyTotal": 66
-    },
-    {
-      "function": "getCropCoordinates_Naver",
-      "time": "2026-02-18T10:44:53.030Z",
-      "dailyTotal": 67
-    },
-    {
-      "function": "quickNaverImageCheck",
-      "time": "2026-02-18T10:44:58.838Z",
-      "dailyTotal": 68
-    },
-    {
-      "function": "getCropCoordinates_Naver",
-      "time": "2026-02-18T10:45:01.354Z",
-      "dailyTotal": 69
-    },
-    {
-      "function": "analyzeImageBasics",
-      "time": "2026-02-18T10:45:10.111Z",
-      "dailyTotal": 70
-    },
     {
       "function": "evaluateImageDetails",
       "time": "2026-02-18T10:45:11.570Z",
@@ -512,7 +447,72 @@
       "function": "getCropCoordinates_Naver",
       "time": "2026-02-18T12:19:55.960Z",
       "dailyTotal": 157
+    },
+    {
+      "function": "quickNaverImageCheck",
+      "time": "2026-02-18T12:20:02.153Z",
+      "dailyTotal": 158
+    },
+    {
+      "function": "analyzeImageBasics",
+      "time": "2026-02-18T12:20:03.516Z",
+      "dailyTotal": 159
+    },
+    {
+      "function": "getCropCoordinates_Naver",
+      "time": "2026-02-18T12:20:05.882Z",
+      "dailyTotal": 160
+    },
+    {
+      "function": "quickNaverImageCheck",
+      "time": "2026-02-18T12:20:11.623Z",
+      "dailyTotal": 161
+    },
+    {
+      "function": "analyzeImageBasics",
+      "time": "2026-02-18T12:20:21.122Z",
+      "dailyTotal": 162
+    },
+    {
+      "function": "evaluateImageDetails",
+      "time": "2026-02-18T12:20:23.396Z",
+      "dailyTotal": 163
+    },
+    {
+      "function": "analyzeImageBasics",
+      "time": "2026-02-18T12:20:29.239Z",
+      "dailyTotal": 164
+    },
+    {
+      "function": "evaluateImageDetails",
+      "time": "2026-02-18T12:20:31.757Z",
+      "dailyTotal": 165
+    },
+    {
+      "function": "getCropCoordinates_Naver",
+      "time": "2026-02-18T12:20:38.956Z",
+      "dailyTotal": 166
+    },
+    {
+      "function": "quickNaverImageCheck",
+      "time": "2026-02-18T12:20:45.410Z",
+      "dailyTotal": 167
+    },
+    {
+      "function": "getCropCoordinates_Naver",
+      "time": "2026-02-18T12:20:47.567Z",
+      "dailyTotal": 168
+    },
+    {
+      "function": "getCropCoordinates_Naver",
+      "time": "2026-02-18T12:20:49.889Z",
+      "dailyTotal": 169
+    },
+    {
+      "function": "quickNaverImageCheck",
+      "time": "2026-02-18T12:20:55.781Z",
+      "dailyTotal": 170
     }
   ],
-  "lastUpdated": "2026-02-18T12:19:55.960Z"
+  "lastUpdated": "2026-02-18T12:20:55.781Z"
 }

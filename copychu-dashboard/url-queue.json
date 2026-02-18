@@ -1,14 +1,31 @@
 {
   "categories": [
     {
-      "id": "88768fea-3b87-46ca-b916-60230a2b9ede",
+      "id": "f69e5a3f-faa8-487b-89f7-5dda7b30a1c8",
       "url": "https://www.oliveyoung.co.kr/store/display/getMCategoryList.do?dispCatNo=10000010011&isLoginCnt=0&aShowCnt=0&bShowCnt=0&cShowCnt=0&t_page=%EB%A1%9C%EC%BC%80%EC%9D%B4%EC%85%98_%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC%EA%B4%80&t_click=%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC%ED%83%AD_%EB%8C%80%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC&t_1st_category_type=%EB%8C%80_%ED%81%B4%EB%A0%8C%EC%A7%95",
       "name": "선크림",
-      "maxProducts": 10,
-      "maxPages": 1,
-      "status": "completed",
-      "createdAt": "2026-02-18T10:28:35.866Z",
-      "completedAt": "2026-02-18T10:29:26.339Z"
+      "maxProducts": 100,
+      "maxPages": 5,
+      "status": "processing",
+      "createdAt": "2026-02-18T12:28:22.894Z"
+    },
+    {
+      "id": "31f59a1f-93ea-46d5-b414-d00036dde38d",
+      "url": "https://www.oliveyoung.co.kr/store/display/getMCategoryList.do?dispCatNo=10000010010&isLoginCnt=0&aShowCnt=null&bShowCnt=null&cShowCnt=null&t_page=%EB%A1%9C%EC%BC%80%EC%9D%B4%EC%85%98_%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC%EA%B4%80&t_click=%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC%ED%83%AD_%EB%8C%80%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC&t_1st_category_type=%EB%8C%80_%EC%84%A0%EC%BC%80%EC%96%B4",
+      "name": "클렌징폼/젤",
+      "maxProducts": 100,
+      "maxPages": 5,
+      "status": "pending",
+      "createdAt": "2026-02-18T12:28:49.242Z"
+    },
+    {
+      "id": "845f938c-91c6-4a8c-a721-61ee3e1fc8eb",
+      "url": "https://www.oliveyoung.co.kr/store/display/getMCategoryList.do?dispCatNo=10000010009&isLoginCnt=0&aShowCnt=null&bShowCnt=null&cShowCnt=null&t_page=%EB%A1%9C%EC%BC%80%EC%9D%B4%EC%85%98_%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC%EA%B4%80&t_click=%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC%ED%83%AD_%EB%8C%80%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC&t_1st_category_type=%EB%8C%80_%ED%81%B4%EB%A0%8C%EC%A7%95",
+      "name": "시트팩",
+      "maxProducts": 100,
+      "maxPages": 5,
+      "status": "pending",
+      "createdAt": "2026-02-18T12:29:08.492Z"
     }
   ],
   "products": []
