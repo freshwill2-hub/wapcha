@@ -262,17 +262,7 @@ async function runPhase0(categoryUrl, maxProducts, categoryName, maxPages = 0, u
         });
         
         currentProcess = child;
-
-        // ✅ fix: Phase 0 타임아웃 (30분) - 프로세스 미종료 방지
-        const PHASE0_TIMEOUT_MS = 30 * 60 * 1000;
-        const phase0Timeout = setTimeout(() => {
-            addLog('error', `🛑 Phase 0 타임아웃 (30분 초과) → 강제 종료`, 'phase0');
-            try { child.kill('SIGTERM'); } catch (e) { /* ignore */ }
-            setTimeout(() => {
-                try { child.kill('SIGKILL'); } catch (e) { /* ignore */ }
-            }, 5000);
-        }, PHASE0_TIMEOUT_MS);
-
+        
         // 🔧 수정 4: stdout 핸들러에 통합 로그 기록 추가
         child.stdout.on('data', (data) => {
             const lines = data.toString().split('\n').filter(l => l.trim());
@@ -296,7 +286,6 @@ async function runPhase0(categoryUrl, maxProducts, categoryName, maxPages = 0, u
         });
         
         child.on('close', (code) => {
-            clearTimeout(phase0Timeout);
             currentProcess = null;
             if (code === 0) {
                 addLog('success', `✅ Phase 0 완료: ${categoryName || '카테고리'}`, 'phase0');
@@ -313,9 +302,8 @@ async function runPhase0(categoryUrl, maxProducts, categoryName, maxPages = 0, u
                 reject(new Error(`Phase 0 failed with code ${code}`));
             }
         });
-
+        
         child.on('error', (error) => {
-            clearTimeout(phase0Timeout);
             currentProcess = null;
             addLog('error', `❌ Phase 0 오류: ${error.message}`, 'phase0');
             reject(error);

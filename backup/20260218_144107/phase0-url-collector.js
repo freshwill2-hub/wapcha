@@ -627,11 +627,6 @@ async function collectUrls() {
     log(`   (Phase 1에서 제품 정보 + 이미지를 함께 수집합니다)`);
     
     logStream.end();
-
-    // ✅ fix: 프로세스 명시적 종료 (Playwright/Crawlee 잔여 핸들 방지)
-    setTimeout(() => {
-        process.exit(0);
-    }, 1000);
 }
 
 // Graceful shutdown
@@ -653,5 +648,4 @@ process.on('SIGTERM', () => {
 collectUrls().catch(error => {
     log('❌ 치명적 오류:', error.message);
     logStream.end();
-    setTimeout(() => process.exit(1), 1000);
 });
