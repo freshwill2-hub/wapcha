@@ -1,4 +1,15 @@
 {
-  "categories": [],
+  "categories": [
+    {
+      "id": "7410e139-5bee-4e8c-be1d-fdbb5268fe9e",
+      "url": "https://www.oliveyoung.co.kr/store/display/getMCategoryList.do?dispCatNo=10000010011&isLoginCnt=0&aShowCnt=0&bShowCnt=0&cShowCnt=0&t_page=%EB%A1%9C%EC%BC%80%EC%9D%B4%EC%85%98_%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC%EA%B4%80&t_click=%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC%ED%83%AD_%EB%8C%80%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC&t_1st_category_type=%EB%8C%80_%ED%81%B4%EB%A0%8C%EC%A7%95",
+      "name": "선크림",
+      "maxProducts": 10,
+      "maxPages": 1,
+      "status": "completed",
+      "createdAt": "2026-02-18T10:18:41.286Z",
+      "completedAt": "2026-02-18T10:19:29.083Z"
+    }
+  ],
   "products": []
 }
