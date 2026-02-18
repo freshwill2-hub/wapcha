@@ -1017,7 +1017,7 @@ async function processProductImages(product, imageUrls) {
 }
 
 // ==================== ✅ v2.9.2: 배치 단위 크롤링 함수 ====================
-async function processBatch(productsToProcess, batchNum = 0) {
+async function processBatch(productsToProcess) {
     const totalProducts = productsToProcess.length;
     
     // Crawlee 스토리지 초기화 (이전 실행 큐 제거 → 무한루프 방지)
@@ -1640,17 +1640,6 @@ async function processBatch(productsToProcess, batchNum = 0) {
                             
                             if (totalVolume > MAX_VOLUME_LIMIT) {
                                 log(`   ⚠️  용량 초과! ${totalVolume}ml > ${MAX_VOLUME_LIMIT}ml → 스킵`);
-                                // ✅ fix: NocoDB에 마킹하여 다음 배치에서 재조회 방지
-                                try {
-                                    await axios.patch(
-                                        `${NOCODB_API_URL}/api/v2/tables/${OLIVEYOUNG_TABLE_ID}/records`,
-                                        [{ Id: product.Id, title_kr: 'SKIP_VOLUME_EXCEEDED' }],
-                                        { headers: { 'xc-token': NOCODB_TOKEN, 'Content-Type': 'application/json' } }
-                                    );
-                                    log(`   ✅ NocoDB 마킹 완료 (SKIP_VOLUME_EXCEEDED)`);
-                                } catch (markErr) {
-                                    log(`   ⚠️  NocoDB 마킹 실패: ${markErr.message}`);
-                                }
                                 stats.volumeExceededSkipped++;
                                 skippedCount++;
                                 processedCount++;
@@ -1682,20 +1671,9 @@ async function processBatch(productsToProcess, batchNum = 0) {
                         if (MAX_VOLUME_LIMIT > 0 && cleanedTitle) {
                             const totalVolume = calculateTotalVolume(cleanedTitle);
                             log(`   📦 용량 계산 (기존 타이틀): ${totalVolume}ml (제한: ${MAX_VOLUME_LIMIT}ml)`);
-
+                            
                             if (totalVolume > MAX_VOLUME_LIMIT) {
                                 log(`   ⚠️  용량 초과! ${totalVolume}ml > ${MAX_VOLUME_LIMIT}ml → 스킵`);
-                                // ✅ fix: NocoDB에 마킹하여 다음 배치에서 재조회 방지
-                                try {
-                                    await axios.patch(
-                                        `${NOCODB_API_URL}/api/v2/tables/${OLIVEYOUNG_TABLE_ID}/records`,
-                                        [{ Id: product.Id, title_kr: 'SKIP_VOLUME_EXCEEDED' }],
-                                        { headers: { 'xc-token': NOCODB_TOKEN, 'Content-Type': 'application/json' } }
-                                    );
-                                    log(`   ✅ NocoDB 마킹 완료 (SKIP_VOLUME_EXCEEDED)`);
-                                } catch (markErr) {
-                                    log(`   ⚠️  NocoDB 마킹 실패: ${markErr.message}`);
-                                }
                                 stats.volumeExceededSkipped++;
                                 skippedCount++;
                                 processedCount++;
@@ -1818,7 +1796,6 @@ async function processBatch(productsToProcess, batchNum = 0) {
     
     const requests = productsToProcess.map((product, index) => ({
         url: product.product_url,
-        uniqueKey: `${product.product_url}_batch${batchNum}`,
         userData: {
             product: product,
             index: index,
@@ -1893,7 +1870,7 @@ async function main() {
             }
             
             // ✅ 배치 단위로 크롤러 생성/실행/종료 (메모리 관리)
-            const batchResult = await processBatch(productsToProcess, batchNumber);
+            const batchResult = await processBatch(productsToProcess);
             
             totalProcessed += batchResult.processedCount;
             totalSuccess += batchResult.successCount;
