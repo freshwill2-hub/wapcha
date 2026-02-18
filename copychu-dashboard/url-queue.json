@@ -6,8 +6,9 @@
       "name": "선크림",
       "maxProducts": 100,
       "maxPages": 5,
-      "status": "processing",
-      "createdAt": "2026-02-18T12:28:22.894Z"
+      "status": "error",
+      "createdAt": "2026-02-18T12:28:22.894Z",
+      "error": "Phase 0 failed with code null"
     },
     {
       "id": "31f59a1f-93ea-46d5-b414-d00036dde38d",
@@ -15,7 +16,7 @@
       "name": "클렌징폼/젤",
       "maxProducts": 100,
       "maxPages": 5,
-      "status": "pending",
+      "status": "processing",
       "createdAt": "2026-02-18T12:28:49.242Z"
     },
     {
