@@ -1,233 +1,18 @@
 {
   "date": "2026-02-18",
-  "dailyCalls": 170,
+  "dailyCalls": 213,
   "dailyLimit": 1500,
-  "remaining": 1330,
-  "sessionCalls": 42,
+  "remaining": 1287,
+  "sessionCalls": 43,
   "byFunction": {
-    "analyzeImage": 56,
-    "getBadgeCropCoordinates": 9,
+    "analyzeImage": 91,
+    "getBadgeCropCoordinates": 17,
     "analyzeImageBasics": 29,
     "evaluateImageDetails": 18,
     "getCropCoordinates_Naver": 31,
     "quickNaverImageCheck": 27
   },
   "callHistory": [
-    {
-      "function": "evaluateImageDetails",
-      "time": "2026-02-18T10:45:11.570Z",
-      "dailyTotal": 71
-    },
-    {
-      "function": "getCropCoordinates_Naver",
-      "time": "2026-02-18T10:45:16.383Z",
-      "dailyTotal": 72
-    },
-    {
-      "function": "quickNaverImageCheck",
-      "time": "2026-02-18T10:45:22.666Z",
-      "dailyTotal": 73
-    },
-    {
-      "function": "analyzeImageBasics",
-      "time": "2026-02-18T10:45:23.960Z",
-      "dailyTotal": 74
-    },
-    {
-      "function": "getCropCoordinates_Naver",
-      "time": "2026-02-18T10:45:30.661Z",
-      "dailyTotal": 75
-    },
-    {
-      "function": "quickNaverImageCheck",
-      "time": "2026-02-18T10:45:36.290Z",
-      "dailyTotal": 76
-    },
-    {
-      "function": "getCropCoordinates_Naver",
-      "time": "2026-02-18T10:45:38.987Z",
-      "dailyTotal": 77
-    },
-    {
-      "function": "quickNaverImageCheck",
-      "time": "2026-02-18T10:45:45.431Z",
-      "dailyTotal": 78
-    },
-    {
-      "function": "getCropCoordinates_Naver",
-      "time": "2026-02-18T10:45:48.085Z",
-      "dailyTotal": 79
-    },
-    {
-      "function": "quickNaverImageCheck",
-      "time": "2026-02-18T10:45:54.261Z",
-      "dailyTotal": 80
-    },
-    {
-      "function": "analyzeImageBasics",
-      "time": "2026-02-18T10:45:55.500Z",
-      "dailyTotal": 81
-    },
-    {
-      "function": "analyzeImageBasics",
-      "time": "2026-02-18T10:46:03.819Z",
-      "dailyTotal": 82
-    },
-    {
-      "function": "evaluateImageDetails",
-      "time": "2026-02-18T10:46:05.280Z",
-      "dailyTotal": 83
-    },
-    {
-      "function": "getCropCoordinates_Naver",
-      "time": "2026-02-18T10:46:13.507Z",
-      "dailyTotal": 84
-    },
-    {
-      "function": "quickNaverImageCheck",
-      "time": "2026-02-18T10:46:19.493Z",
-      "dailyTotal": 85
-    },
-    {
-      "function": "analyzeImageBasics",
-      "time": "2026-02-18T10:46:20.798Z",
-      "dailyTotal": 86
-    },
-    {
-      "function": "getCropCoordinates_Naver",
-      "time": "2026-02-18T10:46:25.667Z",
-      "dailyTotal": 87
-    },
-    {
-      "function": "quickNaverImageCheck",
-      "time": "2026-02-18T10:46:31.681Z",
-      "dailyTotal": 88
-    },
-    {
-      "function": "analyzeImageBasics",
-      "time": "2026-02-18T10:46:32.924Z",
-      "dailyTotal": 89
-    },
-    {
-      "function": "getCropCoordinates_Naver",
-      "time": "2026-02-18T10:46:37.685Z",
-      "dailyTotal": 90
-    },
-    {
-      "function": "quickNaverImageCheck",
-      "time": "2026-02-18T10:46:43.739Z",
-      "dailyTotal": 91
-    },
-    {
-      "function": "analyzeImageBasics",
-      "time": "2026-02-18T10:46:44.982Z",
-      "dailyTotal": 92
-    },
-    {
-      "function": "getCropCoordinates_Naver",
-      "time": "2026-02-18T10:46:52.457Z",
-      "dailyTotal": 93
-    },
-    {
-      "function": "quickNaverImageCheck",
-      "time": "2026-02-18T10:46:58.669Z",
-      "dailyTotal": 94
-    },
-    {
-      "function": "analyzeImageBasics",
-      "time": "2026-02-18T10:46:59.910Z",
-      "dailyTotal": 95
-    },
-    {
-      "function": "analyzeImageBasics",
-      "time": "2026-02-18T10:47:09.048Z",
-      "dailyTotal": 96
-    },
-    {
-      "function": "evaluateImageDetails",
-      "time": "2026-02-18T10:47:11.111Z",
-      "dailyTotal": 97
-    },
-    {
-      "function": "analyzeImageBasics",
-      "time": "2026-02-18T10:47:16.306Z",
-      "dailyTotal": 98
-    },
-    {
-      "function": "evaluateImageDetails",
-      "time": "2026-02-18T10:47:18.075Z",
-      "dailyTotal": 99
-    },
-    {
-      "function": "getCropCoordinates_Naver",
-      "time": "2026-02-18T10:47:23.762Z",
-      "dailyTotal": 100
-    },
-    {
-      "function": "quickNaverImageCheck",
-      "time": "2026-02-18T10:47:30.026Z",
-      "dailyTotal": 101
-    },
-    {
-      "function": "getCropCoordinates_Naver",
-      "time": "2026-02-18T10:47:33.263Z",
-      "dailyTotal": 102
-    },
-    {
-      "function": "quickNaverImageCheck",
-      "time": "2026-02-18T10:47:39.370Z",
-      "dailyTotal": 103
-    },
-    {
-      "function": "getCropCoordinates_Naver",
-      "time": "2026-02-18T10:47:43.376Z",
-      "dailyTotal": 104
-    },
-    {
-      "function": "quickNaverImageCheck",
-      "time": "2026-02-18T10:47:49.411Z",
-      "dailyTotal": 105
-    },
-    {
-      "function": "getCropCoordinates_Naver",
-      "time": "2026-02-18T10:47:53.731Z",
-      "dailyTotal": 106
-    },
-    {
-      "function": "quickNaverImageCheck",
-      "time": "2026-02-18T10:47:59.564Z",
-      "dailyTotal": 107
-    },
-    {
-      "function": "analyzeImage",
-      "time": "2026-02-18T12:15:30.434Z",
-      "dailyTotal": 108
-    },
-    {
-      "function": "analyzeImage",
-      "time": "2026-02-18T12:15:35.939Z",
-      "dailyTotal": 109
-    },
-    {
-      "function": "analyzeImage",
-      "time": "2026-02-18T12:15:40.816Z",
-      "dailyTotal": 110
-    },
-    {
-      "function": "getBadgeCropCoordinates",
-      "time": "2026-02-18T12:15:42.829Z",
-      "dailyTotal": 111
-    },
-    {
-      "function": "analyzeImage",
-      "time": "2026-02-18T12:15:50.971Z",
-      "dailyTotal": 112
-    },
-    {
-      "function": "getBadgeCropCoordinates",
-      "time": "2026-02-18T12:15:52.639Z",
-      "dailyTotal": 113
-    },
     {
       "function": "analyzeImage",
       "time": "2026-02-18T12:16:01.203Z",
@@ -512,7 +297,222 @@
       "function": "quickNaverImageCheck",
       "time": "2026-02-18T12:20:55.781Z",
       "dailyTotal": 170
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-18T18:34:45.348Z",
+      "dailyTotal": 171
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-18T18:34:50.161Z",
+      "dailyTotal": 172
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-18T18:34:58.831Z",
+      "dailyTotal": 173
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-18T18:35:06.265Z",
+      "dailyTotal": 174
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-18T18:35:13.728Z",
+      "dailyTotal": 175
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-18T18:35:26.075Z",
+      "dailyTotal": 176
+    },
+    {
+      "function": "getBadgeCropCoordinates",
+      "time": "2026-02-18T18:35:27.967Z",
+      "dailyTotal": 177
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-18T18:35:35.776Z",
+      "dailyTotal": 178
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-18T18:35:48.468Z",
+      "dailyTotal": 179
+    },
+    {
+      "function": "getBadgeCropCoordinates",
+      "time": "2026-02-18T18:35:50.470Z",
+      "dailyTotal": 180
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-18T18:36:02.703Z",
+      "dailyTotal": 181
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-18T18:36:07.748Z",
+      "dailyTotal": 182
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-18T18:36:26.459Z",
+      "dailyTotal": 183
+    },
+    {
+      "function": "getBadgeCropCoordinates",
+      "time": "2026-02-18T18:36:28.410Z",
+      "dailyTotal": 184
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-18T18:36:36.416Z",
+      "dailyTotal": 185
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-18T18:36:44.222Z",
+      "dailyTotal": 186
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-18T18:36:49.144Z",
+      "dailyTotal": 187
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-18T18:37:19.047Z",
+      "dailyTotal": 188
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-18T18:37:29.411Z",
+      "dailyTotal": 189
+    },
+    {
+      "function": "getBadgeCropCoordinates",
+      "time": "2026-02-18T18:37:36.576Z",
+      "dailyTotal": 190
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-18T18:37:48.952Z",
+      "dailyTotal": 191
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-18T18:37:53.928Z",
+      "dailyTotal": 192
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-18T18:37:58.641Z",
+      "dailyTotal": 193
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-18T18:38:03.566Z",
+      "dailyTotal": 194
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-18T18:38:08.163Z",
+      "dailyTotal": 195
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-18T18:38:12.823Z",
+      "dailyTotal": 196
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-18T18:38:17.208Z",
+      "dailyTotal": 197
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-18T18:38:29.426Z",
+      "dailyTotal": 198
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-18T18:38:34.239Z",
+      "dailyTotal": 199
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-18T18:38:39.192Z",
+      "dailyTotal": 200
+    },
+    {
+      "function": "getBadgeCropCoordinates",
+      "time": "2026-02-18T18:38:41.034Z",
+      "dailyTotal": 201
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-18T18:38:49.124Z",
+      "dailyTotal": 202
+    },
+    {
+      "function": "getBadgeCropCoordinates",
+      "time": "2026-02-18T18:38:50.962Z",
+      "dailyTotal": 203
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-18T18:38:58.784Z",
+      "dailyTotal": 204
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-18T18:39:10.906Z",
+      "dailyTotal": 205
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-18T18:39:15.865Z",
+      "dailyTotal": 206
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-18T18:39:21.125Z",
+      "dailyTotal": 207
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-18T18:39:26.134Z",
+      "dailyTotal": 208
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-18T18:39:30.752Z",
+      "dailyTotal": 209
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-18T18:39:43.061Z",
+      "dailyTotal": 210
+    },
+    {
+      "function": "getBadgeCropCoordinates",
+      "time": "2026-02-18T18:39:45.189Z",
+      "dailyTotal": 211
+    },
+    {
+      "function": "analyzeImage",
+      "time": "2026-02-18T18:39:53.830Z",
+      "dailyTotal": 212
+    },
+    {
+      "function": "getBadgeCropCoordinates",
+      "time": "2026-02-18T18:39:55.864Z",
+      "dailyTotal": 213
     }
   ],
-  "lastUpdated": "2026-02-18T12:20:55.781Z"
+  "lastUpdated": "2026-02-18T18:39:55.864Z"
 }
