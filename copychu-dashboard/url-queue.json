@@ -16,8 +16,9 @@
       "name": "클렌징폼/젤",
       "maxProducts": 100,
       "maxPages": 5,
-      "status": "processing",
-      "createdAt": "2026-02-18T12:28:49.242Z"
+      "status": "error",
+      "createdAt": "2026-02-18T12:28:49.242Z",
+      "error": "Phase 0 failed with code null"
     },
     {
       "id": "845f938c-91c6-4a8c-a721-61ee3e1fc8eb",
@@ -25,8 +26,9 @@
       "name": "시트팩",
       "maxProducts": 100,
       "maxPages": 5,
-      "status": "pending",
-      "createdAt": "2026-02-18T12:29:08.492Z"
+      "status": "completed",
+      "createdAt": "2026-02-18T12:29:08.492Z",
+      "completedAt": "2026-02-18T14:39:36.893Z"
     }
   ],
   "products": []
