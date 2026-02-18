@@ -1,9 +1,0 @@
-{
-	"id": "blNi501wUlb4aFW",
-	"json": "{\"id\":\"blNi501wUlb4aFW\",\"url\":\"https://www.oliveyoung.co.kr/store/display/getMCategoryList.do?dispCatNo=10000010011&isLoginCnt=0&aShowCnt=0&bShowCnt=0&cShowCnt=0&t_page=%EB%A1%9C%EC%BC%80%EC%9D%B4%EC%85%98_%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC%EA%B4%80&t_click=%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC%ED%83%AD_%EB%8C%80%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC&t_1st_category_type=%EB%8C%80_%ED%81%B4%EB%A0%8C%EC%A7%95&pageIdx=4\",\"uniqueKey\":\"https://www.oliveyoung.co.kr/store/display/getMCategoryList.do?aShowCnt=0&bShowCnt=0&cShowCnt=0&dispCatNo=10000010011&isLoginCnt=0&pageIdx=4&t_1st_category_type=%EB%8C%80_%ED%81%B4%EB%A0%8C%EC%A7%95&t_click=%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC%ED%83%AD_%EB%8C%80%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC&t_page=%EB%A1%9C%EC%BC%80%EC%9D%B4%EC%85%98_%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC%EA%B4%80\",\"method\":\"GET\",\"noRetry\":false,\"retryCount\":0,\"errorMessages\":[],\"headers\":{},\"userData\":{\"pageNum\":4}}",
-	"method": "GET",
-	"orderNo": 1771426546906,
-	"retryCount": 0,
-	"uniqueKey": "https://www.oliveyoung.co.kr/store/display/getMCategoryList.do?aShowCnt=0&bShowCnt=0&cShowCnt=0&dispCatNo=10000010011&isLoginCnt=0&pageIdx=4&t_1st_category_type=%EB%8C%80_%ED%81%B4%EB%A0%8C%EC%A7%95&t_click=%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC%ED%83%AD_%EB%8C%80%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC&t_page=%EB%A1%9C%EC%BC%80%EC%9D%B4%EC%85%98_%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC%EA%B4%80",
-	"url": "https://www.oliveyoung.co.kr/store/display/getMCategoryList.do?dispCatNo=10000010011&isLoginCnt=0&aShowCnt=0&bShowCnt=0&cShowCnt=0&t_page=%EB%A1%9C%EC%BC%80%EC%9D%B4%EC%85%98_%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC%EA%B4%80&t_click=%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC%ED%83%AD_%EB%8C%80%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC&t_1st_category_type=%EB%8C%80_%ED%81%B4%EB%A0%8C%EC%A7%95&pageIdx=4"
-}

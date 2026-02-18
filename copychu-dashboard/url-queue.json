@@ -6,8 +6,9 @@
       "name": "선크림",
       "maxProducts": 100,
       "maxPages": 5,
-      "status": "processing",
-      "createdAt": "2026-02-18T14:47:51.968Z"
+      "status": "completed",
+      "createdAt": "2026-02-18T14:47:51.968Z",
+      "completedAt": "2026-02-18T14:50:44.524Z"
     },
     {
       "id": "28844f35-a1ec-45eb-a6c9-d1e8ef345f66",
@@ -15,8 +16,9 @@
       "name": "시트팩",
       "maxProducts": 100,
       "maxPages": 5,
-      "status": "pending",
-      "createdAt": "2026-02-18T14:47:58.509Z"
+      "status": "completed",
+      "createdAt": "2026-02-18T14:47:58.509Z",
+      "completedAt": "2026-02-18T14:53:14.847Z"
     },
     {
       "id": "d0122f44-917b-425e-b97b-785e361534c9",
@@ -24,8 +26,9 @@
       "name": "클렌징폼/젤",
       "maxProducts": 100,
       "maxPages": 5,
-      "status": "pending",
-      "createdAt": "2026-02-18T14:48:07.449Z"
+      "status": "completed",
+      "createdAt": "2026-02-18T14:48:07.449Z",
+      "completedAt": "2026-02-18T14:55:35.676Z"
     }
   ],
   "products": []
