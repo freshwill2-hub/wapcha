@@ -6,8 +6,9 @@
       "name": "스킨/토너",
       "maxProducts": 10,
       "maxPages": 1,
-      "status": "pending",
-      "createdAt": "2026-02-19T11:49:39.199Z"
+      "status": "completed",
+      "createdAt": "2026-02-19T11:49:39.199Z",
+      "completedAt": "2026-02-19T11:50:57.336Z"
     },
     {
       "id": "7542ae07-9e5a-4812-bf9e-59c08f1ddfc8",
@@ -15,8 +16,19 @@
       "name": "클렌징폼/젤",
       "maxProducts": 10,
       "maxPages": 1,
-      "status": "pending",
-      "createdAt": "2026-02-19T11:49:45.608Z"
+      "status": "completed",
+      "createdAt": "2026-02-19T11:49:45.608Z",
+      "completedAt": "2026-02-19T11:51:37.853Z"
+    },
+    {
+      "id": "35df80ae-d187-4f4f-8e75-b25cf1340ecb",
+      "url": "https://www.oliveyoung.co.kr/store/display/getMCategoryList.do?dispCatNo=10000010011&isLoginCnt=0&aShowCnt=null&bShowCnt=null&cShowCnt=null&t_page=%EB%A1%9C%EC%BC%80%EC%9D%B4%EC%85%98_%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC%EA%B4%80&t_click=%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC%ED%83%AD_%EB%8C%80%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC&t_1st_category_type=%EB%8C%80_%ED%81%B4%EB%A0%8C%EC%A7%95",
+      "name": "선크림",
+      "maxProducts": 10,
+      "maxPages": 1,
+      "status": "completed",
+      "createdAt": "2026-02-19T11:50:12.716Z",
+      "completedAt": "2026-02-19T11:52:08.169Z"
     }
   ],
   "products": []
