@@ -110,10 +110,35 @@ const NOCODB_API_TOKEN = process.env.NOCODB_API_TOKEN;
 const SHOPIFY_TABLE_ID = process.env.SHOPIFY_TABLE_ID;
 const OLIVEYOUNG_TABLE_ID = process.env.OLIVEYOUNG_TABLE_ID;
 const GOOGLE_GEMINI_API_KEY = process.env.GOOGLE_GEMINI_API_KEY;
-const PYTHON_PATH = '/root/copychu-scraper/rembg-env/bin/python';
-const REMBG_PATH = '/root/copychu-scraper/rembg-env/bin/rembg';
+const PYTHON_PATH = process.env.PYTHON_PATH || '/root/copychu-scraper/rembg-env/bin/python';
+const REMBG_PATH = process.env.REMBG_PATH || '/root/copychu-scraper/rembg-env/bin/rembg';
 
 const genAI = new GoogleGenerativeAI(GOOGLE_GEMINI_API_KEY);
+
+// ==================== Gemini 429 재시도 래퍼 ====================
+const GEMINI_MAX_RETRIES = 3;
+const GEMINI_RETRY_DELAYS = [30000, 60000, 120000]; // 30초, 60초, 120초
+
+async function callGeminiWithRetry(model, content, functionName) {
+    for (let attempt = 0; attempt <= GEMINI_MAX_RETRIES; attempt++) {
+        try {
+            const result = await model.generateContent(content);
+            trackGeminiCall(functionName);
+            return result;
+        } catch (error) {
+            const is429 = error.status === 429 || error.message?.includes('429') || error.message?.includes('RESOURCE_EXHAUSTED') || error.message?.includes('rate limit');
+
+            if (is429 && attempt < GEMINI_MAX_RETRIES) {
+                const delay = GEMINI_RETRY_DELAYS[attempt];
+                log(`      ⏳ Gemini 429 Rate Limit - ${attempt + 1}차 재시도 (${delay/1000}초 대기)...`);
+                await new Promise(r => setTimeout(r, delay));
+                continue;
+            }
+
+            throw error; // 429가 아니거나 3회 모두 실패
+        }
+    }
+}
 
 // ==================== 설정 ====================
 const TARGET_SIZE = 1200;
@@ -435,7 +460,7 @@ HAS_PACKAGING: [YES/NO]
 PRODUCT_VISIBLE: [YES/NO]
 IS_COMPLETE: [YES/NO]`;
 
-        const result = await model.generateContent([
+        const result = await callGeminiWithRetry(model, [
             prompt,
             {
                 inlineData: {
@@ -443,9 +468,7 @@ IS_COMPLETE: [YES/NO]`;
                     mimeType: 'image/png'
                 }
             }
-        ]);
-
-        trackGeminiCall('analyzeImageBasics');
+        ], 'analyzeImageBasics');
 
         const response = result.response.text().trim();
 
@@ -580,7 +603,7 @@ QUALITY: [0-20 숫자]
 HAS_GIFT_ITEMS: [YES/NO]
 HAS_GHOST_ARTIFACT: [YES/NO]${setFormat}`;
 
-        const result = await model.generateContent([
+        const result = await callGeminiWithRetry(model, [
             prompt,
             {
                 inlineData: {
@@ -588,9 +611,7 @@ HAS_GHOST_ARTIFACT: [YES/NO]${setFormat}`;
                     mimeType: 'image/png'
                 }
             }
-        ]);
-
-        trackGeminiCall('evaluateImageDetails');
+        ], 'evaluateImageDetails');
 
         const response = result.response.text().trim();
         log(`      📄 Gemini 응답:\n${response.split('\n').map(l => '         ' + l).join('\n')}`);
@@ -1001,12 +1022,10 @@ HAS_GIFT: [YES/NO]
 HAS_MODEL: [YES/NO]
 REASON: [한 줄]`;
 
-        const result = await model.generateContent([
+        const result = await callGeminiWithRetry(model, [
             prompt,
             { inlineData: { data: base64, mimeType: 'image/png' } }
-        ]);
-
-        trackGeminiCall('quickNaverImageCheck');
+        ], 'quickNaverImageCheck');
 
         const response = result.response.text().trim();
         const matchResult = response.match(/MATCH:\s*(YES|NO)/i);
@@ -1277,13 +1296,10 @@ JSON 형식으로만 답변:
   "height": 픽셀_높이
 }`;
 
-        const result = await model.generateContent([
+        const result = await callGeminiWithRetry(model, [
             prompt,
             { inlineData: { data: base64, mimeType: 'image/jpeg' } }
-        ]);
-        
-        // Gemini API 호출 추적
-        trackGeminiCall('getCropCoordinates_Naver');
+        ], 'getCropCoordinates_Naver');
 
         const responseText = result.response.text();
         

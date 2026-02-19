@@ -110,10 +110,35 @@ const NOCODB_API_URL = process.env.NOCODB_API_URL || 'http://77.42.67.165:8080';
 const SHOPIFY_TABLE_ID = process.env.SHOPIFY_TABLE_ID;
 const OLIVEYOUNG_TABLE_ID = process.env.OLIVEYOUNG_TABLE_ID;
 const GOOGLE_GEMINI_API_KEY = process.env.GOOGLE_GEMINI_API_KEY;
-const PYTHON_PATH = '/root/copychu-scraper/rembg-env/bin/python';
-const REMBG_PATH = '/root/copychu-scraper/rembg-env/bin/rembg';
+const PYTHON_PATH = process.env.PYTHON_PATH || '/root/copychu-scraper/rembg-env/bin/python';
+const REMBG_PATH = process.env.REMBG_PATH || '/root/copychu-scraper/rembg-env/bin/rembg';
 
 const genAI = new GoogleGenerativeAI(GOOGLE_GEMINI_API_KEY);
+
+// ==================== Gemini 429 재시도 래퍼 ====================
+const GEMINI_MAX_RETRIES = 3;
+const GEMINI_RETRY_DELAYS = [30000, 60000, 120000]; // 30초, 60초, 120초
+
+async function callGeminiWithRetry(model, content, functionName) {
+    for (let attempt = 0; attempt <= GEMINI_MAX_RETRIES; attempt++) {
+        try {
+            const result = await model.generateContent(content);
+            trackGeminiCall(functionName);
+            return result;
+        } catch (error) {
+            const is429 = error.status === 429 || error.message?.includes('429') || error.message?.includes('RESOURCE_EXHAUSTED') || error.message?.includes('rate limit');
+
+            if (is429 && attempt < GEMINI_MAX_RETRIES) {
+                const delay = GEMINI_RETRY_DELAYS[attempt];
+                log(`      ⏳ Gemini 429 Rate Limit - ${attempt + 1}차 재시도 (${delay/1000}초 대기)...`);
+                await new Promise(r => setTimeout(r, delay));
+                continue;
+            }
+
+            throw error; // 429가 아니거나 3회 모두 실패
+        }
+    }
+}
 
 log('🚀 Phase 2.5 (Phase 3): 제품 이미지 처리 (v2 - 개별/세트 구분)');
 log('='.repeat(70));
@@ -294,16 +319,13 @@ PRODUCT_COUNT: [숫자]
 BADGE_LOCATION: [top-left/top-right/bottom-left/bottom-right/none]
 REASON: [한 줄 설명]`;
 
-        const result = await model.generateContent([
+        const result = await callGeminiWithRetry(model, [
             prompt,
             { inlineData: { data: imageData.base64, mimeType: imageData.mimeType } }
-        ]);
-        
-        // Gemini API 호출 추적
-        trackGeminiCall('analyzeImage');
+        ], 'analyzeImage');
 
         const response = result.response.text();
-        
+
         const actionMatch = response.match(/ACTION:\s*(PASS|CROP_BADGE|CROP_SINGLE|SKIP_MODEL|SKIP_BANNER|SKIP_SET_MISMATCH)/i);
         const productCountMatch = response.match(/PRODUCT_COUNT:\s*(\d+)/i);
         const badgeLocationMatch = response.match(/BADGE_LOCATION:\s*([^\n]+)/i);
@@ -382,16 +404,13 @@ async function getBadgeCropCoordinates(imageUrl, productTitle, imageWidth, image
 
 JSON만 출력하세요.`;
 
-        const result = await model.generateContent([
+        const result = await callGeminiWithRetry(model, [
             prompt,
             { inlineData: { data: imageData.base64, mimeType: imageData.mimeType } }
-        ]);
-        
-        // Gemini API 호출 추적
-        trackGeminiCall('getBadgeCropCoordinates');
+        ], 'getBadgeCropCoordinates');
 
         const response = result.response.text();
-        
+
         const jsonMatch = response.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
             const coords = JSON.parse(jsonMatch[0]);
@@ -446,16 +465,13 @@ async function getSingleProductCropCoordinates(imageUrl, productTitle, imageWidt
 
 JSON만 출력하세요.`;
 
-        const result = await model.generateContent([
+        const result = await callGeminiWithRetry(model, [
             prompt,
             { inlineData: { data: imageData.base64, mimeType: imageData.mimeType } }
-        ]);
-        
-        // Gemini API 호출 추적
-        trackGeminiCall('getSingleProductCropCoordinates');
+        ], 'getSingleProductCropCoordinates');
 
         const response = result.response.text();
-        
+
         const jsonMatch = response.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
             const coords = JSON.parse(jsonMatch[0]);

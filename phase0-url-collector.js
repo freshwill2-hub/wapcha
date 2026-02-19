@@ -248,7 +248,13 @@ async function getExistingSkus() {
         return allSkus;
         
     } catch (error) {
-        log('❌ NocoDB SKU 조회 실패:', error.message);
+        const status = error.response?.status;
+        const detail = error.response?.data ? JSON.stringify(error.response.data).substring(0, 200) : '';
+        if (status === 422) {
+            log(`⚠️  NocoDB SKU 조회 422 에러 - 중복 체크 스킵, 진행합니다: ${error.message} ${detail}`);
+        } else {
+            log(`❌ NocoDB SKU 조회 실패 (status: ${status || 'N/A'}): ${error.message} ${detail}`);
+        }
         return new Set();
     }
 }
