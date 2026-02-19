@@ -105,7 +105,7 @@ if (UNIFIED_LOG_PATH) {
 }
 
 // ==================== 환경 변수 ====================
-const NOCODB_API_URL = process.env.NOCODB_API_URL || 'http://77.42.67.165:8080';
+const NOCODB_API_URL = process.env.NOCODB_API_URL;
 const NOCODB_API_TOKEN = process.env.NOCODB_API_TOKEN;
 const SHOPIFY_TABLE_ID = process.env.SHOPIFY_TABLE_ID;
 const OLIVEYOUNG_TABLE_ID = process.env.OLIVEYOUNG_TABLE_ID;
@@ -236,7 +236,7 @@ async function getProductsFromNocoDB() {
             params: {
                 limit: parseInt(process.env.PRODUCT_LIMIT) || 1000,
                 // ✅ v12: 이미 처리된 제품 재처리 방지
-                where: '(validated_images,notnull)~and(main_image,is,null)'
+                where: '~and(validated_images,notnull)~and(main_image,is,null)'
             }
         }
     );

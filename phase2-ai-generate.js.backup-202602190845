@@ -120,8 +120,8 @@ const OLIVEYOUNG_TABLE_ID = process.env.OLIVEYOUNG_TABLE_ID;
 const SHOPIFY_TABLE_ID = process.env.SHOPIFY_TABLE_ID;
 
 // rembg 경로 (가상환경 내부)
-const REMBG_PATH = process.env.REMBG_PATH || '/root/copychu-scraper/rembg-env/bin/rembg';
-const PYTHON_PATH = process.env.PYTHON_PATH || '/root/copychu-scraper/rembg-env/bin/python';
+const REMBG_PATH = '/root/copychu-scraper/rembg-env/bin/rembg';
+const PYTHON_PATH = '/root/copychu-scraper/rembg-env/bin/python';
 
 log('🚀 Phase 2: 배경 제거 + 흰색 배경 (rembg - 오픈소스)');
 log('='.repeat(70));

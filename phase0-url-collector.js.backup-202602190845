@@ -109,7 +109,7 @@ if (UNIFIED_LOG_PATH) {
 
 // ==================== 설정 ====================
 const NOCODB_API_URL = process.env.NOCODB_API_URL || 'http://77.42.67.165:8080';
-const NOCODB_API_TOKEN = process.env.NOCODB_API_TOKEN;
+const NOCODB_TOKEN = process.env.NOCODB_API_TOKEN;
 const OLIVEYOUNG_TABLE_ID = process.env.OLIVEYOUNG_TABLE_ID;
 
 // ✅ Shopify 설정 추가
@@ -222,7 +222,7 @@ async function getExistingSkus() {
             const response = await axios.get(
                 `${NOCODB_API_URL}/api/v2/tables/${OLIVEYOUNG_TABLE_ID}/records`,
                 {
-                    headers: { 'xc-token': NOCODB_API_TOKEN },
+                    headers: { 'xc-token': NOCODB_TOKEN },
                     params: { 
                         limit: limit, 
                         offset: offset,
@@ -261,7 +261,7 @@ async function saveProductUrl(productData) {
             productData,
             {
                 headers: { 
-                    'xc-token': NOCODB_API_TOKEN,
+                    'xc-token': NOCODB_TOKEN,
                     'Content-Type': 'application/json'
                 }
             }

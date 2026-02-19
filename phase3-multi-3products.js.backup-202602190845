@@ -106,7 +106,7 @@ if (UNIFIED_LOG_PATH) {
 // ==================== 환경 변수 ====================
 const PRODUCT_LIMIT = parseInt(process.env.PRODUCT_LIMIT) || 3;
 const NOCODB_API_TOKEN = process.env.NOCODB_API_TOKEN;
-const NOCODB_API_URL = process.env.NOCODB_API_URL || 'http://77.42.67.165:8080';
+const NOCODB_BASE_URL = process.env.NOCODB_API_URL;
 const SHOPIFY_TABLE_ID = process.env.SHOPIFY_TABLE_ID;
 const OLIVEYOUNG_TABLE_ID = process.env.OLIVEYOUNG_TABLE_ID;
 const GOOGLE_GEMINI_API_KEY = process.env.GOOGLE_GEMINI_API_KEY;
@@ -118,7 +118,7 @@ const genAI = new GoogleGenerativeAI(GOOGLE_GEMINI_API_KEY);
 log('🚀 Phase 2.5 (Phase 3): 제품 이미지 처리 (v2 - 개별/세트 구분)');
 log('='.repeat(70));
 log('🔧 설정 확인:');
-log(`   - NocoDB URL: ${NOCODB_API_URL}`);
+log(`   - NocoDB URL: ${NOCODB_BASE_URL}`);
 log(`   - Shopify Table: ${SHOPIFY_TABLE_ID}`);
 log(`   - Python: ${PYTHON_PATH}`);
 log(`   - rembg: ${REMBG_PATH}`);
@@ -148,7 +148,7 @@ const cleanupFiles = (...files) => {
 async function getOliveyoungProduct(productId) {
     try {
         const response = await axios.get(
-            `${NOCODB_API_URL}/api/v2/tables/${OLIVEYOUNG_TABLE_ID}/records`,
+            `${NOCODB_BASE_URL}/api/v2/tables/${OLIVEYOUNG_TABLE_ID}/records`,
             {
                 headers: { 'xc-token': NOCODB_API_TOKEN },
                 params: { where: `(Id,eq,${productId})` }
@@ -563,7 +563,7 @@ async function uploadToNocoDB(filePath, fileName) {
         formData.append('file', fs.createReadStream(filePath), fileName);
         
         const response = await axios.post(
-            `${NOCODB_API_URL}/api/v2/storage/upload`,
+            `${NOCODB_BASE_URL}/api/v2/storage/upload`,
             formData,
             {
                 headers: {
@@ -588,14 +588,14 @@ async function updateProduct(recordId, validatedImages) {
     try {
         log(`\n🗑️  기존 validated_images 삭제 중...`);
         await axios.patch(
-            `${NOCODB_API_URL}/api/v2/tables/${SHOPIFY_TABLE_ID}/records`,
+            `${NOCODB_BASE_URL}/api/v2/tables/${SHOPIFY_TABLE_ID}/records`,
             [{ Id: recordId, validated_images: null }],  // ✅ 배열
             { headers: { 'xc-token': NOCODB_API_TOKEN, 'Content-Type': 'application/json' } }
         );
         
         log(`💾 새 validated_images 저장 중...`);
         await axios.patch(
-            `${NOCODB_API_URL}/api/v2/tables/${SHOPIFY_TABLE_ID}/records`,
+            `${NOCODB_BASE_URL}/api/v2/tables/${SHOPIFY_TABLE_ID}/records`,
             [{ Id: recordId, validated_images: validatedImages }],  // ✅ 배열
             { headers: { 'xc-token': NOCODB_API_TOKEN, 'Content-Type': 'application/json' } }
         );
@@ -657,7 +657,7 @@ async function processProduct(product, productIndex, totalProducts) {
         
         let imageUrl = img.url;
         if (!imageUrl && img.path) {
-            imageUrl = `${NOCODB_API_URL}/${img.path}`;
+            imageUrl = `${NOCODB_BASE_URL}/${img.path}`;
         }
 
         if (!imageUrl) {
@@ -862,7 +862,7 @@ async function processProduct(product, productIndex, totalProducts) {
         const fallbackImg = ai_product_images[0];
         let fallbackUrl = fallbackImg.url;
         if (!fallbackUrl && fallbackImg.path) {
-            fallbackUrl = `${NOCODB_API_URL}/${fallbackImg.path}`;
+            fallbackUrl = `${NOCODB_BASE_URL}/${fallbackImg.path}`;
         }
         if (fallbackUrl) {
             try {
@@ -908,7 +908,7 @@ async function processProducts() {
         log(`📥 NocoDB에서 ${PRODUCT_LIMIT}개 제품 가져오는 중...\n`);
         
         const response = await axios.get(
-            `${NOCODB_API_URL}/api/v2/tables/${SHOPIFY_TABLE_ID}/records`,
+            `${NOCODB_BASE_URL}/api/v2/tables/${SHOPIFY_TABLE_ID}/records`,
             {
                 headers: { 'xc-token': NOCODB_API_TOKEN },
                 params: {
@@ -945,7 +945,7 @@ async function processProducts() {
         log('🎉 Phase 2.5 (Phase 3) 완료!');
         log('='.repeat(70));
         log(`✅ ${products.length}개 제품 처리 완료`);
-        log(`\n📝 NocoDB에서 확인: ${NOCODB_API_URL}`);
+        log(`\n📝 NocoDB에서 확인: ${NOCODB_BASE_URL}`);
         log('   → tb_shopify_products 테이블');
         log('   → validated_images 필드\n');
         log('🎯 이번 버전 처리 규칙:');

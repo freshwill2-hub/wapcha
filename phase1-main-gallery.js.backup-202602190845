@@ -100,7 +100,7 @@ if (UNIFIED_LOG_PATH) {
 
 // ==================== 설정 ====================
 const NOCODB_API_URL = process.env.NOCODB_API_URL || 'http://77.42.67.165:8080';
-const NOCODB_API_TOKEN = process.env.NOCODB_API_TOKEN;
+const NOCODB_TOKEN = process.env.NOCODB_API_TOKEN;
 const OLIVEYOUNG_TABLE_ID = process.env.OLIVEYOUNG_TABLE_ID || 'mfi4ic7zj2gfixv';
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const MAX_VOLUME_LIMIT = parseInt(process.env.MAX_VOLUME_LIMIT) || 0;  // ✅ v2.9: 용량 제한 (ml), 0이면 무제한
@@ -774,7 +774,7 @@ async function getOliveyoungProducts(limit = 100, offset = 0) {
         const response = await axios.get(
             `${NOCODB_API_URL}/api/v2/tables/${OLIVEYOUNG_TABLE_ID}/records`,
             {
-                headers: { 'xc-token': NOCODB_API_TOKEN },
+                headers: { 'xc-token': NOCODB_TOKEN },
                 params: {
                     offset: offset,
                     limit: limit,
@@ -889,7 +889,7 @@ async function uploadToNocoDB(fileBuffer, filename) {
             formData,
             {
                 headers: {
-                    'xc-token': NOCODB_API_TOKEN,
+                    'xc-token': NOCODB_TOKEN,
                     ...formData.getHeaders()
                 },
                 timeout: 60000
@@ -922,7 +922,7 @@ async function updateProduct(recordId, updateData) {
                 [{ Id: recordId, product_images: null }],
                 { 
                     headers: { 
-                        'xc-token': NOCODB_API_TOKEN,
+                        'xc-token': NOCODB_TOKEN,
                         'Content-Type': 'application/json'
                     } 
                 }
@@ -939,7 +939,7 @@ async function updateProduct(recordId, updateData) {
             }],
             { 
                 headers: { 
-                    'xc-token': NOCODB_API_TOKEN,
+                    'xc-token': NOCODB_TOKEN,
                     'Content-Type': 'application/json'
                 } 
             }
@@ -1645,7 +1645,7 @@ async function processBatch(productsToProcess, batchNum = 0) {
                                     await axios.patch(
                                         `${NOCODB_API_URL}/api/v2/tables/${OLIVEYOUNG_TABLE_ID}/records`,
                                         [{ Id: product.Id, title_kr: 'SKIP_VOLUME_EXCEEDED' }],
-                                        { headers: { 'xc-token': NOCODB_API_TOKEN, 'Content-Type': 'application/json' } }
+                                        { headers: { 'xc-token': NOCODB_TOKEN, 'Content-Type': 'application/json' } }
                                     );
                                     log(`   ✅ NocoDB 마킹 완료 (SKIP_VOLUME_EXCEEDED)`);
                                 } catch (markErr) {
@@ -1690,7 +1690,7 @@ async function processBatch(productsToProcess, batchNum = 0) {
                                     await axios.patch(
                                         `${NOCODB_API_URL}/api/v2/tables/${OLIVEYOUNG_TABLE_ID}/records`,
                                         [{ Id: product.Id, title_kr: 'SKIP_VOLUME_EXCEEDED' }],
-                                        { headers: { 'xc-token': NOCODB_API_TOKEN, 'Content-Type': 'application/json' } }
+                                        { headers: { 'xc-token': NOCODB_TOKEN, 'Content-Type': 'application/json' } }
                                     );
                                     log(`   ✅ NocoDB 마킹 완료 (SKIP_VOLUME_EXCEEDED)`);
                                 } catch (markErr) {
