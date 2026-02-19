@@ -1,34 +1,34 @@
 {
   "categories": [
     {
-      "id": "aa515030-76d3-4673-8b26-39268d1a2388",
+      "id": "1adf9363-c51c-4562-8f57-9e9687b6c92e",
       "url": "https://www.oliveyoung.co.kr/store/display/getMCategoryList.do?dispCatNo=10000010011&isLoginCnt=0&aShowCnt=0&bShowCnt=0&cShowCnt=0&t_page=%EB%A1%9C%EC%BC%80%EC%9D%B4%EC%85%98_%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC%EA%B4%80&t_click=%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC%ED%83%AD_%EB%8C%80%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC&t_1st_category_type=%EB%8C%80_%ED%81%B4%EB%A0%8C%EC%A7%95",
       "name": "선크림",
-      "maxProducts": 100,
-      "maxPages": 5,
+      "maxProducts": 10,
+      "maxPages": 1,
       "status": "completed",
-      "createdAt": "2026-02-18T14:47:51.968Z",
-      "completedAt": "2026-02-18T14:50:44.524Z"
+      "createdAt": "2026-02-19T09:02:49.131Z",
+      "completedAt": "2026-02-19T09:05:25.488Z"
     },
     {
-      "id": "28844f35-a1ec-45eb-a6c9-d1e8ef345f66",
-      "url": "https://www.oliveyoung.co.kr/store/display/getMCategoryList.do?dispCatNo=10000010009&isLoginCnt=0&aShowCnt=null&bShowCnt=null&cShowCnt=null&t_page=%EB%A1%9C%EC%BC%80%EC%9D%B4%EC%85%98_%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC%EA%B4%80&t_click=%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC%ED%83%AD_%EB%8C%80%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC&t_1st_category_type=%EB%8C%80_%ED%81%B4%EB%A0%8C%EC%A7%95",
-      "name": "시트팩",
-      "maxProducts": 100,
-      "maxPages": 5,
-      "status": "completed",
-      "createdAt": "2026-02-18T14:47:58.509Z",
-      "completedAt": "2026-02-18T14:53:14.847Z"
-    },
-    {
-      "id": "d0122f44-917b-425e-b97b-785e361534c9",
+      "id": "7ca15cb1-c547-48d2-a424-672d280e21f9",
       "url": "https://www.oliveyoung.co.kr/store/display/getMCategoryList.do?dispCatNo=10000010010&isLoginCnt=0&aShowCnt=null&bShowCnt=null&cShowCnt=null&t_page=%EB%A1%9C%EC%BC%80%EC%9D%B4%EC%85%98_%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC%EA%B4%80&t_click=%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC%ED%83%AD_%EB%8C%80%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC&t_1st_category_type=%EB%8C%80_%EB%A7%88%EC%8A%A4%ED%81%AC%ED%8C%A9",
       "name": "클렌징폼/젤",
-      "maxProducts": 100,
-      "maxPages": 5,
+      "maxProducts": 10,
+      "maxPages": 1,
       "status": "completed",
-      "createdAt": "2026-02-18T14:48:07.449Z",
-      "completedAt": "2026-02-18T14:55:35.676Z"
+      "createdAt": "2026-02-19T09:02:55.680Z",
+      "completedAt": "2026-02-19T09:05:54.375Z"
+    },
+    {
+      "id": "eeb9ef5c-aa62-46c3-a695-43fd667bbf6c",
+      "url": "https://www.oliveyoung.co.kr/store/display/getMCategoryList.do?dispCatNo=10000010001&isLoginCnt=0&aShowCnt=0&bShowCnt=0&cShowCnt=0&t_page=%EB%A1%9C%EC%BC%80%EC%9D%B4%EC%85%98_%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC%EA%B4%80&t_click=%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC%ED%83%AD_%EB%8C%80%EC%B9%B4%ED%85%8C%EA%B3%A0%EB%A6%AC&t_1st_category_type=%EB%8C%80_%EC%84%A0%EC%BC%80%EC%96%B4",
+      "name": "스킨/토너",
+      "maxProducts": 10,
+      "maxPages": 1,
+      "status": "completed",
+      "createdAt": "2026-02-19T09:03:09.894Z",
+      "completedAt": "2026-02-19T09:06:20.288Z"
     }
   ],
   "products": []
