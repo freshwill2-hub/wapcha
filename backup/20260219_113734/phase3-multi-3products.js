@@ -313,17 +313,10 @@ async function analyzeImage(imageUrl, productTitle, isSetProduct) {
 - 이미지에서 **실제 제품이 몇 개 보이는지** 꼭 세어주세요
 - 확신이 없으면 PASS를 선택하세요 (제품을 잘못 제외하는 것보다 포함하는 것이 낫습니다)
 
-**BG_QUALITY (배경 제거 품질 1-10):**
-- 10: 완벽한 배경 제거, 제품 경계 깨끗
-- 7-9: 양호, 약간의 잔여물 있으나 사용 가능
-- 4-6: 보통, 눈에 띄는 잔여물 있음
-- 1-3: 불량, 배경 잔여물이 심하거나 제품 일부가 잘림
-
 다음 형식으로만 답변:
 ACTION: [PASS/CROP_BADGE/CROP_SINGLE/SKIP_MODEL/SKIP_BANNER/SKIP_SET_MISMATCH]
 PRODUCT_COUNT: [숫자]
 BADGE_LOCATION: [top-left/top-right/bottom-left/bottom-right/none]
-BG_QUALITY: [1-10]
 REASON: [한 줄 설명]`;
 
         const result = await callGeminiWithRetry(model, [
@@ -336,13 +329,11 @@ REASON: [한 줄 설명]`;
         const actionMatch = response.match(/ACTION:\s*(PASS|CROP_BADGE|CROP_SINGLE|SKIP_MODEL|SKIP_BANNER|SKIP_SET_MISMATCH)/i);
         const productCountMatch = response.match(/PRODUCT_COUNT:\s*(\d+)/i);
         const badgeLocationMatch = response.match(/BADGE_LOCATION:\s*([^\n]+)/i);
-        const bgQualityMatch = response.match(/BG_QUALITY:\s*(\d+)/i);
         const reasonMatch = response.match(/REASON:\s*(.+)/i);
-
+        
         let action = actionMatch ? actionMatch[1].toUpperCase() : 'PASS';
         const productCount = productCountMatch ? parseInt(productCountMatch[1]) : 1;
         const badgeLocation = badgeLocationMatch ? badgeLocationMatch[1].trim().toLowerCase() : 'none';
-        const bgQuality = bgQualityMatch ? parseInt(bgQualityMatch[1]) : 10;
         const reason = reasonMatch ? reasonMatch[1].trim() : '';
 
         // 추가 검증: 개별/세트 로직 적용
@@ -371,11 +362,11 @@ REASON: [한 줄 설명]`;
             log(`      ❌ 세트 불일치 (${productCount}개만 보임) → 건너뛰기`);
         }
         
-        return { action, productCount, badgeLocation, bgQuality, reason };
-
+        return { action, productCount, badgeLocation, reason };
+        
     } catch (error) {
         log('      ⚠️  이미지 분석 실패:', error.message);
-        return { action: 'PASS', productCount: 1, bgQuality: 10, reason: 'API 오류 - 기본 통과' };
+        return { action: 'PASS', productCount: 1, reason: 'API 오류 - 기본 통과' };
     }
 }
 
@@ -745,80 +736,19 @@ async function processProduct(product, productIndex, totalProducts) {
             // 3단계: 처리 방식 결정
             if (analysis.action === 'PASS') {
                 passCount++;
-                log(`      🎨 bg_quality: ${analysis.bgQuality}/10`);
 
-                // bg_quality < 4: 배경 제거 품질 불량 → 원본 이미지로 대체
-                if (analysis.bgQuality < 4) {
-                    log(`      ⚠️ bg_quality ${analysis.bgQuality}/10 → 원본 이미지로 대체`);
-                    let fallbackUsed = false;
-
-                    if (oliveyoungProduct && oliveyoungProduct.product_images) {
-                        // originalUrl 매칭으로 올리브영 원본 이미지 찾기
-                        const currentOriginalUrl = img.originalUrl;
-                        let originalImgData = null;
-
-                        if (currentOriginalUrl) {
-                            originalImgData = oliveyoungProduct.product_images.find(pi => {
-                                const piUrl = pi.url || (pi.path ? `${NOCODB_API_URL}/${pi.path}` : null);
-                                return piUrl === currentOriginalUrl;
-                            });
-                        }
-
-                        // 매칭 실패 시 인덱스 기반 폴백
-                        if (!originalImgData && i < oliveyoungProduct.product_images.length) {
-                            originalImgData = oliveyoungProduct.product_images[i];
-                        }
-
-                        if (originalImgData) {
-                            let originalUrl = originalImgData.url;
-                            if (!originalUrl && originalImgData.path) {
-                                originalUrl = `${NOCODB_API_URL}/${originalImgData.path}`;
-                            }
-
-                            if (originalUrl) {
-                                try {
-                                    const origPath = `/tmp/orig-fallback-${timestamp}-${i}.png`;
-                                    await downloadImage(originalUrl, origPath);
-                                    const fileName = `final-${Id}-${i + 1}-${timestamp}.png`;
-                                    const uploadedData = await uploadToNocoDB(origPath, fileName);
-                                    const uploadInfo = uploadedData[0];
-                                    uploadInfo.originalUrl = originalUrl;
-                                    validatedImages.push(uploadInfo);
-                                    log(`      📤 저장 완료! (원본 이미지로 대체 - bg_quality 불량)`);
-                                    cleanupFiles(origPath);
-                                    fallbackUsed = true;
-                                } catch (fbErr) {
-                                    log(`      ⚠️ 원본 이미지 다운로드 실패: ${fbErr.message}`);
-                                }
-                            }
-                        }
-                    }
-
-                    if (!fallbackUsed) {
-                        log(`      ⚠️ 원본 매칭 실패 → 기존 이미지 그대로 사용`);
-                        fs.copyFileSync(inputPath, finalPath);
-                        const fileName = `final-${Id}-${i + 1}-${timestamp}.png`;
-                        const uploadedData = await uploadToNocoDB(finalPath, fileName);
-                        const uploadInfo = uploadedData[0];
-                        uploadInfo.originalUrl = imageUrl;
-                        validatedImages.push(uploadInfo);
-                        log(`      📤 저장 완료! (기존 이미지 유지 - 원본 매칭 실패)`);
-                    }
-                } else {
-                    fs.copyFileSync(inputPath, finalPath);
-                    log(`      ✅ Phase 2 처리 완료 이미지 사용 (rembg 생략)`);
-                    const fileName = `final-${Id}-${i + 1}-${timestamp}.png`;
-                    const uploadedData = await uploadToNocoDB(finalPath, fileName);
-                    const uploadInfo = uploadedData[0];
-                    uploadInfo.originalUrl = imageUrl;
-                    validatedImages.push(uploadInfo);
-                    log(`      📤 저장 완료! (그대로 통과)`);
-                }
+                fs.copyFileSync(inputPath, finalPath);
+                log(`      ✅ Phase 2 처리 완료 이미지 사용 (rembg 생략)`);
+                const fileName = `final-${Id}-${i + 1}-${timestamp}.png`;
+                const uploadedData = await uploadToNocoDB(finalPath, fileName);
+                const uploadInfo = uploadedData[0];
+                uploadInfo.originalUrl = imageUrl;
+                validatedImages.push(uploadInfo);
+                log(`      📤 저장 완료! (그대로 통과)`);
                 
             } else if (analysis.action === 'CROP_BADGE') {
                 badgeCropCount++;
-                log(`      🎨 bg_quality: ${analysis.bgQuality}/10`);
-
+                
                 const dimensions = await getImageDimensions(inputPath);
                 if (!dimensions) {
                     log(`      ❌ 이미지 크기 확인 실패`);
@@ -883,8 +813,7 @@ async function processProduct(product, productIndex, totalProducts) {
 
             } else if (analysis.action === 'CROP_SINGLE') {
                 singleCropCount++;
-                log(`      🎨 bg_quality: ${analysis.bgQuality}/10`);
-
+                
                 const dimensions = await getImageDimensions(inputPath);
                 if (!dimensions) {
                     log(`      ❌ 이미지 크기 확인 실패`);

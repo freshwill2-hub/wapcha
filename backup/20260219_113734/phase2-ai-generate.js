@@ -5,7 +5,6 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import path from 'path';
 import dotenv from 'dotenv';
-import sharp from 'sharp';
 
 dotenv.config();
 
@@ -360,38 +359,6 @@ async function downloadImage(imageUrl, outputPath) {
     log(`   ✅ 다운로드 완료 (${sizeKB}KB)`);
 }
 
-// rembg 출력 품질 검증 (알파 채널 분석)
-async function validateRembgResult(transparentPath) {
-    try {
-        const { data, info } = await sharp(transparentPath)
-            .raw()
-            .toBuffer({ resolveWithObject: true });
-
-        const totalPixels = info.width * info.height;
-        let opaquePixels = 0;
-
-        // RGBA: 4 channels per pixel
-        for (let i = 3; i < data.length; i += 4) {
-            if (data[i] > 0) opaquePixels++;
-        }
-
-        const opaqueRatio = opaquePixels / totalPixels;
-
-        if (opaqueRatio < 0.15) {
-            return { pass: false, opaqueRatio, message: `불투명 비율 ${(opaqueRatio * 100).toFixed(1)}% < 15% → 제품까지 사라짐` };
-        }
-
-        if (opaqueRatio > 0.95) {
-            return { pass: true, opaqueRatio, message: `불투명 비율 ${(opaqueRatio * 100).toFixed(1)}% > 95% → 배경 제거 미흡 (경고)` };
-        }
-
-        return { pass: true, opaqueRatio, message: `불투명 비율 ${(opaqueRatio * 100).toFixed(1)}% → 정상` };
-    } catch (error) {
-        log(`   ⚠️  rembg 품질 검증 실패: ${error.message} → 기본 통과`);
-        return { pass: true, opaqueRatio: -1, message: '검증 실패 - 기본 통과' };
-    }
-}
-
 // rembg로 배경 제거 + 흰색 배경 추가
 async function removeBackgroundWithWhite(inputPath, outputPath) {
     log(`\n🎨 배경 제거 중 (rembg)...`);
@@ -401,25 +368,8 @@ async function removeBackgroundWithWhite(inputPath, outputPath) {
         const startTime = Date.now();
         const tempTransparent = outputPath.replace('.png', '_temp.png');
         
-        await execAsync(`${REMBG_PATH} i -m isnet-general-use "${inputPath}" "${tempTransparent}"`);
-
-        // sharp 기반 알파 채널 품질 검증
-        const validation = await validateRembgResult(tempTransparent);
-        log(`   🔍 rembg 품질 검증: ${validation.message}`);
-
-        if (!validation.pass) {
-            log(`   ⚠️  rembg FAIL → 원본 이미지를 그대로 사용합니다.`);
-            fs.copyFileSync(inputPath, outputPath);
-            cleanupFiles(tempTransparent);
-            const duration = ((Date.now() - startTime) / 1000).toFixed(1);
-            log(`   ✅ 원본 이미지 복사 완료 (${duration}초 소요)`);
-            return true;
-        }
-
-        if (validation.opaqueRatio > 0.95) {
-            log(`   ⚠️  배경 제거 미흡 경고 (불투명 ${(validation.opaqueRatio * 100).toFixed(1)}%) - 계속 진행`);
-        }
-
+        await execAsync(`${REMBG_PATH} i "${inputPath}" "${tempTransparent}"`);
+        
         const pythonScriptPath = `/tmp/add_white_bg_${Date.now()}.py`;
         const pythonScript = `from PIL import Image
 
@@ -429,17 +379,27 @@ white_bg.paste(img, (0, 0), img)
 white_bg.convert('RGB').save('${outputPath}', 'PNG')
 print('✅ 흰색 배경 추가 완료')
 `;
-
+        
         fs.writeFileSync(pythonScriptPath, pythonScript);
         await execAsync(`${PYTHON_PATH} "${pythonScriptPath}"`);
-
+        
         cleanupFiles(tempTransparent, pythonScriptPath);
-
+        
         const duration = ((Date.now() - startTime) / 1000).toFixed(1);
-
+        
         if (fs.existsSync(outputPath)) {
             const sizeKB = (fs.statSync(outputPath).size / 1024).toFixed(1);
             log(`   ✅ 배경 제거 + 흰색 배경 완료 (${sizeKB}KB, ${duration}초 소요)`);
+
+            // rembg 품질 검증: 출력이 입력의 5% 미만이면 제품이 거의 없는 이미지
+            try {
+                const outputSize = fs.statSync(outputPath).size;
+                const inputSize = fs.statSync(inputPath).size;
+                if (inputSize > 0 && outputSize < inputSize * 0.05) {
+                    log(`   ⚠️  rembg 품질 의심: 출력 ${(outputSize/1024).toFixed(1)}KB / 입력 ${(inputSize/1024).toFixed(1)}KB (${(outputSize/inputSize*100).toFixed(1)}%)`);
+                }
+            } catch (sizeErr) { /* 크기 검증 실패해도 진행 */ }
+
             return true;
         } else {
             log('   ❌ 출력 파일 생성 실패');
